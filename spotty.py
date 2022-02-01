@@ -13,6 +13,8 @@
 ### timetagger object that includes both timetagger and devmode methods
 
 
+
+###%%%%%%%%%%%%%%%%%%%%%%
 import TimeTagger as tt
 
 import numpy as np
@@ -41,3 +43,6 @@ class taggerSpot():
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
         tt.freeTimeTagger(self.tagger)
+
+print('hi')
+###%%%%%%%%%%%%%%%%%%%%%%
