@@ -48,7 +48,7 @@ class TagServer():
         return self
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
-        tagger.stopServer()
+        self.tagger.stopServer()
         TimeTagger.freeTimeTagger(self.tagger)
         print('Ciao!')
 
