@@ -16,12 +16,12 @@ class TagClient():
         # Use the scanTimeTaggerServers() function to search for Time Tagger servers in the local network
         self.serverlist = TimeTagger.scanTimeTaggerServers()
 
-        print("{} servers found.".format(len(servers)))
+        print("{} servers found.".format(len(self.serverlist)))
         print(self.serverlist)
-
 
         self.server_handshake()
         print('Server handshake successful!!!!!!!!!!!')
+        print('\nTimetagger object initialising...assuming it is reading from PhotonSpot nanowire single-photon detector...will prompt about detector gain settings in a bit\n')
         self.get_methods_naive()
         print('Here are the available class methods to be used in interactive mode')
 

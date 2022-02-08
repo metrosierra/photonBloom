@@ -12,7 +12,9 @@ if sys.version_info < (3, 0):  # Python 2.7
 class TagServer():
 
 
-    def __init__(self):
+    def __init__(self, testsignal = False):
+
+        self.istest = testsignal
         print('\nInitialising Server Object for timetagger (assuming the physical tagger is paired with this PC)\n')
         self.tagger = TimeTagger.createTimeTagger()
 
@@ -21,6 +23,8 @@ class TagServer():
         # self.set_testsignal()
         self.get_ip()
 
+        if self.istest:
+            self.set_testsignal(channels = [1, 2, 3 ,4])
 
         # Start server with full control of the hardware by the connected clients.
         self.start_server()
@@ -29,6 +33,7 @@ class TagServer():
 
     def start_server(self):
         self.tagger.startServer(TimeTagger.AccessMode.Control)
+        return self
 
     def get_ip(self):
         self.local_ip = socket.gethostbyname(socket.gethostname())
@@ -36,12 +41,13 @@ class TagServer():
 
     def set_testsignal(self, channels = [1, 2, 3, 4]):
         self.tagger.setTestSignal(channels, True)
+        print('Test mode set! Activating test signals on channels {}'.format(channels))
+        return self
+
 
     def get_methods_naive(self):
         self.method_list = [attribute for attribute in dir(self) if callable(getattr(self, attribute)) and attribute.startswith('__') is False]
-
         return self.method_list
-
 
 
     def __enter__(self):
@@ -56,5 +62,14 @@ class TagServer():
 if __name__ == '__main__':
     with TagServer() as tes:
         print("with TagServer as tes")
-        # Keep the server alive until you press enter.
-        input('Press ENTER to stop the server...')
+
+        alive = True
+        while alive:
+            # Keep the server alive until you press enter.
+            keyinput = input('Press ENTER to stop the server...')
+            if keyinput == 'start_test':
+                tes.istest = True
+                tes.set_testsignal(channels = [1, 2, 3 ,4])
+
+            elif keyinput == 'quit':
+                alive = False
