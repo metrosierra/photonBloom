@@ -4,12 +4,15 @@ import sys
 import TimeTagger
 import socket
 
+import numpy as np
+import matplotlib.pyplot as plt
+import time
 
 
 class TagClient():
 
 
-    def __init__(self, ip_address):
+    def __init__(self, ip_address = '192.168.0.2'):
 
         self.target_ip = ip_address
         print("Search for Time Taggers on the network...")
@@ -34,7 +37,7 @@ class TagClient():
         except RuntimeError:
             raise Exception('No Time Tagger server available on {} and the default port 41101.'.format(self.target_ip))
 
-        self.client = TimeTagger.createTimeTaggerNetwork('localhost')
+        self.client = TimeTagger.createTimeTaggerNetwork(self.target_ip)
         print('Connecting to the server on localhost.')
 
     def __enter__(self):
@@ -67,13 +70,30 @@ class TagClient():
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         self.rate = TimeTagger.Countrate(self.client, channels)
 
-        rate.startFor(startfor)
-        rate.waitUntilFinished()
-        countrates = rate.getData()
+        self.rate.startFor(startfor)
+        self.rate.waitUntilFinished()
+        self.countrates = self.rate.getData()
 
         print('Measured count rates of channel 1-4 in counts/s:')
-        print(countrates)
-        return countrates
+        print(self.countrates)
+        return self.countrates
+
+    def get_count(self, channels = [1, 2], binwidth = 1000, n = 1000):
+
+        # With the TimeTaggerNetwork object, we can set up a measurement as usual
+        self.count = TimeTagger.Counter(self.client, channels, binwidth, n)
+
+        data = self.count.getData()
+        print(np.shape(data))
+
+
+        print('Measured count of channel 1-4 in counts:')
+        print(data)
+        plt.plot(data)
+        plt.show()
+
+        return data
+
 
 
     ###subclassing the timetagstream class which is under measurement classes
@@ -91,11 +111,15 @@ class TagClient():
         self.stream.startFor(startfor)
         event_counter = 0
         chunk_counter = 1
+
         while self.stream.isRunning():
             # getData() does not return timestamps, but an instance of TimeTagStreamBuffer
             # that contains more information than just the timestamp
             data = self.stream.getData()
-
+            # print(data.getTimestamps())
+            # print(len(data.getTimestamps()))
+            # time.sleep(0.1)
+            print(data.getEventTypes())
             if data.size:
                 # With the following methods, we can retrieve a numpy array for the particular information:
                 channel = data.getChannels()            # The channel numbers
