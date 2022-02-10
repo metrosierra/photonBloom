@@ -97,7 +97,13 @@ class TagClient():
 
 
     ###subclassing the timetagstream class which is under measurement classes
-    def streamdata(self, startfor = int(5E11), channels = [1, 2, 3, 4], n_max_events = 1000000):
+    ###buffer size is memory buffer allocated that is read and destroyed with each
+    ###getData() call.
+    ###the rate of getData() call must be quick relative to buffer size to avoid
+    ###data overflow
+
+    ###startfor is in picoseconds
+    def streamdata(self, startfor = int(5E11), channels = [1, 2, 3, 4], buffer_size = 1000000, update_rate = -1.):
 
         format_string = '{:>8} | {:>17} | {:>7} | {:>14} | {:>13}'
         print(format_string.format('TAG #', 'EVENT TYPE', 'CHANNEL', 'TIMESTAMP (ps)', 'MISSED EVENTS'))
@@ -105,7 +111,7 @@ class TagClient():
         event_name = ['0 (TimeTag)', '1 (Error)', '2 (OverflowBegin)', '3 (OverflowEnd)', '4 (MissedEvents)']
 
         self.stream = TimeTagger.TimeTagStream(tagger = self.client,
-                                          n_max_events = n_max_events,
+                                          n_max_events = buffer_size,
                                           channels = channels)
 
         self.stream.startFor(startfor)
