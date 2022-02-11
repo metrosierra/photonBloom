@@ -40,8 +40,17 @@ class TagServer():
         print("Local IP address:\n{}\n".format(self.local_ip))
 
     def set_testsignal(self, channels = [1, 2, 3, 4]):
-        self.tagger.setTestSignal(channels, True)
-        print('Test mode set! Activating test signals on channels {}'.format(channels))
+
+        if not self.istest:
+            self.tagger.setTestSignal(channels, True)
+            print('Test mode set! Activating test signals on channels {}'.format(channels))
+            self.istest = True
+
+        else:
+            self.tagger.setTestSignal(channels, False)
+            print('Test mode unset! Deactivating test signals on channels {}'.format(channels))
+            self.istest = False
+
         return self
 
 
@@ -67,12 +76,10 @@ if __name__ == '__main__':
         while alive:
             # Keep the server alive until you press enter.
             keyinput = input('\n ########################## Press ENTER to stop the server and release timetagger... ##########################\n')
-            if keyinput == 'start_test' and tes.istest == False:
-                tes.istest = True
+            if keyinput == 'set_test' and tes.istest == False:
                 tes.set_testsignal(channels = [1, 2, 3 ,4])
 
             elif keyinput == 'stop_test' and tes.istest == True:
-                tes.istest = False
                 tes.set_testsignal(channels = [1, 2, 3 ,4])
 
             elif keyinput == 'quit':

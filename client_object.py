@@ -19,7 +19,8 @@ class TagClient():
 
         self.res_modes = {'Standard': TimeTagger.Resolution.Standard, 'HighResA': TimeTagger.Resolution.HighResA,
                      'HighResB': TimeTagger.Resolution.HighResB, 'HighResC': TimeTagger.Resolution.HighResC}
-
+        self.istest = False
+        self.eyesopen = True
         self.target_ip = ip_address
         print("Search for Time Taggers on the network...")
         # Use the scanTimeTaggerServers() function to search for Time Tagger servers in the local network
@@ -166,6 +167,41 @@ class TagClient():
 
         return measured_jitters, within_specs, measured_channels
 
+######################   hardware configuration methods   ################################
+
+    ####about 0.8V for ref
+    def set_trigger(self, channel, level):
+        self.client.setTriggerLevel(channel = channel, voltage = level)
+        return self
+
+    ####about 100ns for ref
+    def set_deadtime(self, channel, deadtime):
+        self.client.setDeadtime(channel = channel, deadtime = deadtime)
+        return self
+
+    def set_eventdivider(self, channel, divider):
+        self.client.setEventDivider(channel = channel, divider = divider)
+        return self
+
+    def setTestSignal(self, channels):
+        if not self.istest:
+            self.tagger.setTestSignal(channels, True)
+            print('Test mode set! Activating test signals on channels {}'.format(channels))
+            self.istest = True
+        else:
+            self.tagger.setTestSignal(channels, False)
+            print('Test mode unset! deactivating test signals on channels {}'.format(channels))
+            self.istest = False
+
+    ###### it's christmas!!!!!!!!!!!
+    def setLED(self, bitmask):
+        if self.eyesopen:
+            self.client.setLED(0)
+            self.eyesopen = False
+        else:
+            self.client.setLED(0x01FF0000)
+            self.eyesopen = True
+        return self
 
 
 ######################   measurement methods   ################################
