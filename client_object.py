@@ -55,7 +55,6 @@ class TagClient():
         print('Server handshake successful!!!!!!!!!!!')
         self.get_info(self.client)
 
-
     def get_info(self, taggerself):
 
         self.model = taggerself.getModel()
@@ -74,22 +73,11 @@ class TagClient():
 
         return self
 
-
     def get_methods_naive(self):
         self.method_list = [attribute for attribute in dir(self) if callable(getattr(self, attribute)) and attribute.startswith('__') is False]
 
         return self.method_list
 
-    def overflow_check(self):
-        # Check for overflows
-        self.overflows = self.client.getOverflows()
-        if self.overflows == 0:
-            print("All incoming data has been processed.")
-        else:
-            print("""{} data blocks are lost.\nBlock loss can happen during the USB transfer from the Time Tagger
-        to the Time Tagger Server and/or during the data transfer over the network from the Time Tagger Server to the client.
-        Overflows are caused by exceeding the processing power (CPU) on the client and/or the server,
-        the USB bandwidth, or the network bandwidth.""".format(self.overflows))
 
     def get_jitter(self):
 
@@ -103,7 +91,7 @@ class TagClient():
             if edition == 'High-Res':
                 print('Setting the Time Tagger into {} mode'.format(mode))
                 # We need to first free the Time Tagger to initiate it again with a different HighRes modes
-                TimeTagger.freeTimeTagger(tagger)
+                TimeTagger.freeTimeTagger(self.client)
                 self.client = TimeTagger.createTimeTaggerNetwork(address = self.target_ip, resolution = self.res_modes[mode])
             print('Single channel RMS jitter is specified with {} ps'.format(jitter_specs_rms[mode]))
             if 'HighRes' in mode:
@@ -113,8 +101,9 @@ class TagClient():
             print('The available channel numbers are {}'.format(channels_available))
             self.client.setTestSignal(channels_available, True)  # Reactivating the test signals
             print('Measuring for 30 seconds')
+            
             # Retrieving the measured data
-            indices, data, meas_chan = synchronized_correlation_measurement(self.client, channels_available, duration=int(30e12))
+            indices, data, meas_chan = jitty.synchronized_correlation_measurement(self.client, channels_available, duration = int(30e12))
             measured_channels.append(meas_chan)
             measured_jitters.append(np.full(len(meas_chan), '', dtype=object))
             within_specs.append(np.full(len(meas_chan), '', dtype=object))
@@ -180,6 +169,17 @@ class TagClient():
 
 ######################   measurement methods   ################################
 
+
+    def overflow_check(self):
+        # Check for overflows
+        self.overflows = self.client.getOverflows()
+        if self.overflows == 0:
+            print("All incoming data has been processed.")
+        else:
+            print("""{} data blocks are lost.\nBlock loss can happen during the USB transfer from the Time Tagger
+        to the Time Tagger Server and/or during the data transfer over the network from the Time Tagger Server to the client.
+        Overflows are caused by exceeding the processing power (CPU) on the client and/or the server,
+        the USB bandwidth, or the network bandwidth.""".format(self.overflows))
 
     ###subclassing the CountRate measurement class
     def get_countrate(self, startfor = int(1E12), channels = [1, 2, 3, 4]):

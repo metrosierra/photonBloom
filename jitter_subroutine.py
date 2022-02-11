@@ -28,30 +28,32 @@ def synchronized_correlation_measurement(tagger, channels, binwidth=1, bins=int(
     To have a simultaneous start, we make use of the Synchronized Measurement class.
     Returns indices, data, and measured channels
     """
-    # Instantiate helper class to synchronize measurements
-    sync_measurement = TimeTagger.SynchronizedMeasurements(tagger)
-    correlation_measurements = []
-    measured_channels = np.array([], dtype=object)
-    # Here we use a single channel, which is correlated to all other channels.
-    start_channel = channels[0]
-    for stop_channel in channels[1:]:
-        if stop_channel - start_channel >= 100:  # In case synchronizer is used, update the start channel to new device.
-            start_channel = stop_channel
-        else:
-            # Initiate the measurements and register them for the synchronized measurement
-            correlation_measurements.append(TimeTagger.Correlation(tagger, start_channel, stop_channel, binwidth, bins))
-            sync_measurement.registerMeasurement(correlation_measurements[-1])
-            # To keep track of the measured correlations
-            measured_channels = np.append(measured_channels, '{:2d} - {:2d}'.format(start_channel, stop_channel))
-    # Starting the measurement
-    sync_measurement.startFor(duration)
-    sync_measurement.waitUntilFinished()
-    data = []
-    indices = []
-    for cor_measurement in correlation_measurements:
-        # Retrieving the data from the Time Tagger
-        indices.append(cor_measurement.getIndex())
-        data.append(cor_measurement.getData())
+    # Instantiate helper class to synchronize measurements and gracefully exit
+    with TimeTagger.SynchronizedMeasurements(tagger) as sync_measurement:
+        correlation_measurements = []
+        measured_channels = np.array([], dtype=object)
+        # Here we use a single channel, which is correlated to all other channels.
+        start_channel = channels[0]
+        for stop_channel in channels[1:]:
+            if stop_channel - start_channel >= 100:  # In case synchronizer is used, update the start channel to new device.
+                start_channel = stop_channel
+            else:
+                # Initiate the measurements and register them for the synchronized measurement
+                correlation_measurements.append(TimeTagger.Correlation(tagger, start_channel, stop_channel, binwidth, bins))
+                sync_measurement.registerMeasurement(correlation_measurements[-1])
+                # To keep track of the measured correlations
+                measured_channels = np.append(measured_channels, '{:2d} - {:2d}'.format(start_channel, stop_channel))
+        # Starting the measurement
+        sync_measurement.startFor(duration)
+        sync_measurement.waitUntilFinished()
+        data = []
+        indices = []
+        for cor_measurement in correlation_measurements:
+            # Retrieving the data from the Time Tagger
+            indices.append(cor_measurement.getIndex())
+            data.append(cor_measurement.getData())
+
+            
     return indices, data, measured_channels
 
 
