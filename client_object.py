@@ -103,7 +103,11 @@ class TagClient():
             print('Measuring for 30 seconds')
             
             # Retrieving the measured data
+<<<<<<< HEAD
             indices, data, meas_chan = jitty.synchronized_correlation_measurement(self.client, channels_available, duration = int(30e12))
+=======
+            indices, data, meas_chan = synchronized_correlation_measurement(self.client, channels_available, duration = int(30e12))
+>>>>>>> 9e50c4e18c590a66d4df178c12db36208adbab85
             measured_channels.append(meas_chan)
             measured_jitters.append(np.full(len(meas_chan), '', dtype=object))
             within_specs.append(np.full(len(meas_chan), '', dtype=object))
