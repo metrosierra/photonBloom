@@ -7,6 +7,7 @@ import socket
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from datetime import datetime
 
 import jitter_subroutine as jitty
 import mathematics as mathy
@@ -44,15 +45,15 @@ class TagClient():
     def server_handshake(self):
         try:
             self.target_server_info = TimeTagger.getTimeTaggerServerInfo('{}'.format(self.target_ip))
-            print('Information about Time Tagger server on {}:'.format(self.target_ip))
-            print(self.target_server_info)
+            # print('Information about Time Tagger server on {}:'.format(self.target_ip))
+            # print(self.target_server_info)
 
         except RuntimeError:
             raise Exception('No Time Tagger server available on {} and the default port 41101.'.format(self.target_ip))
 
         self.client = TimeTagger.createTimeTaggerNetwork(self.target_ip)
-        print('Connecting to the server on localhost.')
-        print('Server handshake successful!!!!!!!!!!!')
+        print('\nConnecting to the server on localhost.')
+        print('Server handshake successful!!!!!!!!!!!\n')
         self.get_info(self.client)
 
     def get_info(self, taggerself):
@@ -101,13 +102,9 @@ class TagClient():
             print('The available channel numbers are {}'.format(channels_available))
             self.client.setTestSignal(channels_available, True)  # Reactivating the test signals
             print('Measuring for 30 seconds')
-            
+
             # Retrieving the measured data
-<<<<<<< HEAD
             indices, data, meas_chan = jitty.synchronized_correlation_measurement(self.client, channels_available, duration = int(30e12))
-=======
-            indices, data, meas_chan = synchronized_correlation_measurement(self.client, channels_available, duration = int(30e12))
->>>>>>> 9e50c4e18c590a66d4df178c12db36208adbab85
             measured_channels.append(meas_chan)
             measured_jitters.append(np.full(len(meas_chan), '', dtype=object))
             within_specs.append(np.full(len(meas_chan), '', dtype=object))
@@ -189,29 +186,28 @@ class TagClient():
     def get_countrate(self, startfor = int(1E12), channels = [1, 2, 3, 4]):
 
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
-        self.rate = TimeTagger.Countrate(self.client, channels)
+        with TimeTagger.Countrate(self.client, channels) as cr:
 
-        self.rate.startFor(startfor)
-        self.rate.waitUntilFinished()
-        self.countrates = self.rate.getData()
+            cr.startFor(startfor)
+            cr.waitUntilFinished()
+            self.countrates = cr.getData()
 
-        print('Measured count rates of channel 1-4 in counts/s:')
-        print(self.countrates)
+            print('Measured count rates of channel 1-4 in counts/s:')
+            print(self.countrates)
+
         return self.countrates
 
     def get_count(self, channels = [1, 2], binwidth = 1000, n = 1000):
 
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
-        self.count = TimeTagger.Counter(self.client, channels, binwidth, n)
+        with TimeTagger.Counter(self.client, channels, binwidth, n) as compte:
 
-        data = self.count.getData()
-        print(np.shape(data))
-
-
-        print('Measured count of channel 1-4 in counts:')
-        print(data)
-        plt.plot(data)
-        plt.show()
+            data = compte.getData()
+            print(np.shape(data))
+            print('Measured count of channel 1-4 in counts:')
+            print(data)
+            plt.plot(data)
+            plt.show()
 
         return data
 
@@ -224,7 +220,7 @@ class TagClient():
     ###data overflow
 
     ###startfor is in picoseconds
-    def streamdata(self, startfor = int(5E11), channels = [1, 2, 3, 4], buffer_size = 1000000, update_rate = -1.):
+    def streamdata(self, startfor = int(5E11), channels = [1, 2, 3, 4], buffer_size = 1000000, update_rate = 0.0001, verbose = True):
 
         format_string = '{:>8} | {:>17} | {:>7} | {:>14} | {:>13}'
         print(format_string.format('TAG #', 'EVENT TYPE', 'CHANNEL', 'TIMESTAMP (ps)', 'MISSED EVENTS'))
@@ -239,14 +235,17 @@ class TagClient():
         event_counter = 0
         chunk_counter = 1
 
+        collected_tags = np.array([1.])
+        tags_channel_list = np.array([1.])
+
         while self.stream.isRunning():
             # getData() does not return timestamps, but an instance of TimeTagStreamBuffer
             # that contains more information than just the timestamp
             data = self.stream.getData()
-            # print(data.getTimestamps())
+            print(data.getTimestamps())
             # print(len(data.getTimestamps()))
-            # time.sleep(0.1)
-            print(data.getEventTypes())
+            time.sleep(update_rate)
+            # print(data.getEventTypes())
             if data.size:
                 # With the following methods, we can retrieve a numpy array for the particular information:
                 channel = data.getChannels()            # The channel numbers
@@ -254,24 +253,33 @@ class TagClient():
                 overflow_types = data.getEventTypes()   # TimeTag = 0, Error = 1, OverflowBegin = 2, OverflowEnd = 3, MissedEvents = 4
                 missed_events = data.getMissedEvents()  # The numbers of missed events in case of overflow
 
-                print(format_string.format(*" "*5))
-                heading = ' Start of data chunk {} with {} events '.format(chunk_counter, data.size)
-                extra_width = 69 - len(heading)
-                print('{} {} {}'.format("="*(extra_width//2), heading, "="*(extra_width - extra_width//2)))
-                print(format_string.format(*" "*5))
+                collected_tags = np.concatenate((collected_tags, timestamps))
+                tags_channel_list = np.concatenate((tags_channel_list, channel))
 
-                print(format_string.format(event_counter + 1, event_name[overflow_types[0]], channel[0], timestamps[0], missed_events[0]))
-                if data.size > 1:
-                    print(format_string.format(event_counter + 1, event_name[overflow_types[1]], channel[1], timestamps[1], missed_events[1]))
-                if data.size > 3:
-                    print(format_string.format(*["..."]*5))
-                if data.size > 2:
-                    print(format_string.format(event_counter + data.size, event_name[overflow_types[-1]], channel[-1], timestamps[-1], missed_events[-1]))
+                if verbose:
+                    print(format_string.format(*" "*5))
+                    heading = ' Start of data chunk {} with {} events '.format(chunk_counter, data.size)
+                    extra_width = 69 - len(heading)
+                    print('{} {} {}'.format("="*(extra_width//2), heading, "="*(extra_width - extra_width//2)))
+                    print(format_string.format(*" "*5))
+
+                    print(format_string.format(event_counter + 1, event_name[overflow_types[0]], channel[0], timestamps[0], missed_events[0]))
+                    if data.size > 1:
+                        print(format_string.format(event_counter + 1, event_name[overflow_types[1]], channel[1], timestamps[1], missed_events[1]))
+                    if data.size > 3:
+                        print(format_string.format(*["..."]*5))
+                    if data.size > 2:
+                        print(format_string.format(event_counter + data.size, event_name[overflow_types[-1]], channel[-1], timestamps[-1], missed_events[-1]))
 
                 event_counter += data.size
                 chunk_counter += 1
 
-        return format_string
+        now = datetime.now()
+        dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+        np.save('output/collected_tags_{}'.format(dt_string), collected_tags[1:])
+        np.save('output/tags_channel_list_{}'.format(dt_string), tags_channel_list[1:])
+
+        return collected_tags,
 
 
 if __name__ == '__main__':

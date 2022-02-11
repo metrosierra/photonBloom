@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from client_object import TagClient
-from live_plot import bloomPlot
+# from live_plot import bloomPlot
 
 
 
@@ -26,12 +26,7 @@ class spotty():
 
         input('please type in start_test into the server terminal session and press ENTER')
         print('attempting to stream data')
-        data = self.spot0.get_count()
-        plt.plot(data)
-        plt.show()
-        #spot0.histogram(aowdaowdaowdbaowdbaa)
-
-
+        data = self.spot0.streamdata(startfor = int(2E7), channels = [1, 2], buffer_size = 1000000, update_rate = 0.0001, verbose = False)
 
 
     def start_plot_protocol(self, refresh_time, seconds):
@@ -58,7 +53,6 @@ class spotty():
         self.save = True
 
         #x, y = something
-
 
         ylabel = 'Signal Counts'
         xlabel = 'Time Trace (s)'

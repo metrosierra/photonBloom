@@ -66,9 +66,13 @@ if __name__ == '__main__':
         alive = True
         while alive:
             # Keep the server alive until you press enter.
-            keyinput = input('Press ENTER to stop the server...')
-            if keyinput == 'start_test':
+            keyinput = input('\n ########################## Press ENTER to stop the server and release timetagger... ##########################\n')
+            if keyinput == 'start_test' and tes.istest == False:
                 tes.istest = True
+                tes.set_testsignal(channels = [1, 2, 3 ,4])
+
+            elif keyinput == 'stop_test' and tes.istest == True:
+                tes.istest = False
                 tes.set_testsignal(channels = [1, 2, 3 ,4])
 
             elif keyinput == 'quit':
