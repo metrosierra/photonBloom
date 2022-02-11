@@ -172,15 +172,18 @@ class TagClient():
     ####about 0.8V for ref
     def set_trigger(self, channel, level):
         self.client.setTriggerLevel(channel = channel, voltage = level)
+        print('\n\nTrigger level set at {}V for channels {}\n\n'.format(level, channel))
         return self
 
     ####about 100ns for ref
     def set_deadtime(self, channel, deadtime):
         self.client.setDeadtime(channel = channel, deadtime = deadtime)
+        print('\n\nDeadtime set at {}s for channels {}\n\n'.format(deadtime, channel))
         return self
 
     def set_eventdivider(self, channel, divider):
         self.client.setEventDivider(channel = channel, divider = divider)
+        print('\n\Event divider set at {} events for channels {}\n\n'.format(divider, channel))
         return self
 
     def setTestSignal(self, channels):
