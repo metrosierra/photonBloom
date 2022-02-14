@@ -7,7 +7,6 @@ import socket
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from datetime import datetime
 
 import jitter_subroutine as jitty
 import mathematics as mathy
@@ -313,12 +312,7 @@ class TagClient():
                 event_counter += data.size
                 chunk_counter += 1
 
-        now = datetime.now()
-        dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-        np.save('output/collected_tags_{}'.format(dt_string), collected_tags[1:])
-        np.save('output/tags_channel_list_{}'.format(dt_string), tags_channel_list[1:])
-
-        return collected_tags,
+        return collected_tags[1:], tags_channel_list[1:]
 
 
 if __name__ == '__main__':
