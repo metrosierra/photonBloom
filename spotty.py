@@ -14,8 +14,7 @@ from client_object import TagClient
 
 
 ###loosely datalogger/plotter class
-class spotty():
-
+class Blossom():
 
     def __init__(self):
 
@@ -114,7 +113,11 @@ class spotty():
     def __exit__(self, exception_type, exception_value, exception_traceback):
         pass
 
-hi = spotty()
+
+if __name__ == '__main__':
+    with Blossom() as bloss:
+        print("\n\n################## With Blossom as bloss ###################\n\n")
+        import code; code.interact(local=locals())
 ###%%%%%%%%%%%%%%%%%%%%%%
 
 #
