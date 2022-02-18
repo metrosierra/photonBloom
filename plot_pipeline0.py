@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-##%%%%%%%%%%%%%
+##%%%%%%%%%%%%
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,13 +7,17 @@ import scipy as sp
 import scipy.stats
 from scipy.stats import spearmanr
 
+import os
+from natsort import natsorted
 
 
-# tags_channel_list = np.load('output/tags_channel_list_11022022_14_38_42.npy')
-# collected_tags = np.load('output/collected_tags_11022022_14_38_42.npy')
+files = natsorted(os.listdir('data'))
 
-background_tags = np.load('data/collected_tags_15022022_16_55_30.npy')
-tags_channel_list = np.load('data/tags_channel_list_15022022_16_55_30.npy')
+###because of natsorted (natural sort), collected_blah.npy should be
+###in front of tags_blah.npy because alphabetical order
+
+background_tags = np.load(files[0])
+tags_channel_list = np.load(files[1])
 
 print(background_tags)
 
@@ -33,31 +37,12 @@ for index, tag in enumerate(background_tags):
 
     if tags_channel_list[index] == 2.:
         channel2.append(tag)
-    #
-    # if tags_channel_list[index] == 3.:
-    #     channel3.append(tag)
-    #
-    # if tags_channel_list[index] == 4.:
-    #     channel4.append(tag)
-
-
-y_ch1 = np.ones(len(channel1[:1000000]))
-y_ch2 = np.ones(len(channel2[:1000000]))
-# y_ch3 = np.ones(len(channel3))
-# y_ch4 = np.ones(len(channel4))
-
-# plt.scatter(channel1[:1000000], y_ch1)
-#
-# plt.show()
-# plt.scatter(channel2[:1000000], y_ch2)
-#
-# plt.show()
 
 
 data = [channel1,channel2]
 
 histogram_data=[]
-bins=[3E3,3E4,3E5,3E6,3E7,3E8]
+bins=[3E3, 3E4, 3E5, 3E6, 3E7, 3E8]
 correlations=[]
 for bin in bins:
     histogram_ind=[]
