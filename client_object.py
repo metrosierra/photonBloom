@@ -185,7 +185,7 @@ class TagClient():
         print('\n\Event divider set at {} events for channels {}\n\n'.format(divider, channel))
         return self
 
-    def setTestSignal(self, channels):
+    def set_testsignal(self, channels):
         if not self.istest:
             self.tagger.setTestSignal(channels, True)
             print('Test mode set! Activating test signals on channels {}'.format(channels))
@@ -196,15 +196,24 @@ class TagClient():
             self.istest = False
 
     ###### it's christmas!!!!!!!!!!!
-    def setLED(self, bitmask):
+    def set_led(self, turnon = True):
+
+        self.eyesopen = turnon
+        if self.eyesopen:
+            self.client.setLED(1)
+        else:
+            self.client.setLED(0)
+        return self
+
+    def set_ledtoggle(self):
+
         if self.eyesopen:
             self.client.setLED(0)
             self.eyesopen = False
         else:
-            self.client.setLED(0x01FF0000)
+            self.client.setLED(1)
             self.eyesopen = True
         return self
-
 
 ######################   measurement methods   ################################
 

@@ -5,6 +5,7 @@
 import TimeTagger as tt
 import numpy as np
 from datetime import datetime
+import json
 
 import matplotlib.pyplot as plt
 
@@ -32,28 +33,78 @@ class Blossom():
         threading.Thread(target = self.live_plot, args = (refresh_time,), daemon = True).start()
         threading.Thread(target = self.log_timer, args = (seconds,), daemon = False).start()
 
-    def start_config_checklist(self, channel):
+    def set_manualconfig(self, channels):
 
-        print('\n\nWarning: this is a global config function = will overwrite all\n\n')
-        self.config['Active Channels'] = channel
-        trigger = input('\nPlease input the trigger level in volts!!\n')
-        self.spot0.setTriggerLevel(channel = channel, voltage = trigger)
-        self.config['Common Trigger'] = trigger
+        trigger = float(input('\nPlease input the trigger level in volts!!\n'))
+        print('{}V Received!'.format(trigger))
+        deadtime = float(input('\nPlease input the deadtimes in picoseconds!\n'))
+        print('{}ps Received!'.format(deadtime))
+        divider =  round(input('\nPlease input the divider integer!\n'))
+        print('{} divider order received!')
+        turnon = round(input('\nLED Power: 1/0????\n'))
+        print('Logic of {} received!'.format(turnon))
 
-        deadtime = input('\nPlease input the deadtimes in picoseconds!\n')
-        deadtime = self.config['Common Deadtime']
-        self.spot0.setTriggerLevel(channel = channel, deadtime = deadtime)
 
-        divider =  input('\nPlease input the divider integer!\n')
-        self.config['Common Eventdivider'] = divider
-        self.client.setEventDivider(channel = channel, divider = divider)
+        for channel in channels:
 
-        bitmask = input('\nLED logic bitmask\n')
-        self.config['LED Logic Levels'] = bitmask
-        self.client.setLED(channel = channel, bitmask = bitmask)
+            channel = round(channel)
+            self.spot0.set_trigger(channel = channel, level = trigger)
+            self.config['channel{}'.format(channel)]['trigger'] = trigger
 
-    def streamdata(self, startfor, channel, buffer_size = 100000, update_rate = 0.0001, verbose = True):
-        tags, channel_list = self.spot0.streamdata(startfor = startfor, channels = channel, buffer_size = buffer_size, update_rate = update_rate, verbose = verbose)
+            self.spot0.set_deadtime(channel = channel, deadtime = deadtime)
+            self.config['channel{}'.format(channel)]['deadtime'] = deadtime
+
+            self.spot0.set_eventdivider(channel = channel, divider = divider)
+            self.config['channel{}'.format(channel)]['divider'] = divider
+
+            self.spot0.set_led(channel = channel, turnon = turnon)
+            self.config['ledstate'] = turnon
+
+
+        print('Channels {} configured! Check out the current configuration below:'.format(channels))
+        print(json.dumps(self.config, indent = 4))
+
+
+
+
+
+    def set_autoconfig(self):
+
+        with open('tagger_config.json') as jsondata:
+
+            self.config = json.load(jsondata)
+
+            for i in range(1,5):
+
+                self.spot0.set_trigger(channel = i, level = self.config['channel{}'.format(i)]['trigger'])
+                self.spot0.set_deadtime(channel = i, level = self.config['channel{}'.format(i)]['trigger'])
+
+
+
+
+            self.config['channel{}'.format(channel)]['deadtime'] = deadtime
+
+            self.spot0.set_eventdivider(channel = channel, divider = divider)
+            self.config['channel{}'.format(channel)]['divider'] = divider
+
+            self.spot0.set_led(channel = channel, turnon = turnon)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):
+        tags, channel_list = self.spot0.streamdata(startfor = startfor, channels = channels, buffer_size = buffer_size, update_rate = update_rate, verbose = verbose)
 
         now = datetime.now()
         dt_string = now.strftime("%d%m%Y_%H_%M_%S")
