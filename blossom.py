@@ -70,37 +70,34 @@ class Blossom():
 
     def set_autoconfig(self):
 
-        with open('tagger_config.json') as jsondata:
+        with open('configurations/tagger_config.json') as jsondata:
 
             self.config = json.load(jsondata)
 
             for i in range(1,5):
 
-                self.spot0.set_trigger(channel = i, level = self.config['channel{}'.format(i)]['trigger'])
-                self.spot0.set_deadtime(channel = i, level = self.config['channel{}'.format(i)]['trigger'])
+                trigger = self.config['channel{}'.format(i)]['trigger']
+                deadtime = self.config['channel{}'.format(i)]['deadtime']
+                divider = self.config['channel{}'.format(i)]['divider']
+                turnon = self.config['turnon']
 
+                self.spot0.set_trigger(channel = i, level = trigger)
+                self.spot0.set_deadtime(channel = i, level = deadtime)
+                self.spot0.set_eventdivider(channel = i, divider = divider)
+                self.spot0.set_led(channel = i, turnon = turnon)
 
+        return self
 
+    def tag_correlation(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
 
-            self.config['channel{}'.format(channel)]['deadtime'] = deadtime
+        hist_data = self.spot0.get_correlation(startfor, channels, binwidth, n)
 
-            self.spot0.set_eventdivider(channel = channel, divider = divider)
-            self.config['channel{}'.format(channel)]['divider'] = divider
+        if save:
+            now = datetime.now()
+            dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+            np.save('output/correlated_width{}ps_n{}_{}'.format(binwidth, n, dt_string), hist_data)
 
-            self.spot0.set_led(channel = channel, turnon = turnon)
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return hist_data
 
 
     def streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):

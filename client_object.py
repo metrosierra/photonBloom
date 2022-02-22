@@ -230,7 +230,7 @@ class TagClient():
         the USB bandwidth, or the network bandwidth.""".format(self.overflows))
 
     ###subclassing the CountRate measurement class
-    def get_countrate(self, startfor = int(1E12), channels = [1, 2, 3, 4]):
+    def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4]):
 
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Countrate(self.client, channels) as cr:
@@ -244,11 +244,13 @@ class TagClient():
 
         return self.countrates
 
-    def get_count(self, channels = [1, 2], binwidth = 1000, n = 1000):
+    def get_count(self, startfor = int(1e12), channels = [1, 2], binwidth = 1000, n = 1000):
 
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Counter(self.client, channels, binwidth, n) as compte:
 
+            compte.startFor(startfor)
+            compte.waitUntilFinished()
             data = compte.getData()
             print(np.shape(data))
             print('Measured count of channel 1-4 in counts:')
@@ -259,13 +261,28 @@ class TagClient():
         return data
 
 
+    ### full auto and cross correlation
+    def get_correlation(self, startfor = int(1E12), channels = [1, 2], binwidth = 1000, n = 1000):
+
+        with TimeTagger.Correlation(self.client, channels, binwidth, n) as corr:
+            corr.startFor(startfor)
+            corr.waitUntilFinished()
+            data = corr.getData()
+            print(data)
+            # plt.plot(data)
+            # plt.show()
+
+        ### 1d np array (int)
+        return data
+
+
+
 
     ###subclassing the timetagstream class which is under measurement classes
     ###buffer size is memory buffer allocated that is read and destroyed with each
     ###getData() call.
     ###the rate of getData() call must be quick relative to buffer size to avoid
     ###data overflow
-
     ###startfor is in picoseconds
     def streamdata(self, startfor = int(5E11), channels = [1, 2, 3, 4], buffer_size = 1000000, update_rate = 0.0001, verbose = True):
 

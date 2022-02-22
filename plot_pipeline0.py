@@ -10,18 +10,19 @@ from scipy.stats import spearmanr
 import os
 from natsort import natsorted
 
-
-files = natsorted(os.listdir('data'))
+### the /data folder
+data_dir = 'data/'
+files = natsorted(os.listdir(data_dir))
 
 ###because of natsorted (natural sort), collected_blah.npy should be
 ###in front of tags_blah.npy because alphabetical order
 
-background_tags = np.load(files[0])
-tags_channel_list = np.load(files[1])
+background_tags = np.load(data_dir + files[0])
+tags_channel_list = np.load(data_dir + files[1])
 
-print(background_tags)
-
-print(tags_channel_list)
+# print(background_tags)
+#
+# print(tags_channel_list)
 
 print(len(background_tags))
 ##%%%%%%%%%%%%%
