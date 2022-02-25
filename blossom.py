@@ -39,9 +39,9 @@ class Blossom():
         print('{}V Received!'.format(trigger))
         deadtime = float(input('\nPlease input the deadtimes in picoseconds!\n'))
         print('{}ps Received!'.format(deadtime))
-        divider =  round(input('\nPlease input the divider integer!\n'))
-        print('{} divider order received!')
-        turnon = round(input('\nLED Power: 1/0????\n'))
+        divider =  round(int(input('\nPlease input the divider integer!\n')))
+        print('{} divider order received!'.format(divider))
+        turnon = round(int(input('\nLED Power: 1/0????\n')))
         print('Logic of {} received!'.format(turnon))
 
 
@@ -49,20 +49,20 @@ class Blossom():
 
             channel = round(channel)
             self.spot0.set_trigger(channel = channel, level = trigger)
-            self.config['channel{}'.format(channel)]['trigger'] = trigger
+            # self.config['channel{}'.format(channel)]['trigger'] = trigger
 
             self.spot0.set_deadtime(channel = channel, deadtime = deadtime)
-            self.config['channel{}'.format(channel)]['deadtime'] = deadtime
+            # self.config['channel{}'.format(channel)]['deadtime'] = deadtime
 
             self.spot0.set_eventdivider(channel = channel, divider = divider)
-            self.config['channel{}'.format(channel)]['divider'] = divider
+            # self.config['channel{}'.format(channel)]['divider'] = divider
 
-            self.spot0.set_led(channel = channel, turnon = turnon)
-            self.config['ledstate'] = turnon
+            self.spot0.set_led(turnon = turnon)
+            # self.config['ledstate'] = turnon
 
 
         print('Channels {} configured! Check out the current configuration below:'.format(channels))
-        print(json.dumps(self.config, indent = 4))
+        # print(json.dumps(self.config, indent = 4))
 
 
 
@@ -70,21 +70,21 @@ class Blossom():
 
     def set_autoconfig(self):
 
-        with open('configurations/tagger_config.json') as jsondata:
+        with open('configuration/tagger_config.json') as jsondata:
 
             self.config = json.load(jsondata)
-
+            print(self.config)
             for i in range(1,5):
 
                 trigger = self.config['channel{}'.format(i)]['trigger']
                 deadtime = self.config['channel{}'.format(i)]['deadtime']
                 divider = self.config['channel{}'.format(i)]['divider']
-                turnon = self.config['turnon']
+                turnon = self.config['ledstate']
 
                 self.spot0.set_trigger(channel = i, level = trigger)
-                self.spot0.set_deadtime(channel = i, level = deadtime)
+                self.spot0.set_deadtime(channel = i, deadtime = deadtime)
                 self.spot0.set_eventdivider(channel = i, divider = divider)
-                self.spot0.set_led(channel = i, turnon = turnon)
+                self.spot0.set_led(turnon = turnon)
 
         return self
 

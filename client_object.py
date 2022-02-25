@@ -177,7 +177,7 @@ class TagClient():
     ####about 100ns for ref
     def set_deadtime(self, channel, deadtime):
         self.client.setDeadtime(channel = channel, deadtime = deadtime)
-        print('\n\nDeadtime set at {}s for channels {}\n\n'.format(deadtime, channel))
+        print('\n\nDeadtime set at {}ps for channels {}\n\n'.format(deadtime, channel))
         return self
 
     def set_eventdivider(self, channel, divider):
@@ -264,7 +264,7 @@ class TagClient():
     ### full auto and cross correlation
     def get_correlation(self, startfor = int(1E12), channels = [1, 2], binwidth = 1000, n = 1000):
 
-        with TimeTagger.Correlation(self.client, channels, binwidth, n) as corr:
+        with TimeTagger.Correlation(self.client, channels[0], channels[1], binwidth, n) as corr:
             corr.startFor(startfor)
             corr.waitUntilFinished()
             data = corr.getData()

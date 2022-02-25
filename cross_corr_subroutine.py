@@ -68,37 +68,37 @@ channel2 = np.array(channel2)
 # print(channel1[:100], channel2[:100])
 
 # #%%%%%%%%%%%%%%%%%%
-#
+
+output1 = signal_bin_combing(channel1[:5000], bin_width = 200e3, sn_bin_no = (1, 499))
+# output2 = signal_bin_combing(channel2[:100000], bin_width = 5e6, sn_bin_no = (50, 450))
+
+output1 = np.array(output1)
+# output2 = np.array(output2)
+plt.plot(output1, label = 'channel1')
+# plt.plot(output2, label = 'channel2')
+plt.legend()
+plt.xlabel('Combing index')
+plt.ylabel('Average signal bin count')
+plt.savefig('output/duochannel_fine_combing_test1.eps', bbox = 'tight')
+plt.show()
+
+#%%%%%%%%%%%%%%%%%%
 # output1 = signal_bin_combing(channel1[:100000], bin_width = 0.5e5, sn_bin_no = (50, 450))
-# output2 = signal_bin_combing(channel2[:100000], bin_width = 0.5e5, sn_bin_no = (50, 450))
+# output2 = signal_bin_combing(channel1[100000:200000], bin_width = 0.5e5, sn_bin_no = (50, 450))
 #
 # output1 = np.array(output1)
 # output2 = np.array(output2)
-# plt.plot(output1, label = 'channel1')
-# plt.plot(output2, label = 'channel2')
+# plt.xlabel('Combing index')
+# plt.ylabel('Average signal bin count')
+# plt.plot(output1, label = 'channel1_firsthalf')
+# plt.savefig('output/channel11_fine_combing_periodicity_test1.eps', bbox = 'tight')
+# plt.show()
 # plt.legend()
 # plt.xlabel('Combing index')
 # plt.ylabel('Average signal bin count')
-# plt.savefig('output/duochannel_fine_combing_test1.eps', bbox = 'tight')
-# plt.show()
-
-#%%%%%%%%%%%%%%%%%%
-output1 = signal_bin_combing(channel1[:100000], bin_width = 0.5e5, sn_bin_no = (50, 450))
-output2 = signal_bin_combing(channel1[100000:200000], bin_width = 0.5e5, sn_bin_no = (50, 450))
-
-output1 = np.array(output1)
-output2 = np.array(output2)
-plt.xlabel('Combing index')
-plt.ylabel('Average signal bin count')
-plt.plot(output1, label = 'channel1_firsthalf')
-plt.savefig('output/channel11_fine_combing_periodicity_test1.eps', bbox = 'tight')
-plt.show()
-plt.legend()
-plt.xlabel('Combing index')
-plt.ylabel('Average signal bin count')
-plt.plot(output2, label = 'channel1_secondhalf')
-plt.legend()
-plt.savefig('output/channel12_fine_combing_periodicity_test1.eps', bbox = 'tight')
-
+# plt.plot(output2, label = 'channel1_secondhalf')
+# plt.legend()
+# plt.savefig('output/channel12_fine_combing_periodicity_test1.eps', bbox = 'tight')
+#
 
 # plt.show()
