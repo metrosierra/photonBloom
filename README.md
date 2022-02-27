@@ -1,2 +1,2 @@
-# photonPlexing (Provisional Name, can be changed)
+# photonBloom
 Photon Number Resolving Temporal Multiplex Detector Ecosystem
