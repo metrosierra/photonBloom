@@ -117,11 +117,11 @@ for index, channel in enumerate(crop_data):
     zero_value = min(data[index]) 
     
     for x in channel:
-        if x-start <= period+pulse_width:
+        if x-start <= period:
             data_array[-1].append(x-start)
         else:
             data_array.append([x-start])
-            start += period+pulse_width    
+            start += period   
     data_lists.append(data_array)  #save each array of data
 
     data_merge = list(chain(*data_array))
