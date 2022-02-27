@@ -37,8 +37,12 @@ Signal data
 data_tags = np.load('data/1uswidth_1khz_4vpp2voffset/collected_tags_25022022_18_05_18.npy')
 Dtags_channel_list = np.load('data/1uswidth_1khz_4vpp2voffset/tags_channel_list_25022022_18_05_18.npy')
 
+#data_tags = np.load('data/500ns_5khz_4vpp2voffset/collected_tags_25022022_18_06_08.npy')
+#Dtags_channel_list = np.load('data/500ns_5khz_4vpp2voffset/tags_channel_list_25022022_18_06_08.npy')
+
 #data_tags = np.load('data/50nswidth_50khz_4vpp2voffset/collected_tags_25022022_18_07_07.npy')
 #Dtags_channel_list = np.load('data/50nswidth_50khz_4vpp2voffset/tags_channel_list_25022022_18_07_07.npy')
+
 '''
 Background data
 '''
@@ -113,11 +117,11 @@ for index, channel in enumerate(crop_data):
     zero_value = min(data[index]) 
     
     for x in channel:
-        if x-start <= period:
+        if x-start <= period+pulse_width:
             data_array[-1].append(x-start)
         else:
             data_array.append([x-start])
-            start += period         
+            start += period+pulse_width    
     data_lists.append(data_array)  #save each array of data
 
     data_merge = list(chain(*data_array))
