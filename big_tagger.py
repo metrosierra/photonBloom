@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-import sys
 import TimeTagger
-import socket
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,6 +8,7 @@ import time
 
 import jitter_subroutine as jitty
 import mathematics as mathy
+from mathematics import percentsss, starsss
 
 class BaseTag():
     def __init__(self, tagger):
@@ -20,8 +19,11 @@ class BaseTag():
         self.istest = False
         self.eyesopen = True
 
-        self.get_methods_naive()
-        print('Here are the available class methods to be used in interactive mode')
+
+    @percentsss 
+    @starsss
+    def welcome_message(self):
+        print('Hello tout le monde!')
 
     def __enter__(self):
         return self
@@ -251,6 +253,15 @@ class BaseTag():
 
         ### 1d np array (int)
         return data
+
+#TODO!
+    def filewrite(self, startfor = int(5E11), channels = [1, 2, 3, 4]):
+        pass
+        synchronized = TimeTagger.SynchronizedMeasurements(tagger)
+
+        # This FileWriter will not start automatically, it waits for 'synchronized'
+        filewriter = TimeTagger.FileWriter(synchronized.getTagger(), tempdir.name + os.sep + "filewriter", channels)
+
 
     ###subclassing the timetagstream class which is under measurement classes
     ###buffer size is memory buffer allocated that is read and destroyed with each

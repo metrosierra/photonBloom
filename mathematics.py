@@ -1,13 +1,27 @@
 #!/usr/bin/env python3
 
-import sys
-import TimeTagger
-import socket
-
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
 from numba import njit
+
+################ for fun ######################
+def starsss(func):
+    def inner(*args, **kwargs):
+        print("*" * 30)
+        func(*args, **kwargs)
+        print("*" * 30)
+    return inner
+
+def percentsss(func):
+    def inner(*args, **kwargs):
+        print("%" * 30)
+        func(*args, **kwargs)
+        print("%" * 30)
+    return inner
+################ for fun ######################
+
+
 
 def gaussian(p, x):
     """
@@ -65,6 +79,20 @@ def numba_histogram(a, bins):
 
 def tag_fourchannel_splice(tags, channels, save = False):
 
+    channel1, channel2, channel3, channel4 = splice_aux(tags, channels)
+    if save:
+        now = datetime.now()
+        dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+        np.save('output/channel1_tags_{}'.format(dt_string), channel1)
+        np.save('output/channel2_tags_{}'.format(dt_string), channel2)
+        np.save('output/channel3_tags_{}'.format(dt_string), channel3)
+        np.save('output/channel4_tags_{}'.format(dt_string), channel4)
+
+    return channel1, channel2, channel3, channel4
+
+
+@njit
+def splice_aux(tags, channels):
     channel1 = []
     channel2 = []
     channel3 = []
@@ -85,13 +113,7 @@ def tag_fourchannel_splice(tags, channels, save = False):
     channel2 = np.array(channel2)
     channel3 = np.array(channel3)
     channel4 = np.array(channel4)
-
-    if save:
-        now = datetime.now()
-        dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-        np.save('output/channel1_tags_{}'.format(dt_string), channel1)
-        np.save('output/channel2_tags_{}'.format(dt_string), channel2)
-        np.save('output/channel3_tags_{}'.format(dt_string), channel3)
-        np.save('output/channel4_tags_{}'.format(dt_string), channel4)
-
+    
     return channel1, channel2, channel3, channel4
+
+

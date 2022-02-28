@@ -1,2 +1,5 @@
 # photonBloom
-Photon Number Resolving Temporal Multiplex Detector Ecosystem
+Photon-Number Resolving Spatial + Temporal Multiplex Detector Ecosystem
+
+
+

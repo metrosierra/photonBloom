@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 
-import sys
 import TimeTagger
 import socket
 
-if sys.version_info < (3, 0):  # Python 2.7
-    input = raw_input
-
-
+from mathmatics import starsss, percentsss
 
 class TagServer():
 
 
     def __init__(self, testsignal = False):
 
+
+        self.welcome_message()
         self.istest = testsignal
         print('\nInitialising Server Object for timetagger (assuming the physical tagger is paired with this PC)\n')
         self.tagger = TimeTagger.createTimeTagger()
@@ -30,6 +28,12 @@ class TagServer():
         self.start_server()
         print('Time Tagger server started successfully on the default port 41101.\n')
         print('This PC is ready to be interfaced with via server as if it is a physical time tagger!!!!!!')
+
+    @percentsss 
+    @starsss
+    def welcome_message(self):
+        print('Hello tout le monde!')
+        
 
     def start_server(self):
         self.tagger.startServer(TimeTagger.AccessMode.Control)
