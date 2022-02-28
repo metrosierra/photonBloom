@@ -82,5 +82,5 @@ if __name__ == '__main__':
             elif keyinput == 'stop_test' and tes.istest == True:
                 tes.set_testsignal(channels = [1, 2, 3 ,4])
 
-            elif keyinput == 'quit':
+            elif keyinput == 'quit' or keyinput == '':
                 alive = False

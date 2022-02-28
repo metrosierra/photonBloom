@@ -11,23 +11,15 @@ import time
 import jitter_subroutine as jitty
 import mathematics as mathy
 
-class TagClient():
-    def __init__(self, ip_address = '192.168.0.2'):
+class BaseTag():
+    def __init__(self, tagger):
 
+        self.client = tagger
         self.res_modes = {'Standard': TimeTagger.Resolution.Standard, 'HighResA': TimeTagger.Resolution.HighResA,
                      'HighResB': TimeTagger.Resolution.HighResB, 'HighResC': TimeTagger.Resolution.HighResC}
         self.istest = False
         self.eyesopen = True
-        self.target_ip = ip_address
-        print("Search for Time Taggers on the network...")
-        # Use the scanTimeTaggerServers() function to search for Time Tagger servers in the local network
-        self.serverlist = TimeTagger.scanTimeTaggerServers()
 
-        print("{} servers found.".format(len(self.serverlist)))
-        print(self.serverlist)
-
-        self.server_handshake()
-        print('\nTimetagger object initialising...assuming it is reading from PhotonSpot nanowire single-photon detector...will prompt about detector gain settings in a bit\n')
         self.get_methods_naive()
         print('Here are the available class methods to be used in interactive mode')
 
@@ -40,35 +32,22 @@ class TagClient():
 
 ########################### initialisation/info grabbing methods #################################
 
-    def server_handshake(self):
-        try:
-            self.target_server_info = TimeTagger.getTimeTaggerServerInfo('{}'.format(self.target_ip))
-            # print('Information about Time Tagger server on {}:'.format(self.target_ip))
-            # print(self.target_server_info)
 
-        except RuntimeError:
-            raise Exception('No Time Tagger server available on {} and the default port 41101.'.format(self.target_ip))
+    def get_info(self):
 
-        self.client = TimeTagger.createTimeTaggerNetwork(self.target_ip)
-        print('\nConnecting to the server on localhost.')
-        print('Server handshake successful!!!!!!!!!!!\n')
-        self.get_info(self.client)
-
-    def get_info(self, taggerself):
-
-        self.model = taggerself.getModel()
+        self.model = self.client.getModel()
 
         if self.model not in ['Time Tagger 20', 'Time Tagger Ultra']:
             raise ValueError('Device currently not supported')
 
-        self.license_info = taggerself.getLicenseInfo().split()
+        self.license_info = self.client.getLicenseInfo().split()
         self.edition = self.license_info[self.license_info.index('Edition:')+1]
         if self.edition == 'High-Res':
             self.modes = self.res_modes.keys()
         else:
             self.modes = [self.model + ' ' + self.edition]  # Only single mode available  # Only single mode available
         print('Connected to a ' + self.model + ' ' + self.edition)
-        print('Serial: {}'.format(taggerself.getSerial()))
+        print('Serial: {}'.format(self.client.getSerial()))
 
         return self
 

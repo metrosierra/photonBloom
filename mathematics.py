@@ -6,8 +6,7 @@ import socket
 
 import numpy as np
 import matplotlib.pyplot as plt
-import time
-
+from datetime import datetime
 from numba import njit
 
 def gaussian(p, x):
@@ -16,8 +15,6 @@ def gaussian(p, x):
     """
     mu, sigma, A = p
     return A/(np.sqrt(2*np.pi)*sigma)*np.exp(-0.5*(x-mu)**2/sigma**2)
-
-
 
 
 
@@ -64,3 +61,37 @@ def numba_histogram(a, bins):
             hist[int(bin)] += 1
 
     return hist, bin_edges
+
+
+def tag_fourchannel_splice(tags, channels, save = False):
+
+    channel1 = []
+    channel2 = []
+    channel3 = []
+    channel4 = []
+
+    for index, tag in enumerate(tags):
+
+        if channels[index] == 1.:
+            channel1.append(tag)
+        if channels[index] == 2.:
+            channel2.append(tag)
+        if channels[index] == 3.:
+            channel3.append(tag)
+        if channels[index] == 4.:
+            channel4.append(tag)
+
+    channel1 = np.array(channel1)
+    channel2 = np.array(channel2)
+    channel3 = np.array(channel3)
+    channel4 = np.array(channel4)
+
+    if save:
+        now = datetime.now()
+        dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+        np.save('output/channel1_tags_{}'.format(dt_string), channel1)
+        np.save('output/channel2_tags_{}'.format(dt_string), channel2)
+        np.save('output/channel3_tags_{}'.format(dt_string), channel3)
+        np.save('output/channel4_tags_{}'.format(dt_string), channel4)
+
+    return channel1, channel2, channel3, channel4

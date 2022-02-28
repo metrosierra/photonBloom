@@ -12,6 +12,8 @@ import jitter_subroutine as jitty
 import mathematics as mathy
 
 class TagClient():
+
+
     def __init__(self, ip_address = '192.168.0.2'):
 
         self.res_modes = {'Standard': TimeTagger.Resolution.Standard, 'HighResA': TimeTagger.Resolution.HighResA,
@@ -166,7 +168,7 @@ class TagClient():
 
 ######################   hardware configuration methods   ################################
 
-    ####about 0.8V for ref
+    ####about 0.08V for ref
     def set_trigger(self, channel, level):
         self.client.setTriggerLevel(channel = channel, voltage = level)
         print('\n\nTrigger level set at {}V for channels {}\n\n'.format(level, channel))
@@ -272,6 +274,9 @@ class TagClient():
 
         ### 1d np array (int)
         return data
+
+
+
 
     ###subclassing the timetagstream class which is under measurement classes
     ###buffer size is memory buffer allocated that is read and destroyed with each
