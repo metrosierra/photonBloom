@@ -3,7 +3,7 @@
 import TimeTagger
 import socket
 
-from mathmatics import starsss, percentsss
+from mathematics import starsss, percentsss
 
 class TagServer():
 

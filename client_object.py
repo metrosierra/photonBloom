@@ -25,10 +25,6 @@ class TagClient(BaseTag):
     def __enter__(self):
         return self
 
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-        TimeTagger.freeTimeTagger(self.client)
-        print('Ciao!')
-
 ########################### initialisation/info grabbing methods #################################
 
     def server_handshake(self):
@@ -43,7 +39,7 @@ class TagClient(BaseTag):
         self.client = TimeTagger.createTimeTaggerNetwork(self.target_ip)
         print('\nConnecting to the server on localhost.')
         print('Server handshake successful!!!!!!!!!!!\n')
-        self.get_info(self.client)
+        self.get_info()
 
         return self.client
 

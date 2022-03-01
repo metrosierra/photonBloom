@@ -19,9 +19,6 @@ class VirtualClient(BaseTag):
     def __enter__(self):
         return self
 
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-        TimeTagger.freeTimeTagger(self.client)
-        print('Ciao!')
 
     def make_virtualtagger(self):
 
