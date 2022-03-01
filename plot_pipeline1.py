@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import os
 from natsort import natsorted
 import cross_corr_subroutine as cross
-
+import mathematics as mathy
 
 data_dir = 'data/'
 folders = natsorted(os.listdir(data_dir))

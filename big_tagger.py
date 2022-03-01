@@ -68,12 +68,12 @@ class BaseTag():
 
         # We loop over the different HighRes modes, if available. Or only use the single available mode.
         for i, mode in enumerate(self.modes):
-            if edition == 'High-Res':
+            if self.edition == 'High-Res':
                 print('Setting the Time Tagger into {} mode'.format(mode))
                 # We need to first free the Time Tagger to initiate it again with a different HighRes modes
                 TimeTagger.freeTimeTagger(self.client)
                 self.client = TimeTagger.createTimeTaggerNetwork(address = self.target_ip, resolution = self.res_modes[mode])
-            print('Single channel RMS jitter is specified with {} ps'.format(jitter_specs_rms[mode]))
+            print('Single channel RMS jitter is specified with {} ps'.format(jitty.jitter_specs_rms[mode]))
             if 'HighRes' in mode:
                 channels_available = self.client.getChannelList(TimeTagger.ChannelEdge.HighResRising)
             else:
@@ -97,7 +97,7 @@ class BaseTag():
             for j, (ind, dat) in enumerate(zip(indices, data)):
                 std, mean = jitty.get_jitter_and_delay(ind, dat)
                 measured_jitters[i][j] = std
-                within_specs[i][j] = std < jitter_specs_rms[mode]
+                within_specs[i][j] = std < jitty.jitter_specs_rms[mode]
                 print('channel numbers ' + measured_channels[i][j] +
                       ': measured single channel RMS jitter: {} ps, within specifications: {}'.format(std, within_specs[i][j]))
                 if j == len(data)-1:  # make only label for last curve to not clutter the plot.
@@ -105,11 +105,11 @@ class BaseTag():
                 else:
                     label = None
                 ax.plot(ind-mean, dat/1e3, label = label)
-            ax.set_xlim((-jitter_specs_rms[mode]*5, jitter_specs_rms[mode]*5))
+            ax.set_xlim((-jitty.jitter_specs_rms[mode]*5, jitty.jitter_specs_rms[mode]*5))
             ax.set_xlabel('Time (ps)')
             ax.set_ylabel('kCounts')
 
-            ax.plot(ind, mathy.gaussian([0, jitter_specs_rms[mode]*np.sqrt(2), np.sum(data)/len(data)/1e3], ind),
+            ax.plot(ind, mathy.gaussian([0, jitty.jitter_specs_rms[mode]*np.sqrt(2), np.sum(data)/len(data)/1e3], ind),
                     color = 'k', ls = '--', label = 'specified jitter')
 
             ax.set_title('Visual comparison of the measured two-channel jitters to specifications')
@@ -121,9 +121,9 @@ class BaseTag():
 
         # Summary of the measured RMS jitters for a single channel in a table
         colLabels = ['single channel\nRMS jitter (ps)', 'within\nspecifications']
-        fig, axes = plt.subplots(1, len(modes), figsize=(len(modes)*7, len(measured_channels[0])/1.6+0.7))
+        fig, axes = plt.subplots(1, len(self.modes), figsize=(len(self.modes)*7, len(measured_channels[0])/1.6+0.7))
         axes = np.atleast_1d(axes)
-        for i in np.arange(len(modes)):
+        for i in np.arange(len(self.modes)):
             content = np.hstack((measured_jitters[i].reshape(-1, 1), within_specs[i].reshape(-1, 1)))
             colors = np.full_like(content, 'white')
             colors[within_specs[i] == True, 1] = 'C2'
@@ -133,12 +133,12 @@ class BaseTag():
             the_table.scale(0.78, 2.2)
             axes[i].axis('tight')
             axes[i].axis('off')
-            if edition == 'High-Res':
+            if self.edition == 'High-Res':
                 axes[i].set_title(list(self.res_modes.keys())[i], size = 12, pad = 7)
             else:
-                axes[i].set_title(model + ' ' + edition, size = 12, pad = 7)
+                axes[i].set_title(self.model + ' ' + self.edition, size = 12, pad = 7)
         axes[0].text(-0.05, 0.5, 'channel combination', rotation = 90, transform = axes[0].transAxes, va = 'center', size = 12)
-        if edition == 'High-Res':
+        if self.edition == 'High-Res':
             figManager = plt.get_current_fig_manager()
             figManager.window.showMaximized()
         plt.show()
@@ -147,7 +147,7 @@ class BaseTag():
 
 ######################   hardware configuration methods   ################################
 
-    ####about 0.8V for ref
+    ####about 0.08V for ref
     def set_trigger(self, channel, level):
         self.client.setTriggerLevel(channel = channel, voltage = level)
         print('\n\nTrigger level set at {}V for channels {}\n\n'.format(level, channel))
@@ -257,10 +257,10 @@ class BaseTag():
 #TODO!
     def filewrite(self, startfor = int(5E11), channels = [1, 2, 3, 4]):
         pass
-        synchronized = TimeTagger.SynchronizedMeasurements(tagger)
+        synchronized = TimeTagger.SynchronizedMeasurements(self.client)
 
         # This FileWriter will not start automatically, it waits for 'synchronized'
-        filewriter = TimeTagger.FileWriter(synchronized.getTagger(), tempdir.name + os.sep + "filewriter", channels)
+        filewriter = TimeTagger.FileWriter(synchronized.getTagger(), "filewriter", channels)
 
 
     ###subclassing the timetagstream class which is under measurement classes
@@ -324,9 +324,3 @@ class BaseTag():
                 chunk_counter += 1
 
         return collected_tags[1:], tags_channel_list[1:]
-
-
-if __name__ == '__main__':
-    with TagClient() as tcee:
-        print("\n\n################## With TagClient as tcee ###################\n\n")
-        import code; code.interact(local=locals())

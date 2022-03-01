@@ -32,6 +32,7 @@ def gaussian(p, x):
 
 
 
+
 @njit
 def get_bin_edges(a, bins):
     bin_edges = np.zeros((bins+1,), dtype=np.float64)
