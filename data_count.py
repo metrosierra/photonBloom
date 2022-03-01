@@ -18,7 +18,7 @@ from scipy.optimize import curve_fit
 import matplotlib.cm as cm
 from itertools import chain
 import os
-from natsort import natsorted
+# from natsort import natsorted
 
 '''
 Import data files
@@ -34,8 +34,8 @@ Import data files
 '''
 Signal data
 '''
-data_tags = np.load('data/1uswidth_1khz_4vpp2voffset/collected_tags_25022022_18_05_18.npy')
-Dtags_channel_list = np.load('data/1uswidth_1khz_4vpp2voffset/tags_channel_list_25022022_18_05_18.npy')
+data_tags = np.load('/Users/sabrinaperrenoud/Desktop/BscProject/data/1uswidth_1khz_4vpp2voffset/collected_tags_25022022_18_05_18.npy')
+Dtags_channel_list = np.load('/Users/sabrinaperrenoud/Desktop/BscProject/data/1uswidth_1khz_4vpp2voffset/tags_channel_list_25022022_18_05_18.npy')
 
 #data_tags = np.load('data/500ns_5khz_4vpp2voffset/collected_tags_25022022_18_06_08.npy')
 #Dtags_channel_list = np.load('data/500ns_5khz_4vpp2voffset/tags_channel_list_25022022_18_06_08.npy')
@@ -143,5 +143,5 @@ for index, channel in enumerate(crop_data):
     plt.title('Histogram for Channel {channel} with bin={bins} over {time} second'.format(channel=index+1,bins=bin_number,time=time_interval*1E-12))
     plt.xlim(0,period*2)
     plt.grid()
-    plt.savefig('output/histogram_1uswidth_1khz_4vpp2voffset_channel'+channel_no+'.eps')
+    # plt.savefig('output/histogram_1uswidth_1khz_4vpp2voffset_channel'+channel_no+'.eps')
     plt.show()
