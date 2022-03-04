@@ -2,7 +2,7 @@
 import numpy as np
 from numba import njit, prange
 
-import mathematics as mathy
+import subroutines.mathematics as mathy
 
 ###test
 @njit(parallel = True)

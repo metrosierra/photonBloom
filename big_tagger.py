@@ -6,9 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
-import jitter_subroutine as jitty
-import mathematics as mathy
-from mathematics import percentsss, starsss
+import subroutines.jitter_subroutine as jitty
+import subroutines.mathematics as mathy
+from subroutines.mathematics import percentsss, starsss
 
 class BaseTag():
     def __init__(self, tagger):

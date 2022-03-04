@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 
-
 ###%%%%%%%%%%%%%%%%%%%%%%
 import TimeTagger as tt
 import numpy as np
 from datetime import datetime
+import time
 import json
+import threading
 
 import matplotlib.pyplot as plt
 
 from client_object import TagClient
 # from live_plot import bloomPlot
+from subroutines.mathematics import percentsss, starsss
 
+@percentsss
+@starsss
+def bienvenue():
+    print('This is the datalogger script for the Photon Spot Nanowire detector, where the Blossom class instantiates client objects and plotting objects to achieve datalogging UX')
 
+bienvenue()
 
 ###loosely datalogger/plotter class
 class Blossom():
@@ -122,36 +129,36 @@ class Blossom():
         self.plot_freeze = False
 
     def live_plot(self, refresh_time):
+        pass
+        # self.frame = 0
 
-        self.frame = 0
+        # self.plotting = True
+        # self.save = True
 
-        self.plotting = True
-        self.save = True
+        # #x, y = something
 
-        #x, y = something
+        # ylabel = 'Signal Counts'
+        # xlabel = 'Time Trace (s)'
+        # title = 'Timetagger Count Acquisition'
+        # refresh_time = refresh_time
 
-        ylabel = 'Signal Counts'
-        xlabel = 'Time Trace (s)'
-        title = 'Timetagger Count Acquisition'
-        refresh_time = refresh_time
+        # with bloomPlot(title, refresh_time) as bp:
 
-        with bloomPlot(title, refresh_time) as bp:
+        #     bp.set_xlabel(xlabel)
+        #     bp.set_ylabel(ylabel)
+        #     bp.x = x
+        #     bp.y = y
+        #     start = time.time()
+        #     while self.plotting:
+        #         if not self.plot_freeze:
+        #             x, y = target_func(self.save)
+        #             bp.y = y
+        #         try:
+        #             bp.update()
+        #         except:
+        #             print('Data error, buffeting')
 
-            bp.set_xlabel(xlabel)
-            bp.set_ylabel(ylabel)
-            bp.x = x
-            bp.y = y
-            start = time.time()
-            while self.plotting:
-                if not self.plot_freeze:
-                    x, y = target_func(self.save)
-                    bp.y = y
-                try:
-                    bp.update()
-                except:
-                    print('Data error, buffeting')
-
-                self.frame += 1
+        #         self.frame += 1
 
 
 
