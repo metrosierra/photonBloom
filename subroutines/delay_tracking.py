@@ -7,29 +7,29 @@ from natsort import natsorted
 import subroutines.mathematics as mathy
 
 
-'''
-Load data
-'''
+# '''
+# Load data
+# '''
 
-data_dir = 'data/'
-folders = natsorted(os.listdir(data_dir))
-try: 
-    folders.remove('archive')
-except:
-    pass
-print(folders)
+# data_dir = 'data/'
+# folders = natsorted(os.listdir(data_dir))
+# try: 
+#     folders.remove('archive')
+# except:
+#     pass
+# print(folders)
 
-dossier = folders[1]
-files = natsorted(os.listdir(data_dir + dossier))
+# dossier = folders[1]
+# files = natsorted(os.listdir(data_dir + dossier))
 
-tags = np.load(data_dir + dossier + '/' + files[0])
-tags_channel_list = np.load(data_dir + dossier + '/' + files[1])
-
-
-channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list)
+# tags = np.load(data_dir + dossier + '/' + files[0])
+# tags_channel_list = np.load(data_dir + dossier + '/' + files[1])
 
 
-data = [channel1,channel2]
+# channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list)
+
+
+# data = [channel1,channel2]
 
 
 
@@ -57,8 +57,7 @@ def data_crop(time_interval,data):
         if max(channel) == max_time:
             print('Last detection in channel {channel} after time t={t} s.'.format(channel=index+1, t=net_time*1E-12))
     
-    return crop_data
-
+    return np.array(crop_data)
 
 def pulse_delay(photonN, delay_lengths, pulse_width, pulse_frequency):
     '''
@@ -78,17 +77,17 @@ def pulse_delay(photonN, delay_lengths, pulse_width, pulse_frequency):
     
     return pulse_delay
 
-'''
-Calling functions
-'''
+# '''
+# Calling functions
+# '''
 
-time_interval = 1E12
-data_crop(time_interval,data)
+# time_interval = 1E12
+# data_crop(time_interval,data)
 
 
-photonN=[4,8,16]
-delay_lengths = [70,210,490] #in metres
-pulse_width = 50*1E-9 #in seconds
-pulse_frequency = 1000000 #in Hz
+# photonN=[4,8,16]
+# delay_lengths = [70,210,490] #in metres
+# pulse_width = 50*1E-9 #in seconds
+# pulse_frequency = 1000000 #in Hz
 
-pulse_delay(photonN, delay_lengths, pulse_width, pulse_frequency)
+# pulse_delay(photonN, delay_lengths, pulse_width, pulse_frequency)

@@ -9,6 +9,7 @@ from natsort import natsorted
 
 import subroutines.cross_corr_subroutine as cross
 import subroutines.mathematics as mathy
+from subroutines.delay_tracking import data_crop
 
 data_dir = 'data/'
 folders = natsorted(os.listdir(data_dir))
@@ -21,7 +22,7 @@ print(folders)
 ###because of natsorted (natural sort), collected_blah.npy should be
 ###in front of tags_blah.npy because alphabetical order
 
-dossier = folders[7]
+dossier = folders[5]
 files = natsorted(os.listdir(data_dir + dossier))
 
 tags = np.load(data_dir + dossier + '/' + files[0])
@@ -29,11 +30,13 @@ tags_channel_list = np.load(data_dir + dossier + '/' + files[1])
 
 
 channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list)
+data=[channel1,channel2]
+channel1, channel2 = data_crop(30e12, data)
 
 bins = 10000
 max_delay = 30e6
 
-counts, midpoints = cross.cross_corr(channel1, channel2, bins = bins, max_delay = max_delay)
+counts, midpoints = cross.cross_corr(np.array(channel1), np.array(channel2), bins = bins, max_delay = max_delay)
 midpoints *= 1e-6
 plt.plot(midpoints, counts)
 plt.xlabel('Delay ($\mu$s)')
