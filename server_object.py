@@ -66,6 +66,8 @@ class TagServer():
     def __enter__(self):
         return self
 
+    @percentsss
+    @starsss
     def __exit__(self, exception_type, exception_value, exception_traceback):
         self.tagger.stopServer()
         TimeTagger.freeTimeTagger(self.tagger)

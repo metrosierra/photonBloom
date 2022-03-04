@@ -323,4 +323,5 @@ class BaseTag():
                 event_counter += data.size
                 chunk_counter += 1
 
+        print(missed_events, 'events missed!!!')
         return collected_tags[1:], tags_channel_list[1:]

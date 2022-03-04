@@ -17,11 +17,11 @@ try:
 except:
     pass
 print(folders)
-
+#%%
 ###because of natsorted (natural sort), collected_blah.npy should be
 ###in front of tags_blah.npy because alphabetical order
 
-dossier = folders[1]
+dossier = folders[7]
 files = natsorted(os.listdir(data_dir + dossier))
 
 tags = np.load(data_dir + dossier + '/' + files[0])
@@ -30,17 +30,16 @@ tags_channel_list = np.load(data_dir + dossier + '/' + files[1])
 
 channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list)
 
-bins = 150000
-max_delay = 1.5e8
+bins = 10000
+max_delay = 30e6
 
 counts, midpoints = cross.cross_corr(channel1, channel2, bins = bins, max_delay = max_delay)
 midpoints *= 1e-6
 plt.plot(midpoints, counts)
 plt.xlabel('Delay ($\mu$s)')
 plt.ylabel('Count')
-
 plt.savefig('output/cross_corr_channel12_{}_bin{}_maxdelay{}.png'.format(dossier, bins, max_delay))
-plt.xlim([-0.2, 0.2])
+plt.xlim([-1, 1])
 plt.savefig('output/cross_corr_channel12_{}_bin{}_maxdelay{}_zoomed.png'.format(dossier, bins, max_delay))
 #%%
 

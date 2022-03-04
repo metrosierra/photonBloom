@@ -1,9 +1,10 @@
-
+#!/usr/bin/env python3
+#%%
 import numpy as np
 from itertools import chain
 import os
 from natsort import natsorted
-import mathematics as mathy
+import subroutines.mathematics as mathy
 
 
 '''
@@ -72,6 +73,7 @@ def pulse_delay(photonN, delay_lengths, pulse_width, pulse_frequency):
     pulse_delay=[L/cg for L in delay_lengths]
     
     for i,L in enumerate(delay_lengths):
+
         print('Photon{N} pulse delay = {pd} seconds with delay length = {L} m.'.format(N=photonN[i],L=L,pd=pulse_delay[i]))
     
     return pulse_delay
@@ -87,6 +89,6 @@ data_crop(time_interval,data)
 photonN=[4,8,16]
 delay_lengths = [70,210,490] #in metres
 pulse_width = 50*1E-9 #in seconds
-pulse_frequency = 50000 #in Hz
+pulse_frequency = 1000000 #in Hz
 
 pulse_delay(photonN, delay_lengths, pulse_width, pulse_frequency)
