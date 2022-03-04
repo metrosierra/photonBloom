@@ -18,7 +18,6 @@ except:
     pass
 print(folders)
 
-
 dossier = folders[1]
 files = natsorted(os.listdir(data_dir + dossier))
 
