@@ -31,8 +31,6 @@ def gaussian(p, x):
     return A/(np.sqrt(2*np.pi)*sigma)*np.exp(-0.5*(x-mu)**2/sigma**2)
 
 
-
-
 @njit
 def get_bin_edges(a, bins):
     bin_edges = np.zeros((bins+1,), dtype=np.float64)
