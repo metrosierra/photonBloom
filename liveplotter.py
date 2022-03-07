@@ -2,7 +2,6 @@
 
 
 ###%%%%%%%%%%%%%%%%%%%%%%
-import threading
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
@@ -10,9 +9,9 @@ import pyqtgraph as pg
 import numpy as np
 import time
 
-class bloomPlot():
+class Plumeria():
 
-    def __init__(self, title = 'Live Plot', refresh_time = 0.0001):
+    def __init__(self, title = 'Live Plot', refresh_interval = 0.0001, initial_xydata = [[0.], [0.]]):
 
         # instantiate the window object
         self.app = QtGui.QApplication([])
@@ -32,7 +31,15 @@ class bloomPlot():
         self.styles = {'color':'y', 'font-size':'20px'}
         self.graph.showGrid(x = True, y = True)
 
-        self.refresh_interval = refresh_time
+        self.set_data(initial_xydata)
+        self.refresh_interval = refresh_interval
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        print('Plotting Object Destroyed')
+        print('Ciao bella ciao bella ciao ciao ciao')
 
 
     def set_xlabel(self, label):
@@ -59,16 +66,10 @@ class bloomPlot():
         QtGui.QApplication.processEvents() # This command initiates a refresh
         time.sleep(self.refresh_interval)
 
-    def __enter__(self):
-        return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-
-        print('Plotting Object Destroyed')
-        print('Ciao bella ciao bella ciao ciao ciao')
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        bplot = bloomPlot()
+        plume = Plumeria()

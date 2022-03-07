@@ -16,8 +16,14 @@ class BaseTag():
         self.client = tagger
         self.res_modes = {'Standard': TimeTagger.Resolution.Standard, 'HighResA': TimeTagger.Resolution.HighResA,
                      'HighResB': TimeTagger.Resolution.HighResB, 'HighResC': TimeTagger.Resolution.HighResC}
+
         self.istest = False
         self.eyesopen = True
+
+        self.corr_running = False
+        self.allrate_runnning = False 
+        self.countrate_running = False
+        self.stream_running = False
 
 
     @percentsss 
@@ -208,51 +214,90 @@ class BaseTag():
         Overflows are caused by exceeding the processing power (CPU) on the client and/or the server,
         the USB bandwidth, or the network bandwidth.""".format(self.overflows))
 
-    ###subclassing the CountRate measurement class
-    def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4]):
-
-        # With the TimeTaggerNetwork object, we can set up a measurement as usual
-        with TimeTagger.Countrate(self.client, channels) as cr:
-
-            cr.startFor(startfor)
-            cr.waitUntilFinished()
-            self.countrates = cr.getData()
-
-            print('Measured count rates of channel 1-4 in counts/s:')
-            print(self.countrates)
-
-        return self.countrates
 
     def get_count(self, startfor = int(1e12), channels = [1, 2], binwidth = 1000, n = 1000):
 
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Counter(self.client, channels, binwidth, n) as compte:
 
-            compte.startFor(startfor)
-            compte.waitUntilFinished()
-            data = compte.getData()
-            print(np.shape(data))
-            print('Measured count of channel 1-4 in counts:')
-            print(data)
-            plt.plot(data)
-            plt.show()
+            if startfor == -1 and self.count_running == False:
+                self.count_running = True
+                compte.start()
+                
+                while self.countrate_running:
+                    self.countrate = compte.getData(rolling = True)
 
-        return data
+                compte.stop()
 
+            elif startfor == -1 and self.allrate_running == True:
+                print('Counter object instance already exists!!! Please destroy it first')
+                self.countrate = 0.
+
+            elif startfor > 0.:
+
+                compte.startFor(startfor)
+                compte.waitUntilFinished()
+                self.countrate = compte.getData()
+                print(np.shape(self.countrate))
+                print('Measured count of channel 1-4 in counts:')
+                print(self.countrate)
+
+        return self.countrate
+
+
+    ###subclassing the CountRate measurement class
+    def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4]):
+
+        # With the TimeTaggerNetwork object, we can set up a measurement as usual
+        with TimeTagger.Countrate(self.client, channels) as cr:
+
+            if startfor == -1 and self.allrate_running == False:
+                self.allrate_running = True
+                cr.start()
+                
+                while self.allrate_running:
+                    self.allrate = cr.getData()
+                cr.stop()
+
+            elif startfor == -1 and self.allrate_running == True:
+                print('Countrate object instance already exists!!! Please destroy it first')
+                self.allrate = 0.
+
+            elif startfor > 0.:
+
+                cr.startFor(startfor)
+                cr.waitUntilFinished()
+                self.allrate = cr.getData()
+
+                print('Measured total total count rate of channel 1-4 in counts/s:')
+                print(self.allrate)
+
+        return self.allrate
 
     ### full auto and cross correlation
     def get_correlation(self, startfor = int(1E12), channels = [1, 2], binwidth = 1000, n = 1000):
 
         with TimeTagger.Correlation(self.client, channels[0], channels[1], binwidth, n) as corr:
-            corr.startFor(startfor)
-            corr.waitUntilFinished()
-            data = corr.getData()
-            print(data)
-            # plt.plot(data)
-            # plt.show()
+            
+            if startfor == -1 and self.corr_running == False:
+                self.corr_running = True
+                corr.start()
+                while self.corr_running:
+                    self.corr_counts = corr.getData()
+                corr.stop()
+
+            elif startfor == -1 and self.corr_running == True:
+                print('Correlation object instance already exists!!! Please destroy it first')
+                self.corr_counts = np.array([0.])
+
+            elif startfor > 0.:
+                corr.startFor(startfor)
+                corr.waitUntilFinished()
+                self.corr_counts = corr.getData()
+                print(self.corr_counts)
 
         ### 1d np array (int)
-        return data
+        return self.corr_counts
 
 #TODO!
     def filewrite(self, startfor = int(5E11), channels = [1, 2, 3, 4]):
@@ -276,52 +321,57 @@ class BaseTag():
         print('---------+-------------------+---------+----------------+--------------')
         event_name = ['0 (TimeTag)', '1 (Error)', '2 (OverflowBegin)', '3 (OverflowEnd)', '4 (MissedEvents)']
 
-        self.stream = TimeTagger.TimeTagStream(tagger = self.client,
-                                          n_max_events = buffer_size,
-                                          channels = channels)
 
-        self.stream.startFor(startfor)
-        event_counter = 0
-        chunk_counter = 1
+        with TimeTagger.TimeTagStream(tagger = self.client, n_max_events = buffer_size, channels = channels) as stream:
 
-        collected_tags = np.array([1.])
-        tags_channel_list = np.array([1.])
+            if startfor == -1:
+                pass
+                # stream.start()
+            
+            elif startfor > 0.:
+                stream.startFor(startfor)
 
-        while self.stream.isRunning():
-            # getData() does not return timestamps, but an instance of TimeTagStreamBuffer
-            # that contains more information than just the timestamp
-            data = self.stream.getData()
-            print(data.getTimestamps())
-            # print(len(data.getTimestamps()))
-            time.sleep(update_rate)
-            # print(data.getEventTypes())
-            if data.size:
-                # With the following methods, we can retrieve a numpy array for the particular information:
-                channel = data.getChannels()            # The channel numbers
-                timestamps = data.getTimestamps()       # The timestamps in ps
-                overflow_types = data.getEventTypes()   # TimeTag = 0, Error = 1, OverflowBegin = 2, OverflowEnd = 3, MissedEvents = 4
-                missed_events = data.getMissedEvents()  # The numbers of missed events in case of overflow
+            event_counter = 0
+            chunk_counter = 1
 
-                collected_tags = np.concatenate((collected_tags, timestamps))
-                tags_channel_list = np.concatenate((tags_channel_list, channel))
+            collected_tags = np.array([1.])
+            tags_channel_list = np.array([1.])
 
-                if verbose:
-                    print(format_string.format(*" "*5))
-                    heading = ' Start of data chunk {} with {} events '.format(chunk_counter, data.size)
-                    extra_width = 69 - len(heading)
-                    print('{} {} {}'.format("="*(extra_width//2), heading, "="*(extra_width - extra_width//2)))
-                    print(format_string.format(*" "*5))
+            while stream.isRunning():
+                # getData() does not return timestamps, but an instance of TimeTagStreamBuffer
+                # that contains more information than just the timestamp
+                data = stream.getData()
+                print(data.getTimestamps())
+                # print(len(data.getTimestamps()))
+                time.sleep(update_rate)
+                # print(data.getEventTypes())
+                if data.size:
+                    # With the following methods, we can retrieve a numpy array for the particular information:
+                    channel = data.getChannels()            # The channel numbers
+                    timestamps = data.getTimestamps()       # The timestamps in ps
+                    overflow_types = data.getEventTypes()   # TimeTag = 0, Error = 1, OverflowBegin = 2, OverflowEnd = 3, MissedEvents = 4
+                    missed_events = data.getMissedEvents()  # The numbers of missed events in case of overflow
 
-                    print(format_string.format(event_counter + 1, event_name[overflow_types[0]], channel[0], timestamps[0], missed_events[0]))
-                    if data.size > 1:
-                        print(format_string.format(event_counter + 1, event_name[overflow_types[1]], channel[1], timestamps[1], missed_events[1]))
-                    if data.size > 3:
-                        print(format_string.format(*["..."]*5))
-                    if data.size > 2:
-                        print(format_string.format(event_counter + data.size, event_name[overflow_types[-1]], channel[-1], timestamps[-1], missed_events[-1]))
+                    collected_tags = np.concatenate((collected_tags, timestamps))
+                    tags_channel_list = np.concatenate((tags_channel_list, channel))
 
-                event_counter += data.size
-                chunk_counter += 1
+                    if verbose:
+                        print(format_string.format(*" "*5))
+                        heading = ' Start of data chunk {} with {} events '.format(chunk_counter, data.size)
+                        extra_width = 69 - len(heading)
+                        print('{} {} {}'.format("="*(extra_width//2), heading, "="*(extra_width - extra_width//2)))
+                        print(format_string.format(*" "*5))
+
+                        print(format_string.format(event_counter + 1, event_name[overflow_types[0]], channel[0], timestamps[0], missed_events[0]))
+                        if data.size > 1:
+                            print(format_string.format(event_counter + 1, event_name[overflow_types[1]], channel[1], timestamps[1], missed_events[1]))
+                        if data.size > 3:
+                            print(format_string.format(*["..."]*5))
+                        if data.size > 2:
+                            print(format_string.format(event_counter + data.size, event_name[overflow_types[-1]], channel[-1], timestamps[-1], missed_events[-1]))
+
+                    event_counter += data.size
+                    chunk_counter += 1
 
         print(missed_events, 'events missed!!!')
         return collected_tags[1:], tags_channel_list[1:]
