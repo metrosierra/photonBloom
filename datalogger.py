@@ -49,7 +49,7 @@ class Lotus():
     @starsss
     def __exit__(self, exception_type, exception_value, exception_traceback):
         print('Ciao bella ciao bella ciao ciao')
-        del self.spot0
+        self.spot0.exit(exception_type, exception_value, exception_traceback)
   
 ####################### Hardware config macros #######################
 
@@ -105,9 +105,14 @@ class Lotus():
 
         return self
 
-    def stop_plot(self):
+    def stop_plot(self, target):
         self.plotting = False
+        if target == 'counter':
+            self.spot0.count_running = False 
 
+        elif target == 'correlation':
+            self.spot0.corr_running = False 
+            
 
 ####################### Measurement + Plotting Macros #######################
 

@@ -27,7 +27,7 @@ def signal_bin_combing(data, bin_width, sig_bin_no = 1, period_no = 100):
 
         output_data.append(sig_count/period_cycles)
 
-    return output_data
+    return np.array(output_data, dtype = np.float64)
 
 @njit
 def cross_corr(master, slave, bins, max_delay):

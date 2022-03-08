@@ -9,8 +9,7 @@ from natsort import natsorted
 
 import subroutines.cross_corr_subroutine as cross
 import subroutines.mathematics as mathy
-from subroutines.delay_tracking import data_crop
-
+import subroutines.delay_tracking as deli
 data_dir = 'data/'
 folders = natsorted(os.listdir(data_dir))
 try:
@@ -31,7 +30,7 @@ tags_channel_list = np.load(data_dir + dossier + '/' + files[1])
 
 channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list)
 data=[channel1,channel2]
-channel1, channel2 = data_crop(30e12, data)
+channel1, channel2 = deli.data_crop(30e12, data)
 
 bins = 10000
 max_delay = 30e6
