@@ -33,31 +33,58 @@ import subroutines.mathematics as mathy
 
 
 
-def data_crop(time_interval,data):
+def data_crop(data, time_interval, verbose = False):
     
     '''
     Takes data slice over selected time interval in seconds.
     '''
 
-    crop_data=[]
-    for index, channel in enumerate(data):
-        start=min(chain(data[0],data[1]))
-        crop_data.append([int(i) for i in channel if int(i) <= int(time_interval+start)])
-        
+    output = []
+
+    for channel in data:
+
+        start = channel[0]
+        output.append(channel[channel < time_interval + start])
+
     
-    max_time = max(chain(crop_data[0],crop_data[1]))
-    min_time = min(chain(crop_data[0],crop_data[1]))
-    net_time = max_time-min_time
+    max_time = max([channel[-1] for channel in output])
+    min_time = min([channel[0] for channel in output])
+    net_time = max_time - min_time
     print('Sample time interval = {t} seconds'.format(t=net_time*1E-12))
     
-    for index, channel in enumerate(crop_data):
-        print('{N} signals detected in channel {channel} in {t} seconds.'.format(N=len(channel),channel=index+1,t=net_time*1E-12))
-        if min(channel) == min_time:
-            print('First detection in channel {channel} with timestamp t={t} ps.'.format(channel=index+1,t=start))
-        if max(channel) == max_time:
-            print('Last detection in channel {channel} after time t={t} s.'.format(channel=index+1, t=net_time*1E-12))
-    
-    return np.array(crop_data)
+    if verbose:
+        for index, channel in enumerate(output):
+            print('{N} signals detected in channel {channel} in {t} seconds.'.format(N=len(channel),channel=index+1,t=net_time*1E-12))
+            if min(channel) == min_time:
+                print('First detection in channel {channel} with timestamp t={t} ps.'.format(channel=index+1,t=start))
+            if max(channel) == max_time:
+                print('Last detection in channel {channel} after time t={t} s.'.format(channel=index+1, t=net_time*1E-12))
+        
+    return output
+
+
+def channel_chop(channel_data, chop_time):
+
+    offset = channel_data[0]
+    totaltime = channel_data[-1] - offset
+    print(totaltime)
+    chops_no = round(totaltime / chop_time)
+    output = []
+    for i in range(chops_no):
+        temp = channel_data.copy()
+        start = chop_time * i 
+        end = chop_time * (i+1)
+        temp = temp[temp < end + offset]
+        temp = temp[temp > start + offset]
+        output.append(temp)
+
+    return output 
+
+
+
+
+
+
 
 def pulse_delay(photonN, delay_lengths, pulse_width, pulse_frequency):
     '''

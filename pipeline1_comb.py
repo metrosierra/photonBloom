@@ -43,9 +43,6 @@ for i in range(5):
     output1 = cross.signal_bin_combing(channel1[:index], bin_width = width, sig_bin_no = signo, period_no = peno)
     output2 = cross.signal_bin_combing(channel2[:index], bin_width = width, sig_bin_no = signo, period_no = peno)
 
-    output1 = np.array(output1)
-    output2 = np.array(output2)
-
     plt.plot(output1, label = 'channel1')
     plt.legend()
     plt.xlabel('Combing index')

@@ -25,7 +25,7 @@ def signal_bin_combing(data, bin_width, sig_bin_no = 1, period_no = 100):
             start_index = q*(period_no-1) + i
             sig_count += np.sum(counts[start_index : start_index + sig_bin_no])
 
-        output_data.append(sig_count/period_cycles)
+        output_data.append(sig_count)
 
     return np.array(output_data, dtype = np.float64)
 

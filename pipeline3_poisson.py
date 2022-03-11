@@ -12,7 +12,7 @@ import subroutines.mathematics as mathy
 import subroutines.delay_tracking as deli
 import subroutines.sigbucket_subroutine as siggy
 
-data_dir = 'data/'
+data_dir = 'data/run2/'
 folders = natsorted(os.listdir(data_dir))
 try:
     folders.remove('archive')
@@ -23,7 +23,7 @@ print(folders)
 ###because of natsorted (natural sort), collected_blah.npy should be
 ###in front of tags_blah.npy because alphabetical order
 
-dossier = folders[1]
+dossier = folders[-1]
 files = natsorted(os.listdir(data_dir + dossier))
 
 tags = np.load(data_dir + dossier + '/' + files[0])
@@ -31,84 +31,86 @@ tags_channel_list = np.load(data_dir + dossier + '/' + files[1])
 
 
 channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list)
-data = [channel1,channel2]
-channel1, channel2 = deli.data_crop(0.05e12, data)
+print(np.min(channel1))
 
-min_channel1 = min(channel1)
-max_channel1 = max(channel1)
+min1 = np.min(channel1)
+min2 = np.min(channel2)
 
-min_channel2 = min(channel2)
-max_channel2 = max(channel2)
+if min1 < min2:
+    channel2 = np.insert(channel2, 0, min1)
 
-
-if min_channel1 < min_channel2:
-
-    channel2 = np.insert(channel2, 0, min_channel1)
-
-elif min_channel2 < min_channel1:
-
-    channel1 = np.insert(channel1, 0, min_channel2)
-
-if max_channel1 < max_channel2:
-
-    channel1 = np.append(channel1, max_channel2)
-
-elif max_channel2 < max_channel1:
-
-    channel2 = np.append(channel2, max_channel1)
-
-min_channel1 = min(channel1)
-max_channel1 = max(channel1)
-
-min_channel2 = min(channel2)
-max_channel2 = max(channel2)
-print(len(channel1), 'hiiii')
-#%%
-channel1 = np.array(channel1)
-channel2 = np.array(channel2)
-
-width = 1e3
-signo = 80
-peno = 20000*2
-
-
-output1 = cross.signal_bin_combing(channel1, bin_width = width, sig_bin_no = signo, period_no = peno)
-
-output2 = cross.signal_bin_combing(channel2, bin_width = width, sig_bin_no = signo, period_no = peno)
-indexcut = 4000
-output1 = output1[indexcut:]
-output2 = output2[indexcut:]
-
-#%%
-print(np.max(output1))
-print(np.max(output2))
-shift1 = np.where(output1 == np.max(output1))[0][0] + indexcut 
-shift2 = np.where(output2 == np.max(output2))[0][0] + indexcut 
-
-experiments1 = siggy.signal_bucket(channel1, bin_width = width, sig_bin_no = signo*100, period_no = peno/2, index_offset = 0)
-
-experiments2 = siggy.signal_bucket(channel2, bin_width = width, sig_bin_no = signo*100, period_no = peno/2, index_offset = 0)
-
-aggregate = experiments1 + experiments2 
-plt.hist(aggregate, 2)
-
-
-# plt.plot(output1, label = 'channel1')
-# plt.legend()
-# plt.xlabel('Combing index')
-# plt.ylabel('Average signal bin count')
-# # plt.xlim([19000, 22000])
-# plt.show()
-
-# plt.plot(output2, label = 'channel2')
-# plt.legend()
-# plt.xlabel('Combing index')
-# plt.ylabel('Average signal bin count')
-# # plt.xlim([19000, 22000])
-# plt.show()
+elif min2 < min1:
+    channel1 = np.insert(channel1, 0, min2)
 
 
 
+# channel1 = np.insert(channel1, 0, np.min(channel1) - 1533300e6)
+# channel2 = np.insert(channel2, 0, np.min(channel2) - 100000e6)
 
 
 #%%
+channel1fixed = channel1.copy()
+channel2fixed = channel2.copy()
+
+
+#%%
+
+channel1chops = deli.channel_chop(channel1fixed, 0.05e12)
+channel2chops = deli.channel_chop(channel2fixed, 0.05e12)
+
+
+width = 10e3
+signo = 100
+peno = 20001
+
+bucket = []
+total_events = 0
+for i in range(100):
+
+    events1 = len(channel1chops[0])
+    events2 = len(channel2chops[0])
+    print(events1, 'expected number of events1')
+    print(events2, 'expected number of events2')
+
+    total_events += events1 + events2
+    length = channel1chops[i][-1] - channel1chops[i][0]
+ 
+    print('Chop', i)
+    output1 = cross.signal_bin_combing(channel1chops[i], bin_width = width, sig_bin_no = signo, period_no = peno)
+    shift1 = np.where(output1 == np.max(output1))[0][0]
+    print(shift1, 'shift1!!')
+    output2 = cross.signal_bin_combing(channel2chops[i], bin_width = width, sig_bin_no = signo, period_no = peno)
+    shift2 = np.where(output2 == np.max(output2))[0][0]
+    print(shift2, 'shift2!!')
+
+
+    experiments1, is_signal1 = siggy.signal_bucket(channel1chops[i], bin_width = width, sig_bin_no = signo, period_no = peno, index_offset = shift1, signal_threshold = 1)
+    experiments2, is_signal2 = siggy.signal_bucket(channel2chops[i], bin_width = width, sig_bin_no = signo, period_no = peno, index_offset = shift2, signal_threshold = 1)
+
+    ceiling = min([len(is_signal1), len(is_signal2)])
+    aggregate = is_signal1[:ceiling] + is_signal2[:ceiling] 
+    bucket.append(aggregate)
+
+#     # hi1 = plt.hist(experiments1)
+#     # plt.show()
+#     # print(hi1[0])
+#     # hi2 = plt.hist(experiments2)
+#     # plt.show()
+#     # print(hi2[0])
+
+    # plt.plot(output1, label = 'channel1')
+    # plt.xlabel('Combing index')
+    # plt.ylabel('Average signal bin count')
+
+    # plt.show()
+
+#     # plt.plot(output2, label = 'channel2')
+#     # plt.xlabel('Combing index')
+#     # plt.ylabel('Average signal bin count')
+
+#     # plt.show()
+
+print(total_events)
+hi3 = plt.hist(np.concatenate(bucket).ravel())
+plt.show()
+print(hi3[0])

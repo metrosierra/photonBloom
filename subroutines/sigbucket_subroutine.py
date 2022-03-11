@@ -6,7 +6,7 @@ import subroutines.mathematics as mathy
 
 ###test
 @njit
-def signal_bucket(data, bin_width, sig_bin_no = 1, period_no = 100, index_offset = 0):
+def signal_bucket(data, bin_width, sig_bin_no = 1, period_no = 100, index_offset = 0, signal_threshold = 5):
 
     total_time = np.max(data) - np.min(data)
     # print(total_time/1e12, 'time')
@@ -17,6 +17,7 @@ def signal_bucket(data, bin_width, sig_bin_no = 1, period_no = 100, index_offset
     counts, edges = mathy.numba_histogram(data, bin_no)
 
     output_data = []
+    is_signal = []
 
     for q in range(period_cycles-1):
         sig_count = 0
@@ -24,5 +25,10 @@ def signal_bucket(data, bin_width, sig_bin_no = 1, period_no = 100, index_offset
         sig_count += np.sum(counts[start_index : start_index + sig_bin_no])
 
         output_data.append(sig_count)
+        if sig_count >= signal_threshold:
+            is_signal.append(1)
+        else:
+            is_signal.append(0)
 
-    return np.array(output_data, dtype = np.int64)
+
+    return np.array(output_data, dtype = np.int64), np.array(is_signal, dtype = np.int64)
