@@ -24,7 +24,7 @@ class BaseTag():
         self.allrate_runnning = False 
         self.countrate_running = False
         self.stream_running = False
-
+        self.countrate = np.array([0, 0])
 
     @percentsss 
     @starsss
@@ -220,18 +220,18 @@ class BaseTag():
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Counter(self.client, channels, binwidth, n) as compte:
 
-            if startfor == -1 and self.count_running == False:
-                self.count_running = True
+            if startfor == -1 and self.countrate_running == False:
+                self.countrate_running = True
                 compte.start()
                 
                 while self.countrate_running:
-                    self.countrate = compte.getData(rolling = True)
-
+                    self.countrate = compte.getData(rolling = True)[-1]
                 compte.stop()
 
-            elif startfor == -1 and self.allrate_running == True:
+            elif startfor == -1 and self.countrate_running == True:
                 print('Counter object instance already exists!!! Please destroy it first')
-                self.countrate = 0.
+                self.countrate = np.array([0])
+                print('eladwaduwba')
 
             elif startfor > 0.:
 

@@ -110,7 +110,7 @@ class Lotus():
     def stop_plot(self, target = 'counter'):
         self.plotting = False
         if target == 'counter':
-            self.spot0.count_running = False 
+            self.spot0.countrate_running = False 
 
         elif target == 'correlation':
             self.spot0.corr_running = False 
@@ -120,9 +120,9 @@ class Lotus():
 
     def start_countplot_protocol(self):
 
-        self.tag_counter(startfor = -1, channels = [1, 2], binwidth = 1e11, n = 100, save = False)
-
-        threading.Thread(target = self.create_liveplot, args = (self.spot0.countrate,), daemon = True).start()
+        self.tag_counter(startfor = -1, channels = [1, 2], binwidth = 1e12, n = 20, save = False)
+        print(self.spot0.countrate, 'hi!!')
+        threading.Thread(target = self.create_liveplot, args = (self.spot0.countrate, 'Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
 
 
     def create_liveplot(self, targetdata, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, initial_xydata = [[0.], [0.]]):
@@ -136,7 +136,9 @@ class Lotus():
             print('Works till here at leastttttttttttt')
             print('stop_plot() to stop plot')
             while self.plotting:
-                plume.set_data(targetdata)
+                # print(self.spot0.countrate, 'hiiii')
+                xaxis = [i for i in range(20)]
+                plume.set_data([xaxis, self.spot0.countrate])
                 plume.update()
 
         print('Plotting session killed!')
@@ -146,7 +148,7 @@ class Lotus():
 
         if startfor == -1:
             print('Persisting Counter class measurement!!!')
-            threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth, n, save, ), daemon = True).start()
+            threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth, n), daemon = True).start()
 
         elif startfor > 0.:
             counts = self.spot0.get_count(startfor, channels, binwidth, n)

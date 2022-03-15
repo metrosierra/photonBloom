@@ -28,7 +28,7 @@ class Plumeria():
 
         self.point_count = 1
         self.plotting = False
-        self.styles = {'color':'y', 'font-size':'20px'}
+        self.styles = {'color':'y', 'font-size':'100px'}
         self.graph.showGrid(x = True, y = True)
 
         self.set_data(initial_xydata)
