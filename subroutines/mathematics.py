@@ -21,8 +21,9 @@ def percentsss(func):
     return inner
 ################ for fun ######################
 
+##############################################################################
 
-
+@njit
 def gaussian(p, x):
     """
     Returns a scaled Gaussian function for visual comparison of the measured data
@@ -30,6 +31,29 @@ def gaussian(p, x):
     mu, sigma, A = p
     return A/(np.sqrt(2*np.pi)*sigma)*np.exp(-0.5*(x-mu)**2/sigma**2)
 
+@njit 
+def poissonian(p, x):
+
+    x = np.floor(x)
+    fac = 1
+    for i in range(1, x+1):
+        fac *= i
+
+    return p**x / fac * np.exp(-p)
+
+
+##############################################################################
+@njit
+def numba_histogram(a, bins):
+    hist = np.zeros((bins,), dtype=np.intp)
+    bin_edges = get_bin_edges(a, bins)
+
+    for x in a.flat:
+        bin = compute_bin(x, bin_edges)
+        if bin is not None:
+            hist[int(bin)] += 1
+
+    return hist, bin_edges
 
 @njit
 def get_bin_edges(a, bins):
@@ -62,19 +86,7 @@ def compute_bin(x, bin_edges):
     else:
         return bin
 
-
-@njit
-def numba_histogram(a, bins):
-    hist = np.zeros((bins,), dtype=np.intp)
-    bin_edges = get_bin_edges(a, bins)
-
-    for x in a.flat:
-        bin = compute_bin(x, bin_edges)
-        if bin is not None:
-            hist[int(bin)] += 1
-
-    return hist, bin_edges
-
+##############################################################################3
 
 def tag_fourchannel_splice(tags, channels, save = False):
 
@@ -114,5 +126,5 @@ def splice_aux(tags, channels):
     channel4 = np.array(channel4)
     
     return channel1, channel2, channel3, channel4
-
+##############################################################################
 

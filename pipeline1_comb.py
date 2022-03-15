@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 import os
 from natsort import natsorted
-import subroutines.cross_corr_subroutine as cross
+import subroutines.sigbucket_subroutine as siggy
 import subroutines.mathematics as mathy
 
 data_dir = 'data/'
@@ -40,8 +40,8 @@ for i in range(5):
 
     time = (np.max(channel1[:index]) - np.min(channel1)) / 1e12
     print(time, 'time')
-    output1 = cross.signal_bin_combing(channel1[:index], bin_width = width, sig_bin_no = signo, period_no = peno)
-    output2 = cross.signal_bin_combing(channel2[:index], bin_width = width, sig_bin_no = signo, period_no = peno)
+    output1 = siggy.signal_bin_combing(channel1[:index], bin_width = width, sig_bin_no = signo, period_no = peno)
+    output2 = siggy.signal_bin_combing(channel2[:index], bin_width = width, sig_bin_no = signo, period_no = peno)
 
     plt.plot(output1, label = 'channel1')
     plt.legend()

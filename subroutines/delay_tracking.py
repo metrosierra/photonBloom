@@ -67,7 +67,6 @@ def channel_chop(channel_data, chop_time):
 
     offset = channel_data[0]
     totaltime = channel_data[-1] - offset
-    print(totaltime)
     chops_no = round(totaltime / chop_time)
     output = []
     for i in range(chops_no):
