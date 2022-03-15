@@ -2,6 +2,10 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import optimize
+from scipy.optimize import curve_fit
+import scipy as sp
+import scipy.special
 
 import os
 from natsort import natsorted
@@ -109,3 +113,52 @@ hi3 = plt.hist(bucket)
 plt.show()
 print(hi3[0])
 # %%
+
+def poisson(x,mean,a):
+    xfact = sp.special.factorial(x)
+    
+    return a * ( (mean**x) / xfact ) * np.exp(-mean)
+
+
+def poisson_histogram_fit(bucket,savefig=False):
+    '''
+    Plotting the histogram of the data buckets and fitting with a Poisson distribution.
+    '''
+    
+    hist = plt.hist(np.concatenate(bucket).ravel(),color='grey')
+
+    x=np.array(list(range(3)))
+    y = [i for i in hist[0] if int(i) != 0]
+    
+    mean=np.mean(y)
+    print('Mean value = {m}'.format(m=mean))
+    
+    for j, val in enumerate(y):
+        p_val = poisson(j,val,1)
+        print('Poisson coefficient for bin {n} = {p}.'.format(n=int(j),p=p_val))
+    
+    plt.hist(np.concatenate(bucket).ravel(),color='grey')
+    plt.scatter(x,y,marker='.',color='red',)
+    
+    opt, cov = curve_fit(poisson,x,y,maxfev=10000)
+    
+    xval=np.linspace(0,3)
+    plt.plot(xval,poisson(xval,*opt),'--',color='red',label='Poisson Fit\n mean={m}\n a={s}'.format(m=int(opt[0]),s=int(opt[1])))
+    
+    plt.ylabel('Counts')
+    plt.xlabel('Number')
+    plt.legend()
+    plt.ylim(0,5000)
+    
+    plt.title('Poisson Fit: 10kcps_50ns_50kHz')
+    if savefig is True:
+        plt.savefig('output/poissonfit_10kcps_50ns_50kHz.eps')
+    plt.show()
+    
+    fit_mean = opt[0]
+    fit_scale = opt[1]
+    print('Poisson Fit Parameters:\n Mean = {m} +/- {me} \n Scale = {a} +/- {ae}'.format(m=opt[0],a=opt[1],me=cov[0,0],ae=cov[1,1]))
+    
+    return fit_mean, fit_scale
+    
+poisson_histogram_fit(bucket,savefig=False)
