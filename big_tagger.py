@@ -156,18 +156,18 @@ class BaseTag():
     ####about 0.08V for ref
     def set_trigger(self, channel, level):
         self.client.setTriggerLevel(channel = channel, voltage = level)
-        print('\n\nTrigger level set at {}V for channels {}\n\n'.format(level, channel))
+        print('\n Trigger level set at {}V for channels {}'.format(level, channel))
         return self
 
     ####about 100ns for ref
     def set_deadtime(self, channel, deadtime):
         self.client.setDeadtime(channel = channel, deadtime = deadtime)
-        print('\n\nDeadtime set at {}ps for channels {}\n\n'.format(deadtime, channel))
+        print('\n Deadtime set at {}ps for channels {}'.format(deadtime, channel))
         return self
 
     def set_eventdivider(self, channel, divider):
         self.client.setEventDivider(channel = channel, divider = divider)
-        print('\n\Event divider set at {} events for channels {}\n\n'.format(divider, channel))
+        print('\n Event divider set at {} events for channels {}'.format(divider, channel))
         return self
 
     def set_testsignal(self, channels):

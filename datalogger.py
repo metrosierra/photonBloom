@@ -36,6 +36,8 @@ class Lotus():
         self.config = dummy_config
         self.create_networktagger('192.168.0.2')
 
+        self.set_autoconfig()
+        print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
 
 
     def create_networktagger(self, ip_address):
@@ -49,7 +51,7 @@ class Lotus():
     @starsss
     def __exit__(self, exception_type, exception_value, exception_traceback):
         print('Ciao bella ciao bella ciao ciao')
-        self.spot0.exit(exception_type, exception_value, exception_traceback)
+        self.spot0.__exit__(exception_type, exception_value, exception_traceback)
   
 ####################### Hardware config macros #######################
 
@@ -105,7 +107,7 @@ class Lotus():
 
         return self
 
-    def stop_plot(self, target):
+    def stop_plot(self, target = 'counter'):
         self.plotting = False
         if target == 'counter':
             self.spot0.count_running = False 
@@ -123,7 +125,7 @@ class Lotus():
         threading.Thread(target = self.create_liveplot, args = (self.spot0.countrate,), daemon = True).start()
 
 
-    def create_liveplot(self, targetdata, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.0001, initial_xydata = [[0.], [0.]]):
+    def create_liveplot(self, targetdata, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, initial_xydata = [[0.], [0.]]):
 
         self.plotting = True
         with Plumeria(title = title, refresh_interval = refresh_interval, initial_xydata = initial_xydata) as plume:
@@ -131,10 +133,11 @@ class Lotus():
             plume.set_data(initial_xydata)
             plume.set_xlabel(xlabel)
             plume.set_ylabel(ylabel)
-            
+            print('Works till here at leastttttttttttt')
+            print('stop_plot() to stop plot')
             while self.plotting:
-                    plume.set_data(targetdata)
-                    plume.update()
+                plume.set_data(targetdata)
+                plume.update()
 
         print('Plotting session killed!')
 
