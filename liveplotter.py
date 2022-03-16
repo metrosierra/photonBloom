@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 
+from subroutines.mathematics import percentsss, starsss
 
 ###%%%%%%%%%%%%%%%%%%%%%%
 
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-
-import numpy as np
 import time
 
 class Plumeria():
 
-    def __init__(self, title = 'Live Plot', refresh_interval = 0.0001, initial_xydata = [[0.], [0.]]):
+    def __init__(self, title = 'Live Plot', refresh_interval = 0.0001, plot_no = 1):
 
         # instantiate the window object
         self.app = QtGui.QApplication([])
         self.window = pg.GraphicsLayoutWidget(show = True, title = "Live Plotting Window")
-
         self.window.resize(900,500)
 
         # just antialiasing
@@ -24,49 +22,66 @@ class Plumeria():
 
         # Creates graph object
         self.graph = self.window.addPlot(title = title)
-        self.curve = self.graph.plot(pen = 'y')
 
+        self.initial_xydata = [[0.], [0.]]
+        self.refresh_interval = refresh_interval
         self.point_count = 1
         self.plotting = False
-        self.styles = {'color':'y', 'font-size':'100px'}
+
+        # creating maybe multiple line plot subclass objects for the self.graph object, store in list
+        self.plot_no = plot_no 
+        self.curves = []
+        self.data_store = []
+        ### storing lineplot instances into list, with indexed data store list
+        for i in range(self.plot_no):
+            ### setting pen as integer makes line colour cycle through 9 hues by default
+            ### check pyqtgraph documentation on styling...it's quite messy
+            self.curves.append(self.graph.plot(pen = i))
+            self.set_data(self.initial_xydata, i)
+
+        ### style points
+        self.styling = {'font-size':'20px'}
         self.graph.showGrid(x = True, y = True)
 
-        self.set_data(initial_xydata)
-        self.refresh_interval = refresh_interval
 
     def __enter__(self):
         return self
 
+    @percentsss 
+    @starsss
     def __exit__(self, exception_type, exception_value, exception_traceback):
         print('Plotting Object Destroyed')
         print('Ciao bella ciao bella ciao ciao ciao')
 
-
     def set_xlabel(self, label):
-        self.graph.setLabel('bottom', label)
+        self.graph.setLabel('bottom', label, **self.styling)
 
     def set_ylabel(self, label):
-        self.graph.setLabel('left', label)
+        self.graph.setLabel('left', label, **self.styling)
 
-    def set_data(self, data):
-        self.x, self.y = data
+    ### please input data as list of lists => [[xdata], [ydata]]
+    ### this is a local data storage, the update function then
+    ### updates the curve instances
+    ### the idea is self.data_store is easier to access to check
+    def set_data(self, data, index):
+        self.data_store[index] = data
+        self.curves[index].setData(data)
         return self
+
 
     def set_refresh_interval(self, interval):
         self.refresh_interval = interval
         return self
 
     def update(self):
-
         # set data simply changes the current dataframe to display
-        self.curve.setData(self.x, self.y)
+
         if self.point_count == 0:
             self.graph.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
+
         self.point_count += 1
         QtGui.QApplication.processEvents() # This command initiates a refresh
         time.sleep(self.refresh_interval)
-
-
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

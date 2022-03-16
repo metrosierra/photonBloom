@@ -34,9 +34,12 @@ class BaseTag():
     def __enter__(self):
         return self
 
+    @percentsss 
+    @starsss
     def __exit__(self, exception_type, exception_value, exception_traceback):
         TimeTagger.freeTimeTagger(self.client)
-        print('Ciao!')
+        print('Sarabada, tomo yo-')
+        print('Tagger Client Object Destroyed')
 
 ########################### initialisation/info grabbing methods #################################
 
@@ -225,13 +228,13 @@ class BaseTag():
                 compte.start()
                 
                 while self.countrate_running:
-                    self.countrate = compte.getData(rolling = True)[-1]
+                    self.countrate = compte.getData(rolling = True)
                 compte.stop()
 
             elif startfor == -1 and self.countrate_running == True:
                 print('Counter object instance already exists!!! Please destroy it first')
                 self.countrate = np.array([0])
-                print('eladwaduwba')
+
 
             elif startfor > 0.:
 

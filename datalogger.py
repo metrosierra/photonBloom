@@ -1,25 +1,18 @@
 #!/usr/bin/env python3
-
-###%%%%%%%%%%%%%%%%%%%%%%
-import TimeTagger as tt
 import numpy as np
 from datetime import datetime
-import time
 import json
 import threading
-
-import matplotlib.pyplot as plt
 
 from client_object import TagClient
 from liveplotter import Plumeria
 
-# from live_plot import bloomPlot
 from subroutines.mathematics import percentsss, starsss
 
 @percentsss
 @starsss
 def bienvenue():
-    print('This is the datalogger script for the Photon Spot Nanowire detector, where the Blossom class instantiates client objects and plotting objects to achieve datalogging UX')
+    print('This is the datalogger script for the Photon Spot Nanowire detector, where the Lotus class instantiates client objects and plotting objects to achieve datalogging UX')
 
 bienvenue()
 
@@ -31,8 +24,6 @@ class Lotus():
     def __init__(self):
 
         print('Initiliasing prototype usage file powered by TagClient methods')
-        self.plotting = False
-        self.plot_freeze = False
         self.config = dummy_config
         self.create_networktagger('192.168.0.2')
 
@@ -50,9 +41,10 @@ class Lotus():
     @percentsss
     @starsss
     def __exit__(self, exception_type, exception_value, exception_traceback):
-        print('Ciao bella ciao bella ciao ciao')
+        print('Con te partiroooooooo')
         self.spot0.__exit__(exception_type, exception_value, exception_traceback)
-  
+        print('Datalogger Object Destroyed')
+
 ####################### Hardware config macros #######################
 
     def set_manualconfig(self, channels):
@@ -82,7 +74,6 @@ class Lotus():
             self.spot0.set_led(turnon = turnon)
             self.config['ledstate'] = turnon
 
-
         print('Channels {} configured! Check out the current configuration below:'.format(channels))
         # print(json.dumps(self.config, indent = 4))
 
@@ -108,7 +99,6 @@ class Lotus():
         return self
 
     def stop_plot(self, target = 'counter'):
-        self.plotting = False
         if target == 'counter':
             self.spot0.countrate_running = False 
 
@@ -118,31 +108,70 @@ class Lotus():
 
 ####################### Measurement + Plotting Macros #######################
 
-    def start_countplot_protocol(self):
+### Plotting protocols
+####################################################################################
+    def start_countplot_protocol(self, channels = [1, 2], binwidth = 1e12, n = 20):
+        
+        if self.spot0.countrate_running:
+            print('Countrate plot already opened! Please kill it first before another instance!')
+        
+        else:
+            self.tag_counter(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
+            threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
 
-        self.tag_counter(startfor = -1, channels = [1, 2], binwidth = 1e12, n = 20, save = False)
-        print(self.spot0.countrate, 'hi!!')
-        threading.Thread(target = self.create_liveplot, args = (self.spot0.countrate, 'Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
 
+    def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
 
-    def create_liveplot(self, targetdata, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, initial_xydata = [[0.], [0.]]):
+        plot_no = len(self.spot0.countrate[0])
+        with Plumeria(title = title, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
 
-        self.plotting = True
-        with Plumeria(title = title, refresh_interval = refresh_interval, initial_xydata = initial_xydata) as plume:
-
-            plume.set_data(initial_xydata)
             plume.set_xlabel(xlabel)
             plume.set_ylabel(ylabel)
             print('Works till here at leastttttttttttt')
             print('stop_plot() to stop plot')
-            while self.plotting:
-                # print(self.spot0.countrate, 'hiiii')
-                xaxis = [i for i in range(20)]
-                plume.set_data([xaxis, self.spot0.countrate])
+            while self.countrate_running:
+                xaxis = [i for i in range(plot_no)]
+                
+                for q in range(len(self.spot0.countrate)):
+                    plume.set_data([xaxis, self.spot0.countrate[q]], q)
+                
                 plume.update()
 
-        print('Plotting session killed!')
+        print('Countrate Plotting Instance Killed!')
+####################################################################################
 
+    def start_corrplot_protocol(self, channels = [1, 2], binwidth = 10e3, n = 100):
+        
+        if self.spot0.corr_running:
+            print('Correlation plot already opened! Please kill it first before another instance!')
+        
+        else:
+            self.tag_correlation(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
+            threading.Thread(target = self.corrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
+
+
+    def corrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
+
+        with Plumeria(title = title, refresh_interval = refresh_interval, plot_no = 1) as plume:
+
+            plume.set_xlabel(xlabel)
+            plume.set_ylabel(ylabel)
+            print('Works till here at leastttttttttttt')
+            print('stop_plot() to stop plot')
+            while self.corr_running:
+                xaxis = [i for i in range(len(self.spot0.corr_counts))]
+                
+                for q in range(len(self.spot0.corr_counts)):
+                    plume.set_data([xaxis, self.spot0.corr_counts], q)
+                
+                plume.update()
+
+        print('Correlation Plotting Instance Killed!')
+
+####################################################################################
+
+
+### Measurement + Data Saving Protocols
 
     def tag_counter(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
 
@@ -160,27 +189,23 @@ class Lotus():
 
             return counts
 
-
-
     def tag_correlation(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
 
         if startfor == -1:
             print('Persisting Counter class measurement!!!')
             threading.Thread(target = self.spot0.get_correlation, args = (startfor, channels, binwidth, n,), daemon = True).start()
-            return self.spot0.corr_counts, self.spot0.corr_running
 
         elif startfor > 0.:
-            hist_data = self.spot0.get_correlation(startfor, channels, binwidth, n)
+            corr = self.spot0.get_correlation(startfor, channels, binwidth, n)
 
             if save:
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
                 np.save('output/correlated_width{}ps_n{}_{}'.format(binwidth, n, dt_string), hist_data)
 
-            return hist_data
+            return corr
 
-
-    def streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):
+    def tag_streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):
         tags, channel_list = self.spot0.streamdata(startfor = startfor, channels = channels, buffer_size = buffer_size, update_rate = update_rate, verbose = verbose)
 
         now = datetime.now()
@@ -190,14 +215,9 @@ class Lotus():
 
         return tags, channel_list
 
-
-
+####################################################################################
 
 if __name__ == '__main__':
     with Lotus() as lot:
         print("\n\n################## With Lotus as lot ###################\n\n")
         import code; code.interact(local=locals())
-###%%%%%%%%%%%%%%%%%%%%%%
-
-#
-#
