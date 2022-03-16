@@ -201,7 +201,7 @@ class Lotus():
             if save:
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/correlated_width{}ps_n{}_{}'.format(binwidth, n, dt_string), hist_data)
+                np.save('output/correlated_width{}ps_n{}_{}'.format(binwidth, n, dt_string), corr)
 
             return corr
 
