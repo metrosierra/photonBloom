@@ -7,6 +7,8 @@ import math
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
+from numba import njit
+import subroutines.mathematics as mathy
 
 '''
 D = number of detectors
@@ -119,14 +121,44 @@ def P_poisson_plot(D,C,N,mean):
     
 import pandas as pd
 
+@njit
+def binomial(p0,m,n):
+    P = mathy.combination(n,m) * (p0**m) * ((1-p0)**(n-m))
+    return P
+    
+def noisy_retrodict(phono, clicks):
 
-def combination(D,N):
-    '''
-    D = number of possible detection events
-    N = number of possible photons detected at each D
-    '''
-    combination = int(math.factorial(D) / ( math.factorial(N) * math.factorial(D-N) ))
-    return combination
+    photon_no = int(phono[0])
+    noise = 0.01
+    efficiency = 0.95
+    detector_no = 4
+    output = []
+    for click in clicks:
+
+        sum1 = 0
+        for i in range(click+1):
+            p1 = binomial(noise,i,detector_no)
+            
+            sum2 = 0
+            for j in range(click-i, photon_no+1):
+                Pd = (detector_no-i)/detector_no
+                p2 = binomial(Pd,j,photon_no)
+
+                sum3 = 0
+                for k in range(click-i, j+1):
+                    Pd = detector_no-i
+                    p3 = binomial(efficiency,k,j) * binomial(Pd,click-i,k)
+                    sum3 += p3
+                    
+                sum2 += p2 * sum3
+
+            sum1 += p1 * sum2
+        output.append(sum1)
+        
+    return output
+
+
+
 D=4
 N=np.array([1,2,3,4])
 C=3
@@ -136,9 +168,9 @@ def combination_probability(C,D,N):
     N = total number of possible photons detected at each D
     C = specific number of photons detected
     '''
-    total = [combination(D,n) for n in N]
+    total = [mathy.combination(D,n) for n in N]
 
-    P = combination(D,C) / sum(total)
+    P = mathy.combination(D,C) / sum(total)
     
 #    print('Probability of detecting {c} photons in one detector is {p}'.format(c=C,p=P))
     return P
@@ -176,4 +208,4 @@ def joint_probabilities(C,D,N):
     return joint_probability
 
 
-joint_probabilities(3,4,4)
+# joint_probabilities(3,4,4)

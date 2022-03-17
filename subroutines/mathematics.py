@@ -33,13 +33,29 @@ def gaussian(p, x):
 
 @njit 
 def poissonian(p, x):
-
     x = np.floor(x)
+    fac = numba_factorial(x)
+    return p**x / fac * np.exp(-p)
+
+@njit
+def numba_factorial(x):
     fac = 1
     for i in range(1, x+1):
         fac *= i
+    return fac
 
-    return p**x / fac * np.exp(-p)
+@njit
+def combination(D,N):
+    '''
+    D = number of possible detection events
+    N = number of possible photons detected at each D
+    '''
+    combination = int(numba_factorial(D) / (numba_factorial(N) * numba_factorial(D-N)))
+    
+    return combination
+
+
+
 
 
 ##############################################################################
