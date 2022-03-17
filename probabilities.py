@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from sympy.functions.combinatorial.numbers import stirling, bell
+from sympy.functions.combinatorial.numbers import stirling
 from itertools import combinations
 import math
 import numpy as np
@@ -13,12 +13,11 @@ D = number of detectors
 C = number of observed clicks
 N = number of photons in initial state
 
-'''
 
 D = [1,2]
 mean = bucket_mean(bucket)
 C, N, patches = plt.hist(bucket)
-
+'''
 
 def poisson(x,mean,a):
     xfact = sp.special.factorial(x)
@@ -116,5 +115,65 @@ def P_poisson_plot(D,C,N,mean):
     P_poisson_plot = P_poissonCN(D,C,N,mean)
     plt.plot(n,P_poisson_plot)
     plt.show()
+    
+    
+import pandas as pd
 
 
+def combination(D,N):
+    '''
+    D = number of possible detection events
+    N = number of possible photons detected at each D
+    '''
+    combination = int(math.factorial(D) / ( math.factorial(N) * math.factorial(D-N) ))
+    return combination
+D=4
+N=np.array([1,2,3,4])
+C=3
+def combination_probability(C,D,N):
+    '''
+    D = number of possible detection events
+    N = total number of possible photons detected at each D
+    C = specific number of photons detected
+    '''
+    total = [combination(D,n) for n in N]
+
+    P = combination(D,C) / sum(total)
+    
+#    print('Probability of detecting {c} photons in one detector is {p}'.format(c=C,p=P))
+    return P
+
+def joint_probabilities(C,D,N):
+    '''
+    D = number of possible detection events
+    N = total number of possible photons detected at each D
+    C = specific number of photons detected
+    '''
+    
+    C=np.array(np.arange(0,C+1))
+    N=np.array(np.arange(1,N+1))
+
+#    single_probabilities = [combination_probability(c,D,N) for c in C]
+    single_probabilities=[(1/(D+1)) for n in range(len(N)+1)]
+    print('Singular probabilities = ',single_probabilities)
+    
+    photons_i = np.array([0,1,2,3,4])
+    photons_j = np.array([0,1,2,3,4])
+    
+    
+    df = pd.DataFrame(photons_i)
+    for j in photons_j:
+        df[j]=[single_probabilities[j]+single_probabilities[i] for i in photons_i]
+    
+    print(df)
+    
+    T = sum(df)
+    Tc = sum([df[i].iloc[len(C)-1-i] for i in range(len(C))])
+    
+    joint_probability = Tc/T
+    print(joint_probability)
+    
+    return joint_probability
+
+
+joint_probabilities(3,4,4)
