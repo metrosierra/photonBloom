@@ -13,6 +13,7 @@ import subroutines.multiplex_macroroutine as molly
 
 
 targets = ('1k_countrate_50nsbench/', '10k_countrate_50nsbench/', '50k_countrate_50nsbench/','100k_countrate_50nsbench/')
+targets = ('70k_countrate_50nsbench/',)
 
 for target_dir in targets:
     data_dir = 'data/photon4/' + target_dir
@@ -55,7 +56,7 @@ for target_dir in targets:
         # print(len(channel1), 'hiiii')
         #%%
         width = 1e3
-        signo = 500
+        signo = 800
         peno = 20001
         multiplex = 2
         chop_no = 5
@@ -70,10 +71,11 @@ for target_dir in targets:
 
         ceiling = min([len(output1), len(output2)])
         aggregate = output1[:ceiling] + output2[:ceiling]
-        hi3 = plt.hist(aggregate, density = False, bins = np.arange(-0.5, 5.5), label = '{} Data photon{} statistics'.format(target_dir[:-1], multiplex*2))
+        hi3 = plt.hist(aggregate, density = False, bins = np.arange(-0.5, 9.5), label = '{} Data photon{} statistics'.format(target_dir[:-1], multiplex*2))
 
         print(hi3[0])
         poinput = np.array([0, 1, 2, 3, 4])
+        poinput = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
         mean = np.dot(poinput, hi3[0]) / np.sum(hi3[0])
         print(mean)
 

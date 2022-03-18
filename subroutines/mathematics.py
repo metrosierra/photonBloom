@@ -45,12 +45,15 @@ def numba_factorial(x):
     return fac
 
 @njit
-def combination(D,N):
+def combination(n, m):
     '''
     D = number of possible detection events
     N = number of possible photons detected at each D
     '''
-    combination = int(numba_factorial(D) / (numba_factorial(N) * numba_factorial(D-N)))
+    if n >= m:
+        combination = numba_factorial(n) / (numba_factorial(m) * numba_factorial(n - m))
+    else: 
+        combination = 0.
     
     return combination
 

@@ -87,15 +87,16 @@ def poisson_histogram_fit(bucket,savefig=False):
 
 
 def PCN(D,C,N):
-    combination_list = [mathy.combination(D,c) for c in range(C+1)]
-    S = [stirling(C, i,kind=2,signed=False) for i in range(N)]
-    factorial = mathy.numba_factorial(C) / (D**N)
+    combination = mathy.combination(D, C)
+    S = stirling(C, N, kind=2, signed=False)
+    if D > 0:
+        factorial = mathy.numba_factorial(C) / (D**N)
+        P = combination * factorial * S
+    elif D == 0:
+        P = 0
         
-    P = [factorial*combination_list[i]*S[i] for i in range(D)]
-    print(P)
-    Prob = sum(P)
-    print('P(C|N) = ',Prob)
-    return Prob
+    # print('P(C|N) = ',P)
+    return P
     
 
 '''
@@ -127,36 +128,37 @@ def binomial(p0,m,n):
     P = mathy.combination(n,m) * (p0**m) * ((1-p0)**(n-m))
     return P
     
-def noisy_retrodict(phono, clicks):
-
-    photon_no = int(phono[0])
-    noise = 0.01
-    efficiency = 0.95
-    detector_no = 4
+def noisy_retrodict(clicks, photon_number,noise = 0.000001,efficiency=0.6):
+    # noise, efficiency= p
+    photon_no = int(np.floor(photon_number))
+    # noise = 0.1
+    # efficiency = 0.85
+    detector_no = 8
     output = []
     for click in clicks:
-
-        sum1 = 0
+        click = int(click)
+        sum1 = 0.
         for i in range(click+1):
             p1 = binomial(noise,i,detector_no)
             
-            sum2 = 0
+            sum2 = 0.
             for j in range(click-i, photon_no+1):
                 Pd = (detector_no-i)/detector_no
                 p2 = binomial(Pd,j,photon_no)
 
-                sum3 = 0
+                sum3 = 0.
                 for k in range(click-i, j+1):
-                    Pd = detector_no-i
-                    p3 = binomial(efficiency,k,j) * binomial(Pd,click-i,k)
+                    Pd2 = detector_no-i
+                    p3 = binomial(efficiency,k,j) * PCN(Pd2,click-i,k)
                     sum3 += p3
                     
                 sum2 += p2 * sum3
 
             sum1 += p1 * sum2
-        output.append(sum1)
-        
-    return output
+        output.append(float(sum1))
+
+    return np.array(output)/np.sum(output)
+
 
 
 
@@ -209,7 +211,7 @@ def joint_probabilities(D,C,N):
     return joint_probability
 
 
-joint_probabilities(4,3,4)
-print(PCN(4,3,4)/PCN(4,4,4))
+# joint_probabilities(4,3,4)
+# print(PCN(4,3,4)/PCN(4,4,4))
 
 
