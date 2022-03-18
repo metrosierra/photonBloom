@@ -87,14 +87,15 @@ def poisson_histogram_fit(bucket,savefig=False):
 
 
 def PCN(D,C,N):
-    combination_list = list(combinations(D,C))
+    combination_list = [mathy.combination(D,c) for c in range(C+1)]
     S = [stirling(C, i,kind=2,signed=False) for i in range(N)]
-    factorial = int(math.factorial(C) / (len(D)**N))
+    factorial = mathy.numba_factorial(C) / (D**N)
         
-    P = [factorial*combination_list[0][i]*S[i] for i in range(len(D))]
-    
-    print('P(C|N) = ',P)
-    return P
+    P = [factorial*combination_list[i]*S[i] for i in range(D)]
+    print(P)
+    Prob = sum(P)
+    print('P(C|N) = ',Prob)
+    return Prob
     
 
 '''
@@ -175,7 +176,7 @@ def combination_probability(C,D,N):
 #    print('Probability of detecting {c} photons in one detector is {p}'.format(c=C,p=P))
     return P
 
-def joint_probabilities(C,D,N):
+def joint_probabilities(D,C,N):
     '''
     D = number of possible detection events
     N = total number of possible photons detected at each D
@@ -208,4 +209,7 @@ def joint_probabilities(C,D,N):
     return joint_probability
 
 
-# joint_probabilities(3,4,4)
+joint_probabilities(4,3,4)
+print(PCN(4,3,4)/PCN(4,4,4))
+
+
