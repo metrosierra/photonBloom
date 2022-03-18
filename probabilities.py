@@ -104,13 +104,16 @@ With Poisson Prior
 '''
 
 def P_poissonCN(D,C,N,mean):
-    factorial = int( math.factorial(C) / math.factorial(N))
-    S = [stirling(C, i,kind=2,signed=False) for i in range(N)]
-    denominator = [int((np.exp(mean/d)-1)**-C) for d in D]
-    
-    P = [factorial * S[i] * int((D[i]/mean)**-N) * denominator for i in range(len(D))]
-    
-    print('P_poisson(C|N) = ',P)
+    factorial = mathy.numba_factorial(C) / mathy.numba_factorial(N)
+    S = stirling(C, N, kind=2, signed=False)
+    if D > 0:
+        gamma = D/mean
+        denominator = (np.exp(1/gamma)-1)**-C
+        P = factorial * S * denominator * (gamma**-N)
+    elif D == 0:
+        P = 0
+        
+    # print('P(C|N) = ',P)
     return P
 
 
@@ -128,7 +131,7 @@ def binomial(p0,m,n):
     P = mathy.combination(n,m) * (p0**m) * ((1-p0)**(n-m))
     return P
     
-def noisy_retrodict(clicks, photon_number,noise = 0.000001,efficiency=0.6):
+def noisy_retrodict(clicks, photon_number,mean,noise = 0.000001,efficiency=0.85):
     # noise, efficiency= p
     photon_no = int(np.floor(photon_number))
     # noise = 0.1
@@ -149,7 +152,7 @@ def noisy_retrodict(clicks, photon_number,noise = 0.000001,efficiency=0.6):
                 sum3 = 0.
                 for k in range(click-i, j+1):
                     Pd2 = detector_no-i
-                    p3 = binomial(efficiency,k,j) * PCN(Pd2,click-i,k)
+                    p3 = binomial(efficiency,k,j) * P_poissonCN(Pd2,click-i,k,mean)
                     sum3 += p3
                     
                 sum2 += p2 * sum3
