@@ -31,7 +31,7 @@ print(x)
 # fit_results = oddy.fit(probby.noisy_retrodict, x, clicks_prob, initials = np.array([0.1, 0.8]))
 photon_no=np.arange(2,12)
 
-hi = probby.noisy_poisson_pc(4.5, detectors = detector_no, qe = 0.95, noise = 0.01)
+hi = probby.noisy_poisson_pc(4.7, qe = 0.95, noise = 0.01)
 print(hi)
 plt.plot(x, hi/np.sum(hi))
 plt.show()
