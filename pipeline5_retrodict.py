@@ -26,33 +26,42 @@ detector_no = 8
 
 x = np.arange(0, 9)
 print(x)
-output = probby.noisy_retrodict(x, 0.1, 3)
+# output = probby.noisy_pcn(x, 0.1, 3)
+# hi = probby.noisy_poisson_pc(3)
 # fit_results = oddy.fit(probby.noisy_retrodict, x, clicks_prob, initials = np.array([0.1, 0.8]))
-photon_no=np.arange(4,12)
-for no in photon_no:
-    opt,cov = curve_fit(probby.noisy_retrodict, x, clicks_prob, p0 = [no, no/1.])
-    print(opt,' hihiihih')
-    yfit = probby.noisy_retrodict(x, *opt)
+photon_no=np.arange(2,12)
 
-
-    chi2 = np.sum((clicks_prob - yfit)**2)/len(yfit)
-    plt.plot(x, yfit, label='{} photons, {:.2f}noise, chi2 = {}'.format(no, opt[0], chi2))
-
-   
-    # # plt.plot(clicks / np.sum(clicks))
-
-    # plt.plot(output,label='output')
-    fig.patch.set_facecolor('xkcd:sky blue')
-
-    plt.title(label = 'Noisy Retrodict Efficiency={e}, Noise = {n}'.format(e=0.95,n=opt[0] ))
-    # plt.savefig('output/Noisy_retrodict_E85_N10.eps')
-    # plt.savefig('output/Noisy_retrodict_E85_N10.png')
-    plt.legend()
-plt.plot(clicks_prob,'--',color='red',label='clicks_prob')
+hi = probby.noisy_poisson_pc(4.5, detectors = detector_no, qe = 0.95, noise = 0.01)
+print(hi)
+plt.plot(x, hi/np.sum(hi))
 plt.show()
 
 
-def chi_square(data,expected):
-    degree = len(data) - 2
-    chi2 =  np.sum((data-expected)**2) / expected / degree
-    return chi2
+
+# for no in photon_no:
+#     opt,cov = curve_fit(probby.noisy_pcn, x, clicks_prob, p0 = [no, no/1.])
+#     print(opt,' hihiihih')
+#     yfit = probby.noisy_pcn(x, *opt)
+
+
+#     chi2 = np.sum((clicks_prob - yfit)**2)/len(yfit)
+#     plt.plot(x, yfit, label='{} photons, {:.2f}noise, chi2 = {}'.format(no, opt[0], chi2))
+
+   
+#     # # plt.plot(clicks / np.sum(clicks))
+
+#     # plt.plot(output,label='output')
+#     fig.patch.set_facecolor('xkcd:sky blue')
+
+#     plt.title(label = 'Noisy Retrodict Efficiency={e}, Noise = {n}'.format(e=0.95,n=opt[0] ))
+#     # plt.savefig('output/Noisy_retrodict_E85_N10.eps')
+#     # plt.savefig('output/Noisy_retrodict_E85_N10.png')
+#     plt.legend()
+# plt.plot(clicks_prob,'--',color='red',label='clicks_prob')
+# plt.show()
+
+
+# def chi_square(data,expected):
+#     degree = len(data) - 2
+#     chi2 =  np.sum((data-expected)**2) / expected / degree
+#     return chi2

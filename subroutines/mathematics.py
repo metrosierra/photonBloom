@@ -44,8 +44,21 @@ def numba_factorial(x):
         fac *= i
     return fac
 
+@njit 
+def numba_stirling2(m, n):
+    reciprocal = numba_factorial(n)
+    summation = 0
+    for i in range(n+1):
+        
+        summation += (-1)**i * numba_combination(n, i) * (n - i)**m
+        
+    return summation / reciprocal
+
+
+
+
 @njit
-def combination(n, m):
+def numba_combination(n, m):
     '''
     D = number of possible detection events
     N = number of possible photons detected at each D
