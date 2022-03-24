@@ -24,7 +24,7 @@ class BaseTag():
         self.allrate_runnning = False 
         self.countrate_running = False
         self.stream_running = False
-        self.countrate = np.array([0, 0])
+        self.countrate = np.array([[0, 0], [0, 0]])
 
     @percentsss 
     @starsss
@@ -229,6 +229,7 @@ class BaseTag():
                 
                 while self.countrate_running:
                     self.countrate = compte.getData(rolling = True)
+                    # print(self.countrate)
                 compte.stop()
 
             elif startfor == -1 and self.countrate_running == True:
@@ -241,9 +242,7 @@ class BaseTag():
                 compte.startFor(startfor)
                 compte.waitUntilFinished()
                 self.countrate = compte.getData()
-                print(np.shape(self.countrate))
                 print('Measured count of channel 1-4 in counts:')
-                print(self.countrate)
 
         return self.countrate
 

@@ -93,6 +93,7 @@ def poisson_infN(mean, threshold = 0.95):
     prob = 0
     n = 1
     current_prob = np.exp(-mean)
+    prob += current_prob
     satisfied = False
     while not satisfied:
 

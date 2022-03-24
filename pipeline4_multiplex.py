@@ -13,10 +13,10 @@ import subroutines.multiplex_macroroutine as molly
 
 
 targets = ('1k_countrate_50nsbench/', '10k_countrate_50nsbench/', '50k_countrate_50nsbench/','100k_countrate_50nsbench/')
-targets = ('70k_countrate_50nsbench/',)
+targets = ('140kcountrate/',)
 
 for target_dir in targets:
-    data_dir = 'data/photon4/' + target_dir
+    data_dir = 'data/photon16/' + target_dir
     folders = natsorted(os.listdir(data_dir))
     try:
         folders.remove('archive')
@@ -28,6 +28,7 @@ for target_dir in targets:
     ###in front of tags_blah.npy because alphabetical order
     for dossier_index in range(2):
         dossier = folders[dossier_index]
+        print(dossier, 'hihi')
         files = natsorted(os.listdir(data_dir + dossier))
 
         tags = np.load(data_dir + dossier + '/' + files[0])
@@ -45,7 +46,7 @@ for target_dir in targets:
 
         elif min2 < min1:
             channel1 = np.insert(channel1, 0, min2)
-        #%%
+#%%
         data = [channel1, channel2]
         channel1fixed, channel2fixed = deli.data_crop(data, 0.07e12)
 
@@ -54,11 +55,10 @@ for target_dir in targets:
         channel2chops = deli.channel_chop(channel2fixed, 0.01e12)
         # channel1chops = [channel1]
         # print(len(channel1), 'hiiii')
-        #%%
         width = 1e3
-        signo = 800
+        signo = 2850
         peno = 20001
-        multiplex = 2
+        multiplex = 8
         chop_no = 5
 
         output1 = molly.sig_chops_multiplex(channel1chops, chop_no = chop_no, binwidth = width, sig_bin_no = signo, sig_threshold = 1, period_no = peno, multiplex = multiplex)
@@ -71,11 +71,13 @@ for target_dir in targets:
 
         ceiling = min([len(output1), len(output2)])
         aggregate = output1[:ceiling] + output2[:ceiling]
-        hi3 = plt.hist(aggregate, density = False, bins = np.arange(-0.5, 9.5), label = '{} Data photon{} statistics'.format(target_dir[:-1], multiplex*2))
+        hi3 = plt.hist(aggregate, density = False, bins = np.arange(-0.5, 17.5), label = '{} Data photon{} statistics'.format(target_dir[:-1], multiplex*2))
 
         print(hi3[0])
         poinput = np.array([0, 1, 2, 3, 4])
         poinput = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
+        poinput = np.arange(17)
+
         mean = np.dot(poinput, hi3[0]) / np.sum(hi3[0])
         print(mean)
 
@@ -85,5 +87,7 @@ for target_dir in targets:
         plt.title('{}'.format(hi3[0]))
         plt.savefig('output/{}_{}_Data photon{}_statistics.eps'.format(target_dir[:-1], dossier, multiplex*2))
         print(poisson)
+        plt.show()
         plt.show(block = False)
         plt.close()
+#%%

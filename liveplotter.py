@@ -10,21 +10,28 @@ import time
 
 class Plumeria():
 
-    def __init__(self, title = 'Live Plot', refresh_interval = 0.0001, plot_no = 1):
+    def __init__(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
 
         # instantiate the window object
         self.app = QtGui.QApplication([])
         self.window = pg.GraphicsLayoutWidget(show = True, title = "Live Plotting Window")
         self.window.resize(900,500)
-
         # just antialiasing
         pg.setConfigOptions(antialias = True)
 
         # Creates graph object
         self.graph = self.window.addPlot(title = title)
+        self.graph.addLegend()
 
         self.initial_xydata = [[0.], [0.]]
         self.refresh_interval = refresh_interval
+        self.xlabel = xlabel 
+        self.ylabel = ylabel
+        self.styling = {'font-size':'20px'}
+
+        self.set_xlabel(self.xlabel)
+        self.set_ylabel(self.ylabel)
+
         self.point_count = 1
         self.plotting = False
 
@@ -36,11 +43,12 @@ class Plumeria():
         for i in range(self.plot_no):
             ### setting pen as integer makes line colour cycle through 9 hues by default
             ### check pyqtgraph documentation on styling...it's quite messy
-            self.curves.append(self.graph.plot(pen = i))
-            self.set_data(self.initial_xydata, i)
-
+            self.curves.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i)))
+            self.data_store.append(self.initial_xydata)
+        print(self.curves)
         ### style points
-        self.styling = {'font-size':'20px'}
+
+
         self.graph.showGrid(x = True, y = True)
 
 
@@ -65,10 +73,10 @@ class Plumeria():
     ### the idea is self.data_store is easier to access to check
     def set_data(self, data, index):
         self.data_store[index] = data
-        self.curves[index].setData(data)
+        self.curves[index].setData(data[0], data[1])
         return self
 
-
+ 
     def set_refresh_interval(self, interval):
         self.refresh_interval = interval
         return self

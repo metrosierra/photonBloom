@@ -122,17 +122,16 @@ class Lotus():
 
     def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
 
-        plot_no = len(self.spot0.countrate[0])
-        with Plumeria(title = title, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
+        plot_no = len(self.spot0.countrate)
+        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
 
             plume.set_xlabel(xlabel)
             plume.set_ylabel(ylabel)
-            print('Works till here at leastttttttttttt')
-            print('stop_plot() to stop plot')
-            while self.countrate_running:
-                xaxis = [i for i in range(plot_no)]
+
+            while self.spot0.countrate_running:
+                xaxis = np.array([i for i in range(len(self.spot0.countrate[0]))])
                 
-                for q in range(len(self.spot0.countrate)):
+                for q in range(plot_no):
                     plume.set_data([xaxis, self.spot0.countrate[q]], q)
                 
                 plume.update()
@@ -152,16 +151,15 @@ class Lotus():
 
     def corrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
 
-        with Plumeria(title = title, refresh_interval = refresh_interval, plot_no = 1) as plume:
+        plot_no = 1
+        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
 
             plume.set_xlabel(xlabel)
             plume.set_ylabel(ylabel)
-            print('Works till here at leastttttttttttt')
-            print('stop_plot() to stop plot')
-            while self.corr_running:
-                xaxis = [i for i in range(len(self.spot0.corr_counts))]
-                
-                for q in range(len(self.spot0.corr_counts)):
+  
+            while self.spot0.corr_running:
+                xaxis = np.array([i for i in range(len(self.spot0.corr_counts))])
+                for q in range(plot_no):
                     plume.set_data([xaxis, self.spot0.corr_counts], q)
                 
                 plume.update()
