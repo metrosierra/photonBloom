@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from scipy.odr import *
+import scipy.odr as odr
 
+import lmfit as limmy
 
 '''
 https://docs.scipy.org/doc/scipy/reference/odr.html
@@ -10,20 +11,24 @@ https://docs.scipy.org/doc/scipy/reference/odr.html
 Basically, define a function, then chuck it into the fit function along with your x y data
 
 Orthogonal Distance Regression (ODR) is better than scipy optimize because it can accept BOTH x and y errors for fitting
+
+Now experimenting with lmfit as well 
 '''
 
-def fit(function, x, y, initials, xerr = None, yerr = 1.):
+
+
+def odrfit(function, x, y, initials, xerr = None, yerr = 1.):
 
     # Create a scipy Model object
-    model = Model(function)
+    model = odr.Model(function)
     # Create a RealData object using our initiated data from above. basically declaring all our variables using the RealData command which the scipy package wants
-    input = RealData(x, y, sx = xerr, sy = yerr)
+    input = odr.RealData(x, y, sx = xerr, sy = yerr)
     # Set up ODR with the model and data. ODR is orthogonal distance regression (need to google!)
-    odr = ODR(input, model, beta0 = initials)
+    odr_setup = odr.ODR(input, model, beta0 = initials)
 
     print('\nRunning fit!')
     # Run the regression.
-    output = odr.run()
+    output = odr_setup.run()
     print('\nFit done!')
     # output.beta contains the fitted parameters (it's a list, so you can sub it back into function as p!)
     print('\nFitted parameters = ', output.beta)
@@ -36,6 +41,16 @@ def fit(function, x, y, initials, xerr = None, yerr = 1.):
     # chi_reduced = chisquare / (len(x) - len(initials))
     # print('\nReduced Chisquare = ', chi_reduced, 'with ',  len(x) - len(initials), 'Degrees of Freedom')
 
-
-
     return output.beta, output.sd_beta, 1.
+
+
+def limmyfit(function, x, y, arg):
+
+    model = limmy.Model(function)
+
+    output = model.fit(y = y, x = x, mean = arg)
+
+    print(output.fit_report())
+
+    
+
