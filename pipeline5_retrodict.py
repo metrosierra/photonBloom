@@ -2,7 +2,7 @@
 
 import numpy as np
 import probabilities as probby
-import subroutines.odr_fit as oddy
+import subroutines.odd_fittings as oddy
 import matplotlib.pyplot as plt
 
 from scipy.optimize import curve_fit

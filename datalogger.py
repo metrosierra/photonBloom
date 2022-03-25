@@ -6,6 +6,7 @@ import threading
 
 from client_object import TagClient
 from liveplotter import Plumeria
+from liveplotter_mark2 import RoseApp, PetalWindow
 
 from subroutines.mathematics import percentsss, starsss
 
@@ -40,12 +41,16 @@ class Lotus():
 
     @percentsss
     @starsss
-    def __exit__(self, exception_type, exception_value, exception_traceback):
+    def ciao(self):
         print('Con te partiroooooooo')
-        self.spot0.__exit__(exception_type, exception_value, exception_traceback)
         print('Datalogger Object Destroyed')
 
-####################### Hardware config macros #######################
+
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        self.spot0.__exit__(exception_type, exception_value, exception_traceback)
+        self.ciao()
+###################### # Hardware config macros #######################
 
     def set_manualconfig(self, channels):
 
@@ -110,6 +115,14 @@ class Lotus():
 
 ### Plotting protocols
 ####################################################################################
+
+    
+    
+    
+    
+    
+    
+    
     def start_countplot_protocol(self, channels = [1, 2], binwidth = 1e12, n = 20):
         
         if self.spot0.countrate_running:
@@ -119,6 +132,7 @@ class Lotus():
             self.tag_counter(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
             threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
 
+        return None
 
     def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
 
@@ -129,7 +143,7 @@ class Lotus():
             plume.set_ylabel(ylabel)
 
             while self.spot0.countrate_running:
-                xaxis = np.array([i for i in range(len(self.spot0.countrate[0]))])
+                xaxis = np.arange(len(self.spot0.countrate[0]))
                 
                 for q in range(plot_no):
                     plume.set_data([xaxis, self.spot0.countrate[q]], q)
@@ -137,6 +151,7 @@ class Lotus():
                 plume.update()
 
         print('Countrate Plotting Instance Killed!')
+        return None
 ####################################################################################
 
     def start_corrplot_protocol(self, channels = [1, 2], binwidth = 10e3, n = 100):
@@ -147,8 +162,9 @@ class Lotus():
         else:
             self.tag_correlation(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
             threading.Thread(target = self.corrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
-
-
+        
+        return None 
+ 
     def corrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
 
         plot_no = 1
@@ -158,14 +174,14 @@ class Lotus():
             plume.set_ylabel(ylabel)
   
             while self.spot0.corr_running:
-                xaxis = np.array([i for i in range(len(self.spot0.corr_counts))])
+                xaxis = np.arange(len(self.spot0.corr_counts))
                 for q in range(plot_no):
                     plume.set_data([xaxis, self.spot0.corr_counts], q)
                 
                 plume.update()
 
         print('Correlation Plotting Instance Killed!')
-
+        return None
 ####################################################################################
 
 

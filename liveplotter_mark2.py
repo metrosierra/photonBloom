@@ -4,18 +4,55 @@ from subroutines.mathematics import percentsss, starsss
 
 ###%%%%%%%%%%%%%%%%%%%%%%
 
-from pyqtgraph.Qt import QtGui, QtCore
+from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 import time
+import sys
 
 
+class RoseApp():
+    def __init__(self, args = []):
 
-class Plumeria():
+        self.app = QtGui.QApplication.instance()
+        if self.app is None:
+            self.app = QtGui.QApplication(args)
 
-    def __init__(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
 
-        # instantiate the window object
-        self.app = QtGui.QApplication([])
+        self.windows = {}
+        self.windowcount = 0
+
+        #enter event loop
+        self.exec_()
+
+    @QtCore.pyqtSlot()
+    def new_window(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
+        window = PetalWindow(self.windowcount, title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no)
+
+        ### This line is a signal connection to window.closed property
+        ### which is emitted when the window is closed
+        ### it's related to the decorator @QtCore.pyqtSlot()
+        window.closed.connect(self.remove_window)
+
+        self.windows[self.windowcount] = window
+        self.windowcount += 1
+
+    @QtCore.pyqtSlot(int)
+    def remove_window(self, index):
+        window_target = self.windows[index]
+        window_target.deleteLater()
+        del self.windows[index]
+        print(self.windows)
+
+
+class PetalWindow(QtWidgets.QWidget):
+
+    ### this is link to the parent class decorated functions
+    closed = QtCore.pyqtSignal(int)
+
+    def __init__(self, window_id, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
+        super().__init__()
+        self.window_id = window_id
+
         self.window = pg.GraphicsLayoutWidget(show = True, title = "Live Plotting Window")
         self.window.resize(900,500)
         # just antialiasing
@@ -49,10 +86,14 @@ class Plumeria():
             self.data_store.append(self.initial_xydata)
         print(self.curves)
         ### style points
-
-
         self.graph.showGrid(x = True, y = True)
 
+
+
+    ### the emit function is part of the qt signalling method
+    def closeEvent(self, event):
+        self.closed.emit(self.window_id)
+        super().closeEvent(event)
 
     def __enter__(self):
         return self
@@ -91,11 +132,14 @@ class Plumeria():
             self.graph.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
 
         self.point_count += 1
-        QtGui.QApplication.processEvents() # This command initiates a refresh
+        # QtGui.QApplication.processEvents() # This command initiates a refresh
         time.sleep(self.refresh_interval)
 
-## Start Qt event loop unless running in interactive mode or using pyside.
+
+
+
+## Start Qt event loop unless running in interactive mode
 if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        plume = Plumeria()
+        rose = RoseApp()
