@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import numpy as np
-import probabilities as probby
-import subroutines.odd_fittings as oddy
 import matplotlib.pyplot as plt
+
+from ..subroutines import retrodict_subroutine as probby
+from ..subroutines import curvefit_subroutine as oddy
 
 from scipy.optimize import curve_fit
 

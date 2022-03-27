@@ -8,7 +8,7 @@ from natsort import natsorted
 import subroutines.sigbucket_subroutine as siggy
 import subroutines.mathematics as mathy
 
-data_dir = 'data/'
+data_dir = '../data/'
 folders = natsorted(os.listdir(data_dir))
 try: 
     folders.remove('archive')

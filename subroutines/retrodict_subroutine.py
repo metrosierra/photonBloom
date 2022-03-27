@@ -229,7 +229,7 @@ def poisson_histogram_fit(bucket,savefig=False):
     plt.hist(np.concatenate(bucket).ravel(),color='grey')
     plt.scatter(x,y,marker='.',color='red',)
 
-    opt, cov = curve_fit(poisson,x,y,maxfev=10000)
+    opt, cov = sp.optimize.curve_fit(poisson,x,y,maxfev=10000)
 
     xval=np.linspace(0,3)
     plt.plot(xval,poisson(xval,*opt),'--',color='red',label='Poisson Fit\n mean={m}\n a={s}'.format(m=int(opt[0]),s=int(opt[1])))

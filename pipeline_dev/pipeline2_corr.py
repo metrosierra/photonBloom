@@ -7,10 +7,10 @@ from scipy.signal import find_peaks
 import os
 from natsort import natsorted
 
-import subroutines.cross_corr_subroutine as cross
-import subroutines.mathematics as mathy
-import subroutines.delay_tracking as deli
-data_dir = 'data/run2/'
+from ..subroutines import cross_corr_subroutine as cross
+from ..subroutines import mathematics as mathy
+from ..subroutines import delay_tracking as deli
+data_dir = '../data/run2/'
 folders = natsorted(os.listdir(data_dir))
 try:
     folders.remove('archive')
@@ -53,7 +53,7 @@ plt.savefig('output/cross_corr_channel12_{}_bin{}_maxdelay{}_zoomed.png'.format(
 #%%
 
 from scipy.signal import find_peaks
-import subroutines.odr_fit as oddy
+from ..subroutines import curvefit_subroutine as oddy
 
 peak_no = 15
 peaks, peaks_aux = find_peaks(counts, distance = 3e5)

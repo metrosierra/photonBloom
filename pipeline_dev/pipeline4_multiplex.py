@@ -7,16 +7,16 @@ from scipy.signal import find_peaks
 import os
 from natsort import natsorted
 
-import subroutines.mathematics as mathy
-import subroutines.delay_tracking as deli
-import subroutines.multiplex_macroroutine as molly
+from ..subroutines import mathematics as mathy
+from ..subroutines import delay_tracking as deli
+from ..subroutines import multiplex_macroroutine as molly
 
 
 targets = ('1k_countrate_50nsbench/', '10k_countrate_50nsbench/', '50k_countrate_50nsbench/','100k_countrate_50nsbench/')
 targets = ('140kcountrate/',)
 
 for target_dir in targets:
-    data_dir = 'data/photon16/' + target_dir
+    data_dir = '../data/photon16/' + target_dir
     folders = natsorted(os.listdir(data_dir))
     try:
         folders.remove('archive')
