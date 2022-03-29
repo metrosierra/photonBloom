@@ -3,66 +3,59 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ..subroutines import retrodict_subroutine as probby
-from ..subroutines import curvefit_subroutine as oddy
-
-from scipy.optimize import curve_fit
+import sys 
+sys.path.append('../')
+from subroutines import retrodict_subroutine as probby
+from subroutines import curvefit_subroutine as oddy
 
 fig = plt.figure()
 
 clicks = np.array([67, 360, 858, 867, 336])
-clicks = np.array([75.,  583., 1278.,  486.,   63.])
-clicks = np.array([ 40., 241., 552., 772., 611., 228.,  39.,   4., 0.])
+# clicks = np.array([75.,  583., 1278.,  486.,   63.])
+# clicks = np.array([ 40., 241., 552., 772., 611., 228.,  39.,   4., 0.])
 # clicks = np.array([6.,  48., 212., 598., 798., 592., 216.,  18.,   1.])
+# clicks = np.array([  6.,  44., 214., 527., 783., 595., 267.,  51.,   2.])
+# clicks = [ 20., 100., 265., 500., 547., 456., 335., 168.,  72.,  21., 3., 1., 0., 0., 0., 0., 0.]
+
+clicks = [  0.,   0.,   7.,  13.,  43., 129., 248., 427., 501., 465., 343., 194.,  81.,  36., 2.,   1.,   0.]
 
 clicks_prob = clicks/np.sum(clicks)
-print('hihi', np.sum(clicks_prob))
-plt.plot(clicks_prob,'--',color='red',label='clicks_prob')
 
 
 
 noise = 0.01
 efficiency = 0.95
-detector_no = 8
-
-x = np.arange(0, 9)
+detector_no = 16
+x = np.arange(0, detector_no+1)
 print(x)
 # output = probby.noisy_pcn(x, 0.1, 3)
 # hi = probby.noisy_poisson_pc(3)
-# fit_results = oddy.fit(probby.noisy_retrodict, x, clicks_prob, initials = np.array([0.1, 0.8]))
-photon_no=np.arange(2,12)
+fit_results = oddy.odrfit(probby.noisy_poisson_pc, x, clicks_prob, [15.])
+plt.figure(figsize=(10, 10))
+plt.plot(clicks_prob,'--',color='red',label='Observed Photon16 Click Distribution')
 
-hi = probby.noisy_poisson_pc(4.7, qe = 0.95, noise = 0.01)
-print(hi)
-plt.plot(x, hi/np.sum(hi))
+output = probby.noisy_poisson_pc(fit_results[0], x)
+plt.plot(output, '--', label = 'Fit Poissonian light distribution, {} mean'.format(fit_results[0][0]))
+
+for i in range(1, 15, 3):
+    print(i)
+    output = probby.noisy_poisson_pc([float(i)], x)
+    plt.plot(output, label = 'Modelled Poissonian Retrodict, {}.0 mean'.format(i))
+plt.legend()
+plt.xlabel('Detector Click Count')
+plt.ylabel('Normalised Relative Probability')
+plt.title('Raw Observation versus pure Fock States in retrodict model')
+
+plt.savefig('../output/datavspoisson2.png', dpi = 200)
 plt.show()
 
 
 
-# for no in photon_no:
-#     opt,cov = curve_fit(probby.noisy_pcn, x, clicks_prob, p0 = [no, no/1.])
-#     print(opt,' hihiihih')
-#     yfit = probby.noisy_pcn(x, *opt)
 
 
-#     chi2 = np.sum((clicks_prob - yfit)**2)/len(yfit)
-#     plt.plot(x, yfit, label='{} photons, {:.2f}noise, chi2 = {}'.format(no, opt[0], chi2))
 
-   
-#     # # plt.plot(clicks / np.sum(clicks))
-
-#     # plt.plot(output,label='output')
-#     fig.patch.set_facecolor('xkcd:sky blue')
-
-#     plt.title(label = 'Noisy Retrodict Efficiency={e}, Noise = {n}'.format(e=0.95,n=opt[0] ))
-#     # plt.savefig('output/Noisy_retrodict_E85_N10.eps')
-#     # plt.savefig('output/Noisy_retrodict_E85_N10.png')
-#     plt.legend()
 # plt.plot(clicks_prob,'--',color='red',label='clicks_prob')
+
+# plt.plot(probby.noisy_poisson_pc(fit_results[0], x), color='blue',label='noisy_poisson_pc')
 # plt.show()
-
-
-# def chi_square(data,expected):
-#     degree = len(data) - 2
-#     chi2 =  np.sum((data-expected)**2) / expected / degree
-#     return chi2
+# print(fit_results[2])

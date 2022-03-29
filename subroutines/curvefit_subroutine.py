@@ -17,7 +17,7 @@ Now experimenting with lmfit as well
 
 
 
-def odrfit(function, x, y, initials, xerr = None, yerr = 1.):
+def odrfit(function, x, y, initials, xerr = None, yerr = None):
 
     # Create a scipy Model object
     model = odr.Model(function)
@@ -37,11 +37,11 @@ def odrfit(function, x, y, initials, xerr = None, yerr = 1.):
     #now we can calculate chi-square (if you included errors for fitting, if not it's meaningless)
 
 
-    # chisquare = np.sum((y - function(output.beta, x))**2/(yerr**2))
-    # chi_reduced = chisquare / (len(x) - len(initials))
+    chisquare = np.sum((y - function(output.beta, x))**2/(function(output.beta, x)))
+    chi_reduced = chisquare / (len(x) - len(initials))
     # print('\nReduced Chisquare = ', chi_reduced, 'with ',  len(x) - len(initials), 'Degrees of Freedom')
 
-    return output.beta, output.sd_beta, 1.
+    return output.beta, output.sd_beta, chi_reduced  
 
 
 def limmyfit(function, x, y, arg):

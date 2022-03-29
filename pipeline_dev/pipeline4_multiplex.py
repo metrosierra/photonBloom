@@ -7,16 +7,19 @@ from scipy.signal import find_peaks
 import os
 from natsort import natsorted
 
-from ..subroutines import mathematics as mathy
-from ..subroutines import delay_tracking as deli
-from ..subroutines import multiplex_macroroutine as molly
+import sys 
+sys.path.append('../')
+from subroutines import mathematics as mathy
+from subroutines import delay_tracking as deli
+from subroutines import multiplex_macroroutine as molly
 
 
 targets = ('1k_countrate_50nsbench/', '10k_countrate_50nsbench/', '50k_countrate_50nsbench/','100k_countrate_50nsbench/')
-targets = ('140kcountrate/',)
+targets = ('300k_countrate_50nsbench/',)
+targets = ('140k_countrate_50nsbench/',)
 
 for target_dir in targets:
-    data_dir = '../data/photon16/' + target_dir
+    data_dir = '../data/photon8/' + target_dir
     folders = natsorted(os.listdir(data_dir))
     try:
         folders.remove('archive')
@@ -56,27 +59,27 @@ for target_dir in targets:
         # channel1chops = [channel1]
         # print(len(channel1), 'hiiii')
         width = 1e3
-        signo = 2850
+
         peno = 20001
         multiplex = 8
+
+        signo = int(multiplex/2 * (350 + 50))
+
         chop_no = 5
 
-        output1 = molly.sig_chops_multiplex(channel1chops, chop_no = chop_no, binwidth = width, sig_bin_no = signo, sig_threshold = 1, period_no = peno, multiplex = multiplex)
-        output2 = molly.sig_chops_multiplex(channel2chops, chop_no = chop_no, binwidth = width, sig_bin_no = signo, sig_threshold = 1, period_no = peno, multiplex = multiplex)
+        output1 = molly.sig_chops_multiplex(channel1chops, chop_no = chop_no, binwidth = width, sig_bin_no = signo, sig_threshold = 1, period_no = peno, multiplex = multiplex/2)
+        output2 = molly.sig_chops_multiplex(channel2chops, chop_no = chop_no, binwidth = width, sig_bin_no = signo, sig_threshold = 1, period_no = peno, multiplex = multiplex/2)
 
 
         print(output1)
 
-        #%%
-
         ceiling = min([len(output1), len(output2)])
         aggregate = output1[:ceiling] + output2[:ceiling]
-        hi3 = plt.hist(aggregate, density = False, bins = np.arange(-0.5, 17.5), label = '{} Data photon{} statistics'.format(target_dir[:-1], multiplex*2))
+        hi3 = plt.hist(aggregate, density = False, bins = np.arange(-0.5, 17.5), label = '{} Data photon{} statistics'.format(target_dir[:-1], multiplex))
 
         print(hi3[0])
-        poinput = np.array([0, 1, 2, 3, 4])
-        poinput = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])
-        poinput = np.arange(17)
+ 
+        poinput = np.arange(multiplex/2 + 1)
 
         mean = np.dot(poinput, hi3[0]) / np.sum(hi3[0])
         print(mean)
@@ -85,9 +88,8 @@ for target_dir in targets:
         plt.plot(poinput, poisson*np.sum(hi3[0]), label = 'Theoretical Poissonian ($\lambda$ = {:.4g})'.format(mean))
         plt.legend()
         plt.title('{}'.format(hi3[0]))
-        plt.savefig('output/{}_{}_Data photon{}_statistics.eps'.format(target_dir[:-1], dossier, multiplex*2))
+        plt.savefig('../output/{}_{}_Data photon{}_statistics.eps'.format(target_dir[:-1], dossier, multiplex))
         print(poisson)
         plt.show()
-        plt.show(block = False)
-        plt.close()
+
 #%%

@@ -10,9 +10,11 @@ import scipy.special
 import os
 from natsort import natsorted
 
-from ..subroutines import mathematics as mathy
-from ..subroutines import delay_tracking as deli
-from ..subroutines import sigbucket_subroutine as siggy
+import sys 
+sys.path.append('../')
+from subroutines import mathematics as mathy
+from subroutines import delay_tracking as deli
+from subroutines import sigbucket_subroutine as siggy
 
 data_dir = '../data/run2/'
 folders = natsorted(os.listdir(data_dir))

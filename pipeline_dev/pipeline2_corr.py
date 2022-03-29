@@ -7,9 +7,12 @@ from scipy.signal import find_peaks
 import os
 from natsort import natsorted
 
-from ..subroutines import cross_corr_subroutine as cross
-from ..subroutines import mathematics as mathy
-from ..subroutines import delay_tracking as deli
+import sys 
+sys.path.append('../')
+from subroutines import mathematics as mathy
+from subroutines import delay_tracking as deli
+from subroutines import cross_corr_subroutine as cross
+
 data_dir = '../data/run2/'
 folders = natsorted(os.listdir(data_dir))
 try:

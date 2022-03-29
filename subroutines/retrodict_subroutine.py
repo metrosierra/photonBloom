@@ -22,43 +22,34 @@ C, N, patches = plt.hist(bucket)
 '''
 #############################################################
 
-@njit
-def PCN(D,C,N):
-    combination = mathy.numba_combination(D, C)
-    S = mathy.numba_stirling2(C, N)
-    if D > 0:
-        factorial = mathy.numba_factorial(C) / (D**N)
-        P = combination * factorial * S
-    elif D == 0:
-        P = 0
-        
-    return P
+
+# @njit
+def noisy_poisson_pc(p, x): ##mean, noise = 0.001, qe = 0.35, multiplex = 8):
+    noise = 0.001
+    multiplex = 16
+    mean,  = p
+    qe = 0.95
+    if mean < 0 or qe < 0 or qe > 1:
+        return np.zeros(multiplex)
+
+    else:
+        clicks = x
+        # qe = 0.85
+        maxn = poisson_infN(mean)
+        fock_poissonprob = np.exp(-mean)
+
     
+        computation = fock_poissonprob * noisy_pcn(clicks, photon_no = 0, noise = noise, efficiency = qe) 
+        for fockn in range(1, maxn + 1):
+            
+            fock_poissonprob *= (mean / fockn)  
+            computation += fock_poissonprob * noisy_pcn(clicks, photon_no = fockn, noise = noise, efficiency = qe) 
 
-@njit
-def binomial(p0,m,n):
-    P = mathy.numba_combination(n,m) * (p0**m) * ((1-p0)**(n-m))
-    return P
-
-# @njit
-def noisy_poisson_pc(mean, noise = 0.001, qe = 0.35, clicks = [0,1,2,3,4,5,6,7,8]):
-
-    maxn = poisson_infN(mean)
-    fock_poissonprob = np.exp(-mean)
-
-    computation = fock_poissonprob * noisy_pcn(clicks, photon_number = 0, noise = noise, efficiency = qe) 
-    for fockn in range(1, maxn + 1):
-
-        fock_poissonprob *= (mean / fockn)  
-
-        computation += fock_poissonprob * noisy_pcn(clicks, photon_number = fockn, noise = noise, efficiency = qe) 
-
-    return computation
+        return computation / np.sum(computation)
 
 # @njit
-def noisy_pcn(clicks, photon_number, noise = 0.01, efficiency = 0.95):
+def noisy_pcn(clicks, photon_no, noise = 0.01, efficiency = 0.95):
     # noise, efficiency= p
-    photon_no = int(np.floor(photon_number))
     # noise = 0.1
     # efficiency = 0.85
     detector_no = len(clicks)
@@ -67,24 +58,25 @@ def noisy_pcn(clicks, photon_number, noise = 0.01, efficiency = 0.95):
         click = int(click)
         sum1 = 0.
         for i in range(click+1):
-            p1 = binomial(noise,i,detector_no)
+            p1 = retrodict_binomial(noise,i,detector_no)
             
             sum2 = 0.
             for j in range(click-i, photon_no+1):
                 Pd = (detector_no-i)/detector_no
-                p2 = binomial(Pd,j,photon_no)
+                p2 = retrodict_binomial(Pd,j,photon_no)
 
                 sum3 = 0.
                 for k in range(click-i, j+1):
                     Pd2 = detector_no-i
-                    p3 = binomial(efficiency, k, j) * PCN(Pd2, click-i, k)
+                    p3 = retrodict_binomial(efficiency, k, j) * PCN(Pd2, click-i, k)
                     sum3 += p3
-                    
+                    if sum3 < 0: print(retrodict_binomial(efficiency, k, j), PCN(Pd2, click-i, k), sum3, 'sum3hihihi')
+
                 sum2 += p2 * sum3
-
+                # if sum2 < 0: print(sum2, 'sum2')
             sum1 += p1 * sum2
+            # if sum1 < 0: print(sum1, 'heyhey')
         output.append(float(sum1))
-
     return np.array(output)#/np.sum(output)
 
 @njit
@@ -107,19 +99,40 @@ def poisson_infN(mean, threshold = 0.95):
 
     return n
 
+# @njit
+def PCN(D,C,N):
+    combination = mathy.numba_combination(D, C)
+    S = mathy.numba_stirling2(C, N)
+    if D > 0 and D**N > 0:
+
+        # if D > 1:
+            # print(D,C, N)
+            # print(D**N, 'hey')
+            # print(mathy.numba_factorial(C), 'hey2')
+        factorial = mathy.numba_factorial(C) / (D**N)
+        P = combination * factorial * S
+
+    elif D == 0:
+        P = 0
+    
+    elif D**N < 0:
+        P = 0
+    
+    
+    return P
+    
+
+### refer to explicit methods article for symbol convention
+# @njit
+def retrodict_binomial(etta, m, n):
+
+    if etta == 0.:
+        return 0.
+    else:
+        P = mathy.numba_combination(n, m) * (etta**m) * ((1 - etta)**(n-m))
+        if P < 0: print(mathy.numba_combination(n, m), (etta**m), ((1 - etta)**(n-m)), 'boo')
+        return P
 ########################################################
-
-D=4
-N=np.array([1,2,3,4])
-C=3
-
-
-'''
-With Poisson Prior
-'''
-
-
-
 
 
 def P_poissonCN(D,C,N,mean):

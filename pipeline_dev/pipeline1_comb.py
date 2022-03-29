@@ -5,8 +5,11 @@ import matplotlib.pyplot as plt
 
 import os
 from natsort import natsorted
-import subroutines.sigbucket_subroutine as siggy
-import subroutines.mathematics as mathy
+
+import sys 
+sys.path.append('../')
+from subroutines import sigbucket_subroutine as siggy 
+from subroutines import mathematics as mathy
 
 data_dir = '../data/'
 folders = natsorted(os.listdir(data_dir))

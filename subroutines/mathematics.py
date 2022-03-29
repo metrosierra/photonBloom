@@ -37,40 +37,44 @@ def poissonian(p, x):
     fac = numba_factorial(x)
     return p**x / fac * np.exp(-p)
 
-@njit
+### beware of integer overflow!!!!!!!!
+# @njit
 def numba_factorial(x):
     fac = 1
     for i in range(1, x+1):
         fac *= i
-    return fac
+    return int(fac)
 
-@njit 
-def numba_stirling2(m, n):
-    reciprocal = numba_factorial(n)
+# @njit 
+def numba_stirling2(n, k):
+    reciprocal = numba_factorial(k)
     summation = 0
-    for i in range(n+1):
-        
-        summation += (-1)**i * numba_combination(n, i) * (n - i)**m
-        
-    return summation / reciprocal
+
+    if k > n:
+        return 0
+
+    else:
+        for i in range(k+1):
+            value = (-1)**i * numba_combination(k, i) * (k - i)**n
+            summation += value
+        return summation / reciprocal
 
 
 
-
-@njit
+# @njit
 def numba_combination(n, m):
     '''
     D = number of possible detection events
     N = number of possible photons detected at each D
     '''
     if n >= m:
-        combination = numba_factorial(n) / (numba_factorial(m) * numba_factorial(n - m))
+
+        combination = int(numba_factorial(n) / (numba_factorial(m) * numba_factorial(n - m)))
     else: 
-        combination = 0.
+        combination = 0
     
+    if combination < 0: print(numba_factorial(n), (numba_factorial(m) * numba_factorial(n - m)),' combi')
     return combination
-
-
 
 
 
