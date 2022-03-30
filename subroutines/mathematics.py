@@ -124,18 +124,31 @@ def compute_bin(x, bin_edges):
 
 ##############################################################################3
 
-def tag_fourchannel_splice(tags, channels, save = False):
+def tag_fourchannel_splice(tags, channels, commonfloor = False, save = False):
 
-    channel1, channel2, channel3, channel4 = splice_aux(tags, channels)
+    
+    spliced_channels = splice_aux(tags, channels)
     if save:
         now = datetime.now()
         dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-        np.save('output/channel1_tags_{}'.format(dt_string), channel1)
-        np.save('output/channel2_tags_{}'.format(dt_string), channel2)
-        np.save('output/channel3_tags_{}'.format(dt_string), channel3)
-        np.save('output/channel4_tags_{}'.format(dt_string), channel4)
 
-    return channel1, channel2, channel3, channel4
+        for index, channel in enumerate(spliced_channels):
+            np.save('output/channel{}_tags_{}'.format(index+1, dt_string), channel)
+
+    if commonfloor: 
+        min_candidates = []
+        for channel in spliced_channels:
+            if len(channel) > 0:
+                min_candidates.append(np.min(channel))
+
+        mintag = min(min_candidates)
+
+        output = []
+        for channel in spliced_channels:
+            output.append(np.insert(channel, 0, mintag))
+    
+    print(len(output))
+    return output
 
 
 @njit

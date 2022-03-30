@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-from sympy.functions.combinatorial.numbers import stirling
-# from itertools import combinations
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -15,29 +12,24 @@ D = number of detectors
 C = number of observed clicks
 N = number of photons in initial state
 
-
-D = [1,2]
-mean = bucket_mean(bucket)
-C, N, patches = plt.hist(bucket)
 '''
+
+
 #############################################################
 
-
+#### ifixb is an array of same length as p, and 0 means fixed 
+### parameter, and >0 means fitting parameter
 # @njit
 def noisy_poisson_pc(p, x): ##mean, noise = 0.001, qe = 0.35, multiplex = 8):
-    noise = 0.001
-    multiplex = 16
-    mean,  = p
-    qe = 0.95
+    mean, noise, multiplex, qe = p
+
     if mean < 0 or qe < 0 or qe > 1:
         return np.zeros(multiplex)
 
     else:
         clicks = x
-        # qe = 0.85
         maxn = poisson_infN(mean)
         fock_poissonprob = np.exp(-mean)
-
     
         computation = fock_poissonprob * noisy_pcn(clicks, photon_no = 0, noise = noise, efficiency = qe) 
         for fockn in range(1, maxn + 1):

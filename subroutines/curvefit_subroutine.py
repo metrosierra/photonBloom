@@ -17,14 +17,14 @@ Now experimenting with lmfit as well
 
 
 
-def odrfit(function, x, y, initials, xerr = None, yerr = None):
+def odrfit(function, x, y, initials, xerr = None, yerr = None, param_mask = np.array([1, 0, 0, 0])):
 
     # Create a scipy Model object
     model = odr.Model(function)
     # Create a RealData object using our initiated data from above. basically declaring all our variables using the RealData command which the scipy package wants
-    input = odr.RealData(x, y, sx = xerr, sy = yerr)
+    inputdata = odr.RealData(x, y, sx = xerr, sy = yerr)
     # Set up ODR with the model and data. ODR is orthogonal distance regression (need to google!)
-    odr_setup = odr.ODR(input, model, beta0 = initials)
+    odr_setup = odr.ODR(inputdata, model, beta0 = initials, ifixb = param_mask)
 
     print('\nRunning fit!')
     # Run the regression.

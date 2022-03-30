@@ -30,7 +30,7 @@ x = np.arange(0, detector_no+1)
 print(x)
 # output = probby.noisy_pcn(x, 0.1, 3)
 # hi = probby.noisy_poisson_pc(3)
-fit_results = oddy.odrfit(probby.noisy_poisson_pc, x, clicks_prob, [15.])
+fit_results = oddy.odrfit(probby.noisy_poisson_pc, x, clicks_prob, [15., noise, detector_no, efficiency])
 plt.figure(figsize=(10, 10))
 plt.plot(clicks_prob,'--',color='red',label='Observed Photon16 Click Distribution')
 

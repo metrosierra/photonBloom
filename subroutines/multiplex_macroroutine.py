@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
-from numba import njit, prange
-import numba as nb
+from numba import njit
 
 import matplotlib.pyplot as plt
 
