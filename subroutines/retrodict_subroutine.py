@@ -257,3 +257,30 @@ def poisson_histogram_fit(bucket,savefig=False):
     print('Poisson Fit Parameters:\n Mean = {m} +/- {me} \n Scale = {a} +/- {ae}'.format(m=opt[0],a=opt[1],me=cov[0,0],ae=cov[1,1]))
 
     return fit_mean, fit_scale
+
+
+#%% Alternative photon retrodict equation as singular sum with error factor as given in Jonsson paper.
+
+def noisy_pcn_alt(clicks, photon_no, efficiency, noise=0):
+    '''
+    Probability of getting C clicks fir an input Fock state of N photons.
+    --> Equation given in Jonsson paper.
+    --> May assume noise to be ~0 - neglect dark counts
+    '''
+    D = len(clicks)
+    C = clicks
+    N = photon_no
+    
+    output = []
+    
+    f1 = (1/D**N) * mathy.numba_combination(D, C)
+    for click in clicks:
+        click = int(click)
+        for i in range(click+1):
+            f2 = ( (-1)**i ) * ( (1-noise)**(D-C+i) ) * mathy.numba_combination(C, i)
+            f3 = ( D - (D-C+i)*efficiency )**N
+            prob = f1*f2*f3
+            
+            output.append(prob)
+            
+    return output
