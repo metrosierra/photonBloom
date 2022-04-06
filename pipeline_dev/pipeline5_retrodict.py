@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+#%%
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,18 +12,46 @@ from subroutines import curvefit_subroutine as oddy
 fig = plt.figure()
 
 clicks = np.array([67, 360, 858, 867, 336])
-# clicks = np.array([75.,  583., 1278.,  486.,   63.])
+clicks = np.array([75.,  583., 1278.,  486.,   63.])
 # clicks = np.array([ 40., 241., 552., 772., 611., 228.,  39.,   4., 0.])
-# clicks = np.array([6.,  48., 212., 598., 798., 592., 216.,  18.,   1.])
-# clicks = np.array([  6.,  44., 214., 527., 783., 595., 267.,  51.,   2.])
+# # clicks = np.array([6.,  48., 212., 598., 798., 592., 216.,  18.,   1.])
+# # clicks = np.array([  6.,  44., 214., 527., 783., 595., 267.,  51.,   2.])
+
+clicks = [104., 355., 610., 586., 471., 230., 75., 36., 18., 0., 0., 0., 0., 0., 0., 0., 0.]
 # clicks = [ 20., 100., 265., 500., 547., 456., 335., 168.,  72.,  21., 3., 1., 0., 0., 0., 0., 0.]
 
 clicks = [  0.,   0.,   7.,  13.,  43., 129., 248., 427., 501., 465., 343., 194.,  81.,  36., 2.,   1.,   0.]
 
 clicks_prob = clicks/np.sum(clicks)
+#############################THIS IS THE MAXIMUM LIKELIHOOD ESTIMATOR TEST
+multiplex = 16
+noise = 0.0001
+qe = 0.7
 
+x_domain = np.arange(0, multiplex +1)
+mean_guess = np.sum(x_domain * np.array(clicks_prob)) 
+print(mean_guess)
 
+output = []
+trials = np.linspace(np.floor(mean_guess/3),np.floor(mean_guess*4.5), 50)
+resolution = trials[1] - trials[0]
+print(resolution, 'resolution')
+for trial in trials:
 
+    logmle = probby.log_mle_pc([trial, noise, multiplex, qe], x_domain, clicks)
+    output.append(logmle)
+
+plt.plot(output)
+plt.show()
+opt_trial = trials[np.argmax(output)]
+print(opt_trial, 'optimised!!!')
+fit = probby.noisy_poisson_pc([opt_trial, noise, multiplex, qe], x_domain)
+
+plt.plot(fit)
+plt.plot(clicks_prob)
+plt.show()
+######################################################### THIS IS THE SCIPY ODR FIT TEST
+#%%
 noise = 0.01
 efficiency = 0.95
 detector_no = 16
@@ -51,11 +80,4 @@ plt.show()
 
 
 
-
-
-
-# plt.plot(clicks_prob,'--',color='red',label='clicks_prob')
-
-# plt.plot(probby.noisy_poisson_pc(fit_results[0], x), color='blue',label='noisy_poisson_pc')
-# plt.show()
-# print(fit_results[2])
+#%%

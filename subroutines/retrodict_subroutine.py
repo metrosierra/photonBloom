@@ -17,8 +17,17 @@ N = number of photons in initial state
 
 #############################################################
 
-#### ifixb is an array of same length as p, and 0 means fixed 
-### parameter, and >0 means fitting parameter
+def log_mle_pc(p, clicks, data):
+
+    probs = noisy_poisson_pc(p, clicks)
+    log_mle = 0
+
+    for index, freq in enumerate(data):
+        log_mle += np.log(probs[index]) * freq
+    return log_mle
+
+
+
 # @njit
 def noisy_poisson_pc(p, x): ##mean, noise = 0.001, qe = 0.35, multiplex = 8):
     mean, noise, multiplex, qe = p
@@ -72,7 +81,7 @@ def noisy_pcn(clicks, photon_no, noise = 0.01, efficiency = 0.95):
     return np.array(output)#/np.sum(output)
 
 @njit
-def poisson_infN(mean, threshold = 0.95):
+def poisson_infN(mean, threshold = 0.99):
 
     prob = 0
     n = 1
