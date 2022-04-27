@@ -6,13 +6,13 @@ import subroutines.delay_tracking as deli
 import subroutines.multiplex_macroroutine as molly
 import subroutines.prettyplot as pretty
 
-def twomultiplex(bidata, chopsize, chop_no, binwidth, peno, multiplex, filename):
+def twomultiplex(bidata, chopsize, chop_no, binwidth, peno, multiplex, filename, delayno = 350, pulseno = 50):
 
     channel1fixed, channel2fixed = deli.data_crop(bidata, chopsize * (chop_no + 2))
     channel1chops = deli.channel_chop(channel1fixed, chopsize)
     channel2chops = deli.channel_chop(channel2fixed, chopsize)
 
-    signo = int(multiplex/2 * (350 + 50))
+    signo = int(multiplex/2 * (delayno + pulseno))
     print('Signal bucket width for photon{}'.format(multiplex), signo)
 
     output1 = molly.sig_chops_multiplex(channel1chops, chop_no = chop_no, binwidth = binwidth, sig_bin_no = signo, sig_threshold = 1, period_no = peno, multiplex = multiplex/2)

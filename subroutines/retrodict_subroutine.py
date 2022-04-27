@@ -19,7 +19,9 @@ N = number of photons in initial state
 
 def log_mle_pc(p, clicks, data):
 
+    # print(data, clicks)
     probs = noisy_poisson_pc(p, clicks)
+    # print(probs)
     log_mle = 0
 
     for index, freq in enumerate(data):
