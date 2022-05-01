@@ -20,7 +20,7 @@ N = number of photons in initial state
 def log_mle_pc(p, clicks, data):
 
     # print(data, clicks)
-    probs = noisy_poisson_pc(p, clicks)
+    probs = noisy_poisson_pc_new(p, clicks)
     # print(probs)
     log_mle = 0
 
@@ -28,6 +28,20 @@ def log_mle_pc(p, clicks, data):
         log_mle += np.log(probs[index]) * freq
     return log_mle
 
+def noisy_poisson_pc_new(p, x):
+    mean, noise, multiplex, qe = p
+    if mean < 0 or qe < 0 or qe > 1:
+        return np.zeros(multiplex)
+
+    else:
+        output = []
+        for fockn in range(0, multiplex+1):
+            binom = mathy.numba_combination(multiplex, fockn)
+            exponent_noise = np.exp(-mean * qe)*(1 - noise)**multiplex 
+            big_fraction = (np.exp(mean*qe/multiplex)/(1-noise) - 1)**fockn 
+            output.append(binom * exponent_noise * big_fraction)
+
+        return np.array(output)
 
 
 # @njit
@@ -108,10 +122,6 @@ def PCN(D,C,N):
     S = mathy.numba_stirling2(C, N)
     if D > 0 and D**N > 0:
 
-        # if D > 1:
-            # print(D,C, N)
-            # print(D**N, 'hey')
-            # print(mathy.numba_factorial(C), 'hey2')
         factorial = mathy.numba_factorial(C) / (D**N)
         P = combination * factorial * S
 
@@ -120,7 +130,9 @@ def PCN(D,C,N):
     
     elif D**N < 0:
         P = 0
-    
+    else:
+        print('Error occured!! Please check')
+        P = 0
     
     return P
     

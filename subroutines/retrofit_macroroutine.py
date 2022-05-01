@@ -19,8 +19,8 @@ def poisson_odr_retrofit(counts, multiplex, filename, qe = 0.5, noise = 0.00001)
     ### mean, noise, multiplex, qe
     input_param = np.array([mean_guess, noise, multiplex, qe])
 
-    fit_results = oddy.odrfit(probby.noisy_poisson_pc, x = clicks, y = counts_prob, initials = input_param, param_mask = np.array([1, 0, 0, 0]))
-    counts_fit = probby.noisy_poisson_pc(fit_results[0], clicks)
+    fit_results = oddy.odrfit(probby.noisy_poisson_pc_new, x = clicks, y = counts_prob, initials = input_param, param_mask = np.array([1, 0, 0, 0]))
+    counts_fit = probby.noisy_poisson_pc_new(fit_results[0], clicks)
     print(counts_fit)
     plt.plot(clicks, counts_fit, ls = '--', label = 'Fit Poissonian light distribution, {:.3f}$\pm${:.3f} mean'.format(fit_results[0][0], fit_results[1][0]))
     ax.legend(fontsize = 15)
@@ -50,9 +50,7 @@ def poisson_mle_gradient(counts, multiplex, filename, qe = 0.5, noise = 0.001, t
 
     while not converged:
         trial += gradient * step_size
-        print(trial)
         next_value = probby.log_mle_pc([trial, noise, multiplex, qe], clicks, counts)
-        print(next_value)
 
         if next_value <= ref_value:
             gradient *= -1
@@ -71,10 +69,10 @@ def poisson_mle_gradient(counts, multiplex, filename, qe = 0.5, noise = 0.001, t
     left_converged = False
     while not left_converged:
         trial += error_step*gradient
-        print('left trial', trial)
+        # print('left trial', trial)
         next_value = probby.log_mle_pc([trial, noise, multiplex, qe], clicks, counts)
 
-        print(abs(ref_value - next_value), 'hi')
+        # print(abs(ref_value - next_value), 'hi')
 
         if ref_value - next_value > 0.5:
             ### remove the step, halve the step for the next run
@@ -93,9 +91,6 @@ def poisson_mle_gradient(counts, multiplex, filename, qe = 0.5, noise = 0.001, t
         trial += error_step*gradient
         next_value = probby.log_mle_pc([trial, noise, multiplex, qe], clicks, counts)
 
-        print(trial)
-        print(abs(ref_value - next_value), 'hi')
-
         if ref_value - next_value > 0.5: 
             trial -= gradient*error_step
             error_step /= 2
@@ -104,12 +99,18 @@ def poisson_mle_gradient(counts, multiplex, filename, qe = 0.5, noise = 0.001, t
             right_converged = True 
     righterror = trial - opt_trial
 
+    opt_fit = probby.noisy_poisson_pc_new([opt_trial, noise, multiplex, qe], clicks)
+    ssres = np.sum((opt_fit - counts_prob)**2)
+    sstot = np.sum((counts_prob - np.mean(counts_prob))**2)
+    rsquare = 1 - ssres/sstot
+
+
 #########################just plotting###########################
     fig, ax = pretty.prettyplot(figsize = (10, 10), yaxis_dp = '%.2f', xaxis_dp = '%.1f', ylabel = 'Normalised Relative Probability', xlabel = 'Detector Click Count', title = 'Retrodict fit of observed probability, Photon{}, qe{}%, noise{:.6f}'.format(multiplex, qe*100, noise))
     plt.plot(clicks, counts_prob, ls = '--', color='red', label = 'Observed Photon{} Click Distribution'.format(multiplex))
 
-    counts_fit = probby.noisy_poisson_pc([opt_trial, noise, multiplex, qe], clicks)
-    plt.plot(clicks, counts_fit, ls = '--', label = 'Fit Poissonian light distribution, {:.3f}+{:.3f}-{:.3f} mean'.format(opt_trial, lefterror, righterror))
+    counts_fit = probby.noisy_poisson_pc_new([opt_trial, noise, multiplex, qe], clicks)
+    plt.plot(clicks, counts_fit, ls = '--', label = 'Fit Poissonian, {:.3f}{:.3f}+{:.3f} mean, {:.5f} rsquare'.format(opt_trial, lefterror, righterror, rsquare))
     ax.legend(fontsize = 15)
 
     plt.savefig('../output/{}_mleretrodict_{}percentqe.eps'.format(filename, qe*100))
@@ -119,4 +120,4 @@ def poisson_mle_gradient(counts, multiplex, filename, qe = 0.5, noise = 0.001, t
     plt.close()
 
 
-    return opt_trial, lefterror, righterror
+    return opt_trial, lefterror, righterror, rsquare

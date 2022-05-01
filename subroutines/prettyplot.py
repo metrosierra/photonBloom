@@ -22,5 +22,6 @@ def prettyplot(figsize = (9, 6), yaxis_dp = '%.1f', xaxis_dp = '%.2f', ylabel = 
     ax.set_xlabel(xlabel, fontsize = 20)
     ax.set_ylabel(ylabel, fontsize = 20)
     ax.set_title(title, fontsize = 20)
+    fig.tight_layout()
 
     return fig, ax

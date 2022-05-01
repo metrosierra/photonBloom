@@ -20,7 +20,7 @@ from subroutines import retrofit_macroroutine as rexxy
 
 #%%
 stages = [4, 8, 16]
-stages = [4]
+# stages = [2]
 '''
 file structure is just:
 data -> photon{stages} -> multiple folders for each countrate -> each countrate folder 
@@ -30,12 +30,12 @@ os.listdir lists the folder names automatically after photonX
 '''
 
 qe = 0.589
-### delay time in ns
-delayno = 350
-### pulse time in ns
-pulseno = 50
+### delay time in ns, usually 350
+delayno = 290
+### pulse time in ns, usually 50
+pulseno = 20
 ### whether to use old fitting method or new
-old = True
+old = False
 
 
 ######################just finding the file
@@ -85,20 +85,20 @@ for stage in stages:
             ### from undercounting...this is all in nanoseconds
             noiserate = len(noise[noise < (noise[0] + 8e12)]) / 8e9
             noiseprob += noiserate * windowno / 2
-            print(noiseprob)
+            print(noiseprob, 'average noise')
 
     ####################################################
 
 
     ############################## workhorse is just here 
-        counts = twosie.twomultiplex(data, chopsize = 0.01e12, chop_no = 5, binwidth = 1e3, peno = 20001, multiplex = multiplex, filename = filename, delayno = delayno, pulseno = pulseno)
-
+        counts = twosie.twomultiplex(data, chopsize = 0.3e12, chop_no = 3, binwidth = 1e3, peno = 20001, multiplex = multiplex, filename = filename, delayno = delayno, pulseno = pulseno)
+        # counts = twosie.twomultiplex(data, chopsize = 0.1e12, chop_no = 6, binwidth = 1e3, peno = 20000, multiplex = multiplex, filename = filename, delayno = 0, pulseno = 50)
         ### old
         if old:
             output = rexxy.poisson_odr_retrofit(counts, multiplex = multiplex, filename = filename, qe = qe, noise = noiseprob)
         else:
         ### new MLE gradient descent
-            output = rexxy.poisson_mle_gradient(counts, multiplex, qe = qe, noise = noiseprob, threshold = 0.0001)
+            output = rexxy.poisson_mle_gradient(counts, multiplex, filename = filename, qe = qe, noise = noiseprob, threshold = 0.0001)
 
     ####################################
 
