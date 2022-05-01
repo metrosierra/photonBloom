@@ -36,6 +36,43 @@ This makes the final report crunch much faster.
 
 #%%
 
+'''
+
+keyplots:
+
+Sabrina:
+photon8 data only (showing saturation) -> 60k, 100k, 140k 
+photon4 data only (showing saturation) -> 20k, 70k, 150k
+photon16 bidirectional histogram (using all 10s of data)-> 150k --> pipeline2_correlation_plot.py --> with function cross.cross_corr
+
+Mingsong:
+photon16 data + fit -> 50k, 100k, 150k, 200k
+photon16 combing ladder -> 150k -> pipeline4_multiplex.py
+photon16 jitter smear plot (varying size of data chop) -> 150k -> pipeline4_multiplex.py
+
+
+
+'''
+
+'''
+- square plots generally look nice (9x9 plot vs fontsize 20 scaling)
+- use inkscape or something to combine eps plots
+- inward pointing ticks, for all four sides
+- use different linestyle and colour for each line in plot
+- use axis labels 'Counts' vs 'Clicks'
+- significants figures/decimals reflect precision of quantity measured. else default to 3 sig fig (eg probability)
+- errors are reported to ONE SIG FIG, value rounded to error precision
+- legends go to largest empty space 
+- legends: 'Click Distribution' and 'Poissonian Fit, mean'
+
+
+
+'''
+
+
+
+#%%
+
 
 overall_qe = 0.589###AS OF 26 APRIL 2022 
 
@@ -43,11 +80,12 @@ overall_qe = 0.589###AS OF 26 APRIL 2022
 
 
 
-
-
-
-
-
+###data
+### fig, ax = prettyplot()
+### plt.plot 
+### plt.save 
+### plt.show
+### plt.close()
 
 
 

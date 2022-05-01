@@ -8,7 +8,7 @@ import sys
 sys.path.append('../')
 from subroutines import retrodict_subroutine as probby
 from subroutines import curvefit_subroutine as oddy
-from subroutines import retrofit_macroroutine as rexxy
+from subroutines import retrofit_macroroutine as rexy
 
 fig = plt.figure()
 
@@ -90,7 +90,7 @@ data = [photon4_50k, photon4_70k, photon4_150k, photon8_60k, photon8_100k, photo
 for subdata in data:
 
     multiplex, qe, noise, counts = subdata
-    fits = rexxy.poisson_mle_gradient(counts, multiplex, filename = 'pipeline5_test', qe = qe, noise = noise, threshold = 0.0001)
+    fits = rexy.poisson_mle_gradient(counts, multiplex, filename = 'pipeline5_test', qe = qe, noise = noise, threshold = 0.0001)
 
 
 ######################################################### THIS IS THE SCIPY ODR FIT TEST

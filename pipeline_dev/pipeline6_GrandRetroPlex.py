@@ -20,6 +20,7 @@ from subroutines import retrofit_macroroutine as rexxy
 
 #%%
 stages = [4, 8, 16]
+stages = [4]
 '''
 file structure is just:
 data -> photon{stages} -> multiple folders for each countrate -> each countrate folder 
@@ -34,7 +35,7 @@ delayno = 350
 ### pulse time in ns
 pulseno = 50
 ### whether to use old fitting method or new
-old = False
+old = True
 
 
 ######################just finding the file
