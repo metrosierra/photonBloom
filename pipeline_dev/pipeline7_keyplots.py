@@ -275,7 +275,7 @@ Line Plot
 for i, data in enumerate(data_photon4):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
     plt.scatter(xaxis, data[3], color = 'black', marker='D')
-    plt.plot(xaxis, data[3], color = 'black')
+    plt.plot(xaxis, data[3], color = 'black',linestyle='--')
     plt.savefig('../output/{}.eps'.format(filename_photon4[i]+'_lineplot'))
     plt.show()
     plt.close()
@@ -316,7 +316,7 @@ Line Plot
 for i, data in enumerate(data_photon8):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
     plt.scatter(xaxis, data[3], color = 'black', marker='D')
-    plt.plot(xaxis, data[3], color = 'black')
+    plt.plot(xaxis, data[3], color = 'black',linestyle='--')
     plt.savefig('../output/{}.eps'.format(filename_photon8[i]+'_lineplot'))
     plt.show()
     plt.close()
@@ -357,7 +357,7 @@ plt.plot(bidirectional_data[0], bidirectional_data[1],color='red')
 plt.xlabel('Delay ($\mu$s)')
 plt.ylabel('Count')
 plt.xlim([-10, 10])
-plt.savefig('..output/photon16_150kcounts_bidirectional_histogram.eps')
+plt.savefig('../output/photon16_150kcounts_bidirectional_histogram.eps')
 plt.show()
 
 #%%
