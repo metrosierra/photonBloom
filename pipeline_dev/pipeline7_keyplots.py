@@ -242,19 +242,19 @@ plt.close()
 #%%
 
 '''
-Photon4 data only (showing saturation) -> 50k, 70k, 150k
+Photon4 data only (showing saturation) -> 20k, 70k, 150k
 '''
 photon_no = 4
 xaxis = np.arange(0, photon_no+1)
 '''
-Photon4 Data: 50k, 70k, 150k
+Photon4 Data: 20k, 70k, 150k
 '''
-photon4_50k = [4, overall_qe, 0.006563, [508., 1082., 663., 215., 15.]]
-photon4_70k = [4, overall_qe, 0.006385, [78., 536., 1179., 615., 77.]] 
-photon4_150k = [4, overall_qe, 0.027358, [5., 87., 865., 1223., 309.]]
+photon4_20k = [4, overall_qe, 0.0005436, [1.183e+03, 9.550e+02, 2.940e+02, 3.500e+01, 1.000e+00]]
+photon4_70k = [4, overall_qe, 0.0031, [83., 438., 894., 822., 248.]]
+photon4_150k = [4, overall_qe, 0.0136, [5., 56., 354., 1051., 1023.]]
 
-data_photon4 = [photon4_50k, photon4_70k, photon4_150k]
-filename_photon4 = ['photon4_50k_histogram', 'photon4_70k_histogram', 'photon4_150k_histogram']
+data_photon4 = [photon4_20k, photon4_70k, photon4_150k]
+filename_photon4 = ['photon4_20k_histogram', 'photon4_70k_histogram', 'photon4_150k_histogram']
 
 
 '''
@@ -263,7 +263,7 @@ Histogram Plot
 
 for i, data in enumerate(data_photon4):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black')
+    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black',label = 'Click Distribution')
     plt.savefig('../output/{}.eps'.format(filename_photon4[i]))
     plt.show()
     plt.close()
@@ -274,8 +274,8 @@ Line Plot
 
 for i, data in enumerate(data_photon4):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.scatter(xaxis, data[3], color = 'black', marker='D')
-    plt.plot(xaxis, data[3], color = 'black')
+    plt.scatter(xaxis, data[3], color = 'black', marker='D',label = 'Click Distribution')
+    plt.plot(xaxis, data[3], color = 'black',linestyle='--')
     plt.savefig('../output/{}.eps'.format(filename_photon4[i]+'_lineplot'))
     plt.show()
     plt.close()
@@ -291,9 +291,9 @@ xaxis = np.arange(0, photon_no+1)
 '''
 Photon8 Data: 60k, 100k, 140k
 '''
-photon8_60k = [8, overall_qe, 0.004672, [234., 661., 864., 493., 186., 37., 7., 1., 0.]]
-photon8_100k = [8, overall_qe, 0.008244, [40., 232., 522., 775., 610., 239., 63., 5., 1.]]
-photon8_140k = [8, overall_qe, 0.013272, [6., 44., 214., 527., 783., 595., 267., 51., 2.]]
+photon8_60k = [8, overall_qe, 0.0031538, [258., 634., 850., 487., 202.,  40.,  10.,   2.,   0.]]
+photon8_100k = [8, overall_qe, 0.005564, [47., 240., 491., 694., 586., 316., 95., 16., 2.]]
+photon8_140k = [8, overall_qe, 0.008958, [6.,  53., 176., 441., 663., 637., 364., 132.,  17.]]
 
 data_photon8 = [photon8_60k, photon8_100k, photon8_140k]
 filename_photon8 = ['photon8_60k_histogram', 'photon8_100k_histogram', 'photon8_140k_histogram']
@@ -304,7 +304,7 @@ Histogram Plot
 
 for i, data in enumerate(data_photon8):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black')
+    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black',label = 'Click Distribution')
     plt.savefig('../output/{}.eps'.format(filename_photon8[i]))
     plt.show()
     plt.close()
@@ -315,8 +315,8 @@ Line Plot
 
 for i, data in enumerate(data_photon8):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.scatter(xaxis, data[3], color = 'black', marker='D')
-    plt.plot(xaxis, data[3], color = 'black')
+    plt.scatter(xaxis, data[3], color = 'black', marker='D',label= 'Click Distribution')
+    plt.plot(xaxis, data[3], color = 'black',linestyle='--')
     plt.savefig('../output/{}.eps'.format(filename_photon8[i]+'_lineplot'))
     plt.show()
     plt.close()
