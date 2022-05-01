@@ -332,18 +332,18 @@ xaxis = np.arange(0, photon_no+1)
 '''
 Loading and Saving Data
 '''
-# tags = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/collected_tags_24032022_17_31_49.npy')
-# tags_channel_list = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/tags_channel_list_24032022_17_31_49.npy')
-# channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags[:100000], tags_channel_list[:100000],commonfloor = True)
-# data=[channel1,channel2]
-# channel1, channel2 = deli.data_crop(data, 0.1e12)
-# bins = 20000
-# max_delay = 1100e6
-# counts, midpoints = cross.cross_corr(channel1, channel2, bins = bins, max_delay = max_delay)
-# midpoints *= 1e-6
+tags = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/collected_tags_24032022_17_31_49.npy')
+tags_channel_list = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/tags_channel_list_24032022_17_31_49.npy')
+channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags[:100000], tags_channel_list[:100000],commonfloor = True)
+data=[channel1,channel2]
+channel1, channel2 = deli.data_crop(data, 0.1e12)
+bins = 2000
+max_delay = 10e6
+counts, midpoints = cross.cross_corr(channel1, channel2, bins = bins, max_delay = max_delay)
+midpoints *= 1e-6
 
-# bidirectional_data = np.array([midpoints, counts])
-# np.savetxt('../data/photon16/150k_data_bidirectional.txt', bidirectional_data)
+bidirectional_data = np.array([midpoints, counts])
+np.savetxt('../data/photon16/150k_data_bidirectional.txt', bidirectional_data)
 '''
 Plotting Bidirectional Histogram Photon16 150k countrate
 '''
