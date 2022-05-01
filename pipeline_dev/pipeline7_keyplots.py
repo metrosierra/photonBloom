@@ -354,7 +354,7 @@ fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.2f'
 plt.plot(bidirectional_data[0], bidirectional_data[1],color='red')
 plt.xlabel('Delay ($\mu$s)')
 plt.ylabel('Count')
-plt.xlim([-10, 10])
+plt.xlim([-5, 5])
 plt.savefig('../output/photon16_150kcounts_bidirectional_histogram.eps')
 plt.show()
 
