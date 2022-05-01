@@ -263,7 +263,7 @@ Histogram Plot
 
 for i, data in enumerate(data_photon4):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black')
+    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black',label = 'Click Distribution')
     plt.savefig('../output/{}.eps'.format(filename_photon4[i]))
     plt.show()
     plt.close()
@@ -274,7 +274,7 @@ Line Plot
 
 for i, data in enumerate(data_photon4):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.scatter(xaxis, data[3], color = 'black', marker='D')
+    plt.scatter(xaxis, data[3], color = 'black', marker='D',label = 'Click Distribution')
     plt.plot(xaxis, data[3], color = 'black',linestyle='--')
     plt.savefig('../output/{}.eps'.format(filename_photon4[i]+'_lineplot'))
     plt.show()
@@ -304,7 +304,7 @@ Histogram Plot
 
 for i, data in enumerate(data_photon8):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black')
+    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black',label = 'Click Distribution')
     plt.savefig('../output/{}.eps'.format(filename_photon8[i]))
     plt.show()
     plt.close()
@@ -315,7 +315,7 @@ Line Plot
 
 for i, data in enumerate(data_photon8):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.scatter(xaxis, data[3], color = 'black', marker='D')
+    plt.scatter(xaxis, data[3], color = 'black', marker='D',label= 'Click Distribution')
     plt.plot(xaxis, data[3], color = 'black',linestyle='--')
     plt.savefig('../output/{}.eps'.format(filename_photon8[i]+'_lineplot'))
     plt.show()
