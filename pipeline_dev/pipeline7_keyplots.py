@@ -240,7 +240,6 @@ plt.close()
 
 
 #%%
-
 '''
 Photon4 data only (showing saturation) -> 20k, 70k, 150k
 '''
@@ -262,9 +261,10 @@ Histogram Plot
 '''
 
 for i, data in enumerate(data_photon4):
-    fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black',label = 'Click Distribution')
-    plt.savefig('../output/{}.eps'.format(filename_photon4[i]))
+    fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.0f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
+    plt.bar(xaxis, data[3], width=1, color = 'lightsteelblue', edgecolor = 'black',label = 'Click Distribution')
+    plt.xticks(xaxis)
+    plt.savefig('../output/{}.eps'.format(filename_photon4[i]), bbox_inches = 'tight')
     plt.show()
     plt.close()
 
@@ -276,6 +276,7 @@ for i, data in enumerate(data_photon4):
     fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
     plt.scatter(xaxis, data[3], color = 'black', marker='D',label = 'Click Distribution')
     plt.plot(xaxis, data[3], color = 'black',linestyle='--')
+    plt.xticks(xaxis)
     plt.savefig('../output/{}.eps'.format(filename_photon4[i]+'_lineplot'))
     plt.show()
     plt.close()
@@ -303,9 +304,10 @@ Histogram Plot
 '''
 
 for i, data in enumerate(data_photon8):
-    fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-    plt.bar(xaxis, data[3], width=1, color = 'lightgrey', edgecolor = 'black',label = 'Click Distribution')
-    plt.savefig('../output/{}.eps'.format(filename_photon8[i]))
+    fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.0f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
+    plt.bar(xaxis, data[3], width=1, color = 'lightsteelblue', edgecolor = 'black',label = 'Click Distribution')
+    plt.xticks(xaxis)
+    plt.savefig('../output/{}.eps'.format(filename_photon8[i]), bbox_inches ='tight')
     plt.show()
     plt.close()
 
@@ -314,51 +316,52 @@ Line Plot
 '''
 
 for i, data in enumerate(data_photon8):
-    fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
+    fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.0f', xaxis_dp = '%.0f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
     plt.scatter(xaxis, data[3], color = 'black', marker='D',label= 'Click Distribution')
     plt.plot(xaxis, data[3], color = 'black',linestyle='--')
-    plt.savefig('../output/{}.eps'.format(filename_photon8[i]+'_lineplot'))
+    plt.xticks(xaxis)
+    plt.savefig('../output/{}.eps'.format(filename_photon8[i]+'_lineplot'), bbox_inches ='tight')
     plt.show()
     plt.close()
 
-# #%%
-# '''
-# photon16 bidirectional histogram (using all 10s of data)-> 150k --> pipeline2_correlation_plot.py --> with function cross.cross_corr
-# '''
-# overall_qe = 0.589
+#%%
+'''
+photon16 bidirectional histogram (using all 10s of data)-> 150k --> pipeline2_correlation_plot.py --> with function cross.cross_corr
+'''
+overall_qe = 0.589
 
-# photon_no = 16
-# xaxis = np.arange(0, photon_no+1)
+photon_no = 16
+xaxis = np.arange(0, photon_no+1)
 
-# '''
-# Loading and Saving Data
-# '''
-# tags = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/collected_tags_24032022_17_31_49.npy')
-# tags_channel_list = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/tags_channel_list_24032022_17_31_49.npy')
-# channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list,commonfloor = True)
-# data=[channel1,channel2]
-# channel1, channel2 = deli.data_crop(data, 0.2e12)
+'''
+Loading and Saving Data
+'''
+tags = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/collected_tags_24032022_17_31_49.npy')
+tags_channel_list = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/tags_channel_list_24032022_17_31_49.npy')
+channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list,commonfloor = True)
+data=[channel1,channel2]
+channel1, channel2 = deli.data_crop(data, 0.2e12)
 
-# print('hihi')
-# bins = 2000
-# max_delay = 5e6
-# counts, midpoints = cross.cross_corr(channel1, channel2, bins = bins, max_delay = max_delay)
-# midpoints *= 1e-6
+print('hihi')
+bins = 2000
+max_delay = 5e6
+counts, midpoints = cross.cross_corr(channel1, channel2, bins = bins, max_delay = max_delay)
+midpoints *= 1e-6
 
-# bidirectional_data = np.array([midpoints, counts])
-# np.savetxt('../output/150k_data_bidirectional.txt', bidirectional_data)
-# '''
-# Plotting Bidirectional Histogram Photon16 150k countrate
-# '''
+bidirectional_data = np.array([midpoints, counts])
+np.savetxt('../output/150k_data_bidirectional.txt', bidirectional_data)
+'''
+Plotting Bidirectional Histogram Photon16 150k countrate
+'''
 
-# bidirectional_data = np.loadtxt('../output/150k_data_bidirectional.txt')
+bidirectional_data = np.loadtxt('../output/150k_data_bidirectional.txt')
 
-# fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.2f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-# plt.plot(bidirectional_data[0], bidirectional_data[1],color='red')
-# plt.xlabel('Delay ($\mu$s)')
-# plt.ylabel('Count')
-# plt.xlim([-5, 5])
-# plt.savefig('../output/photon16_150kcounts_bidirectional_histogram.eps')
-# plt.show()
+fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.0f', xaxis_dp = '%.2f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
+plt.plot(bidirectional_data[0], bidirectional_data[1],color='dodgerblue')
+plt.xlabel('Delay ($\mu$s)')
+plt.ylabel('Count')
+plt.xlim([-5, 5])
+plt.savefig('../output/photon16_150kcounts_bidirectional_histogram.eps', bbox_inches = 'tight')
+plt.show()
 
 #%%
