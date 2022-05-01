@@ -12,7 +12,7 @@ def twomultiplex(bidata, chopsize, chop_no, binwidth, peno, multiplex, filename,
     channel1chops = deli.channel_chop(channel1fixed, chopsize)
     channel2chops = deli.channel_chop(channel2fixed, chopsize)
 
-    signo = int(multiplex/2 * (delayno + pulseno))
+    signo = int(multiplex/2-1) * (delayno + pulseno) - delayno
     print('Signal bucket width for photon{}'.format(multiplex), signo)
 
     output1 = molly.sig_chops_multiplex(channel1chops, chop_no = chop_no, binwidth = binwidth, sig_bin_no = signo, sig_threshold = 1, period_no = peno, multiplex = multiplex/2)

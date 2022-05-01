@@ -29,9 +29,10 @@ which has a darkcount folder and signal folder (eg 50nswidth_blah)
 os.listdir lists the folder names automatically after photonX
 '''
 
+
 qe = 0.589
 ### delay time in ns, usually 350
-delayno = 290
+delayno = 350
 ### pulse time in ns, usually 50
 pulseno = 20
 ### whether to use old fitting method or new

@@ -107,8 +107,8 @@ photon16_50k_fit = probby.noisy_poisson_pc_new([fitparam, data[2],  data[0],  da
 
 fig, ax = pretty.prettyplot(figsize = (9, 9), yaxis_dp = '%.3f', xaxis_dp = '%.0f', ylabel = 'Probability', xlabel = 'Clicks', title = '')
 
-plt.plot(clicks, data[3]/np.sum(data[3]), marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
-plt.plot(clicks, photon16_50k_fit, marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.2f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
+plt.plot(clicks, data[3]/np.sum(data[3]), color = 'black', marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
+plt.plot(clicks, photon16_50k_fit, color = 'dodgerblue', marker = '.', markersize = 17, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.2f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
 ax.legend(fontsize = 15)
 plt.xticks(x_axis)
 
@@ -132,8 +132,8 @@ photon16_100k_fit = probby.noisy_poisson_pc_new([fitparam, data[2],  data[0],  d
 
 fig, ax = pretty.prettyplot(figsize = (9, 9), yaxis_dp = '%.3f', xaxis_dp = '%.0f', ylabel = 'Probability', xlabel = 'Clicks', title = '')
 
-plt.plot(clicks, data[3]/np.sum(data[3]), marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
-plt.plot(clicks, photon16_100k_fit, marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.2f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
+plt.plot(clicks, data[3]/np.sum(data[3]), color = 'black', marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
+plt.plot(clicks, photon16_100k_fit, color = 'dodgerblue', marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.2f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
 ax.legend(fontsize = 15)
 plt.xticks(x_axis)
 
@@ -156,8 +156,8 @@ photon16_150k_fit = probby.noisy_poisson_pc_new([fitparam, data[2],  data[0],  d
 
 fig, ax = pretty.prettyplot(figsize = (9, 9), yaxis_dp = '%.3f', xaxis_dp = '%.0f', ylabel = 'Probability', xlabel = 'Clicks', title = '')
 
-plt.plot(clicks, data[3]/np.sum(data[3]), marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
-plt.plot(clicks, photon16_150k_fit, marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.2f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
+plt.plot(clicks, data[3]/np.sum(data[3]), color = 'black', marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
+plt.plot(clicks, photon16_150k_fit, color = 'dodgerblue', marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.2f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
 ax.legend(fontsize = 15)
 plt.xticks(x_axis)
 
@@ -180,8 +180,8 @@ photon16_200k_fit = probby.noisy_poisson_pc_new([fitparam, data[2],  data[0],  d
 
 fig, ax = pretty.prettyplot(figsize = (9, 9), yaxis_dp = '%.3f', xaxis_dp = '%.0f', ylabel = 'Probability', xlabel = 'Clicks', title = '')
 
-plt.plot(clicks, data[3]/np.sum(data[3]), marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
-plt.plot(clicks, photon16_200k_fit, marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.1f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
+plt.plot(clicks, data[3]/np.sum(data[3]), color = 'black', marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
+plt.plot(clicks, photon16_200k_fit, color = 'dodgerblue', marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.1f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
 ax.legend(fontsize = 15)
 plt.xticks(x_axis)
 
@@ -204,8 +204,8 @@ photon16_350k_fit = probby.noisy_poisson_pc_new([fitparam, data[2],  data[0],  d
 
 fig, ax = pretty.prettyplot(figsize = (9, 9), yaxis_dp = '%.3f', xaxis_dp = '%.0f', ylabel = 'Probability', xlabel = 'Clicks', title = '')
 
-plt.plot(clicks, data[3]/np.sum(data[3]), marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
-plt.plot(clicks, photon16_350k_fit, marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.1f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
+plt.plot(clicks, data[3]/np.sum(data[3]), color = 'black', marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
+plt.plot(clicks, photon16_350k_fit, color = 'dodgerblue', marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.1f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
 ax.legend(fontsize = 14)
 plt.xticks(x_axis)
 
@@ -227,8 +227,8 @@ photon16_500k_fit = probby.noisy_poisson_pc_new([fitparam, data[2],  data[0],  d
 
 fig, ax = pretty.prettyplot(figsize = (9, 9), yaxis_dp = '%.3f', xaxis_dp = '%.0f', ylabel = 'Probability', xlabel = 'Clicks', title = '')
 
-plt.plot(clicks, data[3]/np.sum(data[3]), marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
-plt.plot(clicks, photon16_500k_fit, marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.1f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
+plt.plot(clicks, data[3]/np.sum(data[3]), color = 'black',marker = 's', markersize = 13, ls = 'solid', linewidth  = 2, label = 'Click Distribution')
+plt.plot(clicks, photon16_500k_fit, color = 'dodgerblue', marker = '.', markersize = 20, ls = 'dashed', linewidth = 2, label = 'MLE Fit, $\lambda = {:.1f}\pm{:.1g}, R^2 = {}$'.format(fitparam, right_error, rsquare))
 ax.legend(fontsize = 15)
 plt.xticks(x_axis)
 
@@ -321,43 +321,44 @@ for i, data in enumerate(data_photon8):
     plt.show()
     plt.close()
 
-#%%
-'''
-photon16 bidirectional histogram (using all 10s of data)-> 150k --> pipeline2_correlation_plot.py --> with function cross.cross_corr
-'''
+# #%%
+# '''
+# photon16 bidirectional histogram (using all 10s of data)-> 150k --> pipeline2_correlation_plot.py --> with function cross.cross_corr
+# '''
+# overall_qe = 0.589
 
-photon16_150k = [16, overall_qe, 0.01725, [19., 102., 268., 503., 565., 444., 332., 172., 63., 15., 4., 1., 0., 0., 0., 0., 0.]]
+# photon_no = 16
+# xaxis = np.arange(0, photon_no+1)
 
-photon_no = 16
-xaxis = np.arange(0, photon_no+1)
-
-'''
-Loading and Saving Data
-'''
+# '''
+# Loading and Saving Data
+# '''
 # tags = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/collected_tags_24032022_17_31_49.npy')
 # tags_channel_list = np.load('../data/photon16/150k_countrate_50nsbench/50ns_50khz_4vpp2voffset/tags_channel_list_24032022_17_31_49.npy')
-# channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags[:100000], tags_channel_list[:100000],commonfloor = True)
+# channel1, channel2, channel3, channel4 = mathy.tag_fourchannel_splice(tags, tags_channel_list,commonfloor = True)
 # data=[channel1,channel2]
-# channel1, channel2 = deli.data_crop(data, 0.1e12)
-# bins = 20000
-# max_delay = 1100e6
+# channel1, channel2 = deli.data_crop(data, 0.2e12)
+
+# print('hihi')
+# bins = 2000
+# max_delay = 5e6
 # counts, midpoints = cross.cross_corr(channel1, channel2, bins = bins, max_delay = max_delay)
 # midpoints *= 1e-6
 
 # bidirectional_data = np.array([midpoints, counts])
-# np.savetxt('../data/photon16/150k_data_bidirectional.txt', bidirectional_data)
-'''
-Plotting Bidirectional Histogram Photon16 150k countrate
-'''
+# np.savetxt('../output/150k_data_bidirectional.txt', bidirectional_data)
+# '''
+# Plotting Bidirectional Histogram Photon16 150k countrate
+# '''
 
-bidirectional_data = np.loadtxt('../data/photon16/150k_data_bidirectional.txt')
+# bidirectional_data = np.loadtxt('../output/150k_data_bidirectional.txt')
 
-fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.2f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
-plt.plot(bidirectional_data[0], bidirectional_data[1],color='red')
-plt.xlabel('Delay ($\mu$s)')
-plt.ylabel('Count')
-plt.xlim([-10, 10])
-plt.savefig('..output/photon16_150kcounts_bidirectional_histogram.eps')
-plt.show()
+# fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.2f', ylabel = 'Counts', xlabel = 'Clicks', title = None)
+# plt.plot(bidirectional_data[0], bidirectional_data[1],color='red')
+# plt.xlabel('Delay ($\mu$s)')
+# plt.ylabel('Count')
+# plt.xlim([-5, 5])
+# plt.savefig('../output/photon16_150kcounts_bidirectional_histogram.eps')
+# plt.show()
 
 #%%
