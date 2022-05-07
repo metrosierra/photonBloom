@@ -7,11 +7,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import matplotlib.cm as cm
+import sys
+sys.path.append('../')
 
-import retrodict_subroutine as probby
-import curvefit_subroutine as oddy
-import retrofit_macroroutine as rexxy
-import prettyplot as plot
+from subroutines import retrodict_subroutine as probby
+from subroutines import curvefit_subroutine as oddy
+from subroutines import retrofit_macroroutine as rexxy
+from subroutines import prettyplot as plot
 
 #%%
 
@@ -69,13 +71,15 @@ for l,qe in enumerate(qe_range):
             error_qefit +=0
     error_qefits.append(error_qefit/sum(clicks_prob[:16]))
     
-    plt.plot(x_domain, fit, label='{}'.format(round(qe,1)), color=cm.Blues(l/10))
+    plt.plot(x_domain, fit, label='{:.3f}'.format(qe), color=cm.Blues(l/10))
 x2_domain = np.arange(0, multiplex+1)
-plt.plot(x2_domain, clicks_prob, color='black',linestyle='--',label='Observed\nClicks')
-plt.legend(title='QE', fontsize=18,title_fontsize=18)
+plt.plot(x2_domain, clicks_prob, color='black',linestyle='--',label='Data')
+plt.legend(title = 'QE', fontsize=18,title_fontsize=18)
 plt.ylabel('Probability')
 plt.xlabel('Clicks')
 plt.savefig('../output/photon16_150kcounts_varying_qe_comparison.eps')
+plt.savefig('../output/photon16_150kcounts_varying_qe_comparison.png', dpi = 120)
+
 plt.show()
 
 print('Error between model and fit for varied QE',error_qefits)
@@ -114,13 +118,15 @@ for i,n in enumerate(noise_range):
     
     
     
-    plt.plot(x_domain, fit, label='{}'.format(round(n,2)), color=cm.Blues_r(i/5))
+    plt.plot(x_domain, fit, label='{:.3f}'.format(n), color = cm.Blues_r(i/5))
 x2_domain = np.arange(0, multiplex+1)
-plt.plot(x2_domain, clicks_prob, color='black',linestyle='--',label='Observed\nClicks\nQE=0.589')
-plt.legend(title='Noise', fontsize=18,title_fontsize=18)
+plt.plot(x2_domain, clicks_prob, color='black',linestyle='--',label='Data\nQE=0.589')
+plt.legend(title = 'Noise', fontsize=18, title_fontsize=18)
 plt.ylabel('Probability')
 plt.xlabel('Clicks')
 plt.savefig('../output/photon16_150kcounts_varying_noise_comparison.eps')
+plt.savefig('../output/photon16_150kcounts_varying_noise_comparison.png', dpi = 120)
+
 plt.show()
 
 print('Error between model and fit for varied noise',error_noisefits)
@@ -188,7 +194,13 @@ for n in N:
 
     plt.scatter(2**(n+1), combined_loss,marker='s',color='dodgerblue', label='Combined Loss')
 plt.plot(photon_resolution, loss_per_n,linestyle='--',color='dodgerblue')
-plt.savefig('../output/photon16_150kcounts_loss_vs_photonresolution.eps')
+
+plt.xscale('log', base = 2)
+
+plt.yticks(np.arange(1.00, 6.00, 0.5))
+plt.savefig('../output/photon16_150kcounts_loss_vs_photonresolution.eps', bbox_inches = 'tight')
+plt.savefig('../output/photon16_150kcounts_loss_vs_photonresolution.png', dpi = 120)
+
 plt.show()
 
 #%%
@@ -198,28 +210,33 @@ Comparing different types of loss with increasing photon number reolution
 '''
 fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.2f', xaxis_dp = '%.0f', ylabel = 'Loss (dB)', xlabel = 'Photon Number Resolution', title = None)
 
-plt.scatter(photon_resolution, splice_loss(N),marker='s',color='dodgerblue', label='Splice Loss')
-plt.plot(photon_resolution, splice_loss(N),linestyle='--',color='dodgerblue')
-plt.scatter(photon_resolution, coupler_loss(N),marker='s',color='firebrick', label='Coupler Loss')
-plt.plot(photon_resolution, coupler_loss(N),linestyle='--',color='firebrick')
-plt.scatter(photon_resolution, fibre_loss(np.array(delay_lengths)[:max(N)+1]),marker='s',color='midnightblue', label='Fibre Loss')
-plt.plot(photon_resolution, fibre_loss(np.array(delay_lengths)[:max(N)+1]),linestyle='--',color='midnightblue')
+plt.plot(photon_resolution, splice_loss(N), marker='.',markersize = 18, linestyle='solid',color='dodgerblue', label='Splice Loss')
+plt.plot(photon_resolution, coupler_loss(N), marker='s', markersize = 10, linestyle='--',color='firebrick', label='Coupler Loss')
+plt.plot(photon_resolution, fibre_loss(np.array(delay_lengths)[:max(N)+1]), marker='^', markersize = 10, linestyle='dashdot',color='midnightblue', label='Fibre Loss')
+
+plt.xscale('log', base = 2)
 
 plt.legend(fontsize=20)
-plt.savefig('../output/photon16_150kcounts_losstypes.eps')
+plt.savefig('../output/photon16_150kcounts_losstypes.eps', bbox_inches = 'tight')
+plt.savefig('../output/photon16_150kcounts_losstypes.png', dpi = 120)
+
 plt.show()
 
 #%%
 
 '''
-Quantum Efficiency with Photon Number Resolution
+Overall Quantum Efficiency with Photon Number Resolution
 '''
 
-fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.2f', xaxis_dp = '%.0f', ylabel = 'Quantum Efficiency', xlabel = 'Photon Number Resolution', title = None)
-plt.plot(photon_resolution, total_losses,linestyle='--',color='dodgerblue')
-plt.scatter(photon_resolution, total_losses, marker = 's', color='dodgerblue', label='PhotonN QE')
-plt.legend(fontsize=20)
-plt.savefig('../output/photon16_150kcounts_qe_vs_photonresolution.eps')
+fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.3f', xaxis_dp = '%.0f', ylabel = 'Overall QE', xlabel = 'Photon Number Resolution', title = None)
+plt.plot(photon_resolution, total_losses, marker = '.', markersize = 13, linestyle='--',color='dodgerblue')
+
+
+plt.xscale('log', base = 2)
+
+plt.savefig('../output/photon16_150kcounts_qe_vs_photonresolution.eps', bbox_inches = 'tight')
+plt.savefig('../output/photon16_150kcounts_qe_vs_photonresolution.png', dpi = 120)
+
 plt.show()
 
 print(photon_resolution)
