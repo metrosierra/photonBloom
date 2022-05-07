@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 
+
 import os
 from natsort import natsorted
 
@@ -91,6 +92,84 @@ photon16 jitter smear plot (varying size of data chop) -> 150k -> pipeline4_mult
 # 'photon16_500k': [16, qe, 0.0544, [0., 0., 0., 0., 0., 0., 2., 2., 17., 39., 102., 282., 485., 593., 567., 326., 75.]]
 
 overall_qe = 0.589###AS OF 26 APRIL 2022 
+
+#%%%%%%%
+
+'''
+oscilloscope trace plot for InGaS photodetector setup
+
+The pulse looks like /\ (triangle) on the sig gen as a voltage signal
+because 8.4 is shortest rise/fall time for the pulse edges
+the oscilloscope trace shows the voltage converted from the PHOTON COUNT
+
+we see a broadening of the trace asymmetrically to a width of 50ns and this is possible due to system
+capacitance (takes time to charge up, takes time to discharge according to exponentials)
+'''
+
+data = np.loadtxt('../data/F0000CH1.csv')
+time = data[:,0]*1e9
+voltage = data[:,1]*1e3
+
+fig, ax = pretty.prettyplot(figsize = (9, 9), yaxis_dp = '%.2f', xaxis_dp = '%.0f', ylabel = 'Voltage (mV)', xlabel = 'Time (ns)', title = '')
+
+plt.plot(time, voltage)
+plt.xlim([-60, 130])
+plt.savefig('../output/laser_pulse_scope_trace.eps')
+plt.savefig('../output/laser_pulse_scope_trace.png', dpi = 200)
+
+plt.show()
+
+#%%
+
+'''
+Countrate vs fit poisson parameter plot
+
+Where we are taking the total countrate (sum of two channel countrates)
+as a linear proxy to the laser power, since we manually adjust the laser
+but use the countrate as our "power meter"...
+
+So we assuming the countrate scales linearly, as long as we are well below
+individual nanowire saturation
+
+the data sets are photon16->50k, 100k, 150k, 200k, 250k, 300k, 350k, 400k, 450k, 500k, in this order
+
+'''
+
+countrates = np.array([72540.0, 139500.0, 205820.0, 259540.0, 329540.0, 414120.0, 497420.0, 546040.0, 601040.0, 630120.0]
+)
+
+
+poisson_fits = np.array([2.581, 5.212, 8.086, 10.577, 14.328, 19.784, 26.595, 31.919, 38.599, 43.312])
+fit_errors = [0.044, 0.064, 0.082, 0.096, 0.116, 0.144, 0.179, 0.209, 0.248, 0.278]
+
+fit1 = np.polyfit(countrates[0:4]/1000, poisson_fits[0:4], 1)
+
+xfit1 = np.linspace(countrates[0]/1000, countrates[4]/1000, 500)
+yfit1 = xfit1*fit1[0] + fit1[1]
+
+fit2 = np.polyfit(countrates[4:-1]/1000, poisson_fits[4:-1], 1)
+
+xfit2 = np.linspace(countrates[4]/1000, countrates[-1]/1000, 500)
+yfit2 = xfit2*fit2[0] + fit2[1]
+
+fit3 = np.polyfit(countrates/1000, poisson_fits, 2)
+
+xfit3 = np.linspace(countrates[0]/1000, countrates[-1]/1000, 500)
+yfit3 = xfit3**2*fit3[0] + xfit3*fit3[1] + fit3[2]
+
+fig, ax = pretty.prettyplot(figsize = (9, 9), yaxis_dp = '%.1f', xaxis_dp = '%.0f', ylabel = 'Poisson Mean Fit', xlabel = 'Count Rate (kHz)', title = '')
+
+plt.plot(np.array(countrates)/1000, poisson_fits, marker = '.', markersize = 18, color = 'black', label = 'Data')
+
+# plt.plot(xfit1, yfit1, color = 'dodgerblue', linewidth = 3, label = 'Low Power Regime Fit')
+# plt.plot(xfit2, yfit2, color = 'firebrick', linewidth = 3, label = 'High Power Regime Fit')
+plt.plot(xfit3, yfit3, color = 'orange', linewidth = 4, linestyle = '--', label = 'Heuristic Quadratic Fit')
+plt.legend(fontsize = 20)
+
+plt.savefig('../output/linearity_study.eps', bbox_inches = 'tight')
+plt.savefig('../output/linearity_study.png', dpi = 200)
+
+plt.show()
 
 
 

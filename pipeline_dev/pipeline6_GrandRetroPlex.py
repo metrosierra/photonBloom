@@ -42,7 +42,8 @@ old = False
 ######################just finding the file
 for stage in stages:
 
-
+    countrate_list = []
+    true_countrate_list = []
     data_dir = '../data/photon{}/'.format(stage)
     folders = natsorted(os.listdir(data_dir))
     try:
@@ -80,14 +81,27 @@ for stage in stages:
         ### this is the time of a single multiplexed pulse window (delay+one subpulse) in ns
         windowno = delayno + pulseno
         ###just getting average noise probability per ns 
-        noiseprob = 0.
+        noiserate = 0.
         for noise in noisedata:
             ### let's say we average over the first 8 seconds to be safe
             ### from undercounting...this is all in nanoseconds
-            noiserate = len(noise[noise < (noise[0] + 8e12)]) / 8e9
-            noiseprob += noiserate * windowno / 2
-            print(noiseprob, 'average noise')
+            noiserate += len(noise[noise < (noise[0] + 0.05e12)]) / 0.05
+        
+        noiseprob = noiserate/1e9 * windowno/2
+        
+        countrate = 0
+        ### in seconds
+        for channel in data:
+           countrate += len(channel[channel < (channel[0] + 0.05e12)]) / 0.05
 
+
+        countrate_list.append(countrate)
+        true_countrate_list.append(countrate - noiserate)
+        # print(filename)
+        # print(countrate, 'countrate')
+        # print(noiserate, 'average noise')
+        # print(countrate - noiserate, 'true countrate')
+        # print('##################')
     ####################################################
 
 
@@ -101,6 +115,8 @@ for stage in stages:
         ### new MLE gradient descent
             output = rexxy.poisson_mle_gradient(counts, multiplex, filename = filename, qe = qe, noise = noiseprob, threshold = 0.0001)
 
+    print(countrate_list, 'countrates')
+    print(true_countrate_list, 'countrates minus darkcount')
     ####################################
 
 
