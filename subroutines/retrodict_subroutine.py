@@ -17,8 +17,33 @@ N = number of photons in initial state
 
 #############################################################
 
-#### ifixb is an array of same length as p, and 0 means fixed 
-### parameter, and >0 means fitting parameter
+def log_mle_pc(p, clicks, data):
+
+    # print(data, clicks)
+    probs = noisy_poisson_pc_new(p, clicks)
+    # print(probs)
+    log_mle = 0
+
+    for index, freq in enumerate(data):
+        log_mle += np.log(probs[index]) * freq
+    return log_mle
+
+def noisy_poisson_pc_new(p, x):
+    mean, noise, multiplex, qe = p
+    if mean < 0 or qe < 0 or qe > 1:
+        return np.zeros(multiplex)
+
+    else:
+        output = []
+        for fockn in range(0, multiplex+1):
+            binom = mathy.numba_combination(multiplex, fockn)
+            exponent_noise = np.exp(-mean * qe)*(1 - noise)**multiplex 
+            big_fraction = (np.exp(mean*qe/multiplex)/(1-noise) - 1)**fockn 
+            output.append(binom * exponent_noise * big_fraction)
+
+        return np.array(output)
+
+
 # @njit
 def noisy_poisson_pc(p, x): ##mean, noise = 0.001, qe = 0.35, multiplex = 8):
     mean, noise, multiplex, qe = p
@@ -72,7 +97,7 @@ def noisy_pcn(clicks, photon_no, noise = 0.01, efficiency = 0.95):
     return np.array(output)#/np.sum(output)
 
 @njit
-def poisson_infN(mean, threshold = 0.95):
+def poisson_infN(mean, threshold = 0.99):
 
     prob = 0
     n = 1
@@ -97,10 +122,6 @@ def PCN(D,C,N):
     S = mathy.numba_stirling2(C, N)
     if D > 0 and D**N > 0:
 
-        # if D > 1:
-            # print(D,C, N)
-            # print(D**N, 'hey')
-            # print(mathy.numba_factorial(C), 'hey2')
         factorial = mathy.numba_factorial(C) / (D**N)
         P = combination * factorial * S
 
@@ -109,7 +130,9 @@ def PCN(D,C,N):
     
     elif D**N < 0:
         P = 0
-    
+    else:
+        print('Error occured!! Please check')
+        P = 0
     
     return P
     
@@ -257,3 +280,30 @@ def poisson_histogram_fit(bucket,savefig=False):
     print('Poisson Fit Parameters:\n Mean = {m} +/- {me} \n Scale = {a} +/- {ae}'.format(m=opt[0],a=opt[1],me=cov[0,0],ae=cov[1,1]))
 
     return fit_mean, fit_scale
+
+
+#%% Alternative photon retrodict equation as singular sum with error factor as given in Jonsson paper.
+
+def noisy_pcn_alt(clicks, photon_no, efficiency, noise=0):
+    '''
+    Probability of getting C clicks fir an input Fock state of N photons.
+    --> Equation given in Jonsson paper.
+    --> May assume noise to be ~0 - neglect dark counts
+    '''
+    D = len(clicks)
+    C = clicks
+    N = photon_no
+    
+    output = []
+    
+    f1 = (1/D**N) * mathy.numba_combination(D, C)
+    for click in clicks:
+        click = int(click)
+        for i in range(click+1):
+            f2 = ( (-1)**i ) * ( (1-noise)**(D-C+i) ) * mathy.numba_combination(C, i)
+            f3 = ( D - (D-C+i)*efficiency )**N
+            prob = f1*f2*f3
+            
+            output.append(prob)
+            
+    return output
