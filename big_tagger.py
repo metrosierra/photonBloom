@@ -32,6 +32,7 @@ class BaseTag():
         print('Hello tout le monde!')
 
     def __enter__(self):
+        
         return self
 
     @percentsss 
@@ -301,6 +302,76 @@ class BaseTag():
         ### 1d np array (int)
         return self.corr_counts
 
+    ### 2D correlation vs time-delay from a trigger channel
+    def triggered_correlation(self, 
+                              trigger_channel = 2 , 
+                              corr_channel1 = 3, 
+                              corr_channel2 = 4, 
+                              binwidth_ns=500, 
+                              n_values=20,
+                              runtime = int(1e12)):
+        # Create Correlation measurements and use SynchronizedMeasurements to start them easily
+        sm = TimeTagger.SynchronizedMeasurements(self.client)
+        
+        if (n_values % 2) == 0:
+            n_values+=1
+        
+        midpoint = n_values/2+0.5
+        
+        # Make virtual channels that are delayed by each multiple of the bin widths
+        # then take coincidences for corr_channel1(2) and the trigger_channel
+        # this creates virtual channels that can then be correlated with corr_channel2(1) 
+        ydelayed = []
+        ycoincidences = []
+        y2coincidences = []
+        
+        channel1delayed = TimeTagger.DelayedChannel(sm.getTagger(), 
+                                                  input_channel=corr_channel1, 
+                                                  delay=midpoint*binwidth_ns*1000)
+        channel2delayed = TimeTagger.DelayedChannel(sm.getTagger(), 
+                                                  input_channel=corr_channel2, 
+                                                  delay=midpoint*binwidth_ns*1000)
+        
+        for i in range(n_values):
+            ydelayed.append(TimeTagger.DelayedChannel(sm.getTagger(), 
+                                                      input_channel=trigger_channel, 
+                                                      delay=(i)*binwidth_ns*1000))
+            ycoincidences.append(TimeTagger.Coincidence(sm.getTagger(), [channel1delayed.getChannel(),ydelayed[i].getChannel()],
+                                             coincidenceWindow = binwidth_ns*1000,
+                                             timestamp = TimeTagger.CoincidenceTimestamp.ListedFirst))
+            y2coincidences.append(TimeTagger.Coincidence(sm.getTagger(), [channel2delayed.getChannel(),ydelayed[i].getChannel()],
+                                             coincidenceWindow = binwidth_ns*1000,
+                                             timestamp = TimeTagger.CoincidenceTimestamp.ListedFirst))
+        
+        # Measure correlations between the delayed triggered virtual channels and corr_channel2(1)
+        corr_list = []
+        corr2_list = []
+        
+        for i in range(n_values):
+            corr_list.append(TimeTagger.Correlation(sm.getTagger(),
+                                                    ycoincidences[i].getChannel(),
+                                                    channel2delayed.getChannel(), 
+                                                    binwidth = binwidth_ns*1000,
+                                                    n_bins = n_values))
+            corr2_list.append(TimeTagger.Correlation(sm.getTagger(),
+                                                    y2coincidences[i].getChannel(),
+                                                    channel1delayed.getChannel(), 
+                                                    binwidth = binwidth_ns*1000,
+                                                    n_bins = n_values))
+        
+        # Run for runtime
+        sm.startFor(runtime, clear=True)
+        sm.waitUntilFinished()
+        
+        outputdata = np.zeros(shape=(n_values,n_values))
+        
+        for i in range(n_values):
+            with corr_list[i] as corr, corr2_list[i] as corr2:
+                dat = np.add(corr.getData(), corr2.getData())
+                #print(np.array(dat))
+                outputdata[i]=np.array(dat)                
+        return outputdata
+     
 #TODO!
     def filewrite(self, startfor = int(5E11), channels = [1, 2, 3, 4]):
         pass
