@@ -184,9 +184,14 @@ net_losses = []
 total_losses = []
 percentage_losses = []
 
+detector_loss = 0.46
+reflectance_loss=0.18
+
+
+
 fig, ax = plot.prettyplot(figsize = (9, 9), yaxis_dp = '%.2f', xaxis_dp = '%.0f', ylabel = 'Loss (dB)', xlabel = 'Photon Number Resolution', title = None)
 for n in N:
-    combined_loss = splice_loss(n) + coupler_loss(n) + fibre_loss(delay_lengths[n]) + connector_loss
+    combined_loss = splice_loss(n) + coupler_loss(n) + fibre_loss(delay_lengths[n]) + connector_loss + detector_loss+reflectance_loss
     loss_per_n.append(combined_loss)
     net_losses.append(1-net_loss(combined_loss))
     total_losses.append(total_loss(combined_loss))
