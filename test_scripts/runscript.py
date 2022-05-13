@@ -1,9 +1,14 @@
+#!/usr/bin/env python3
+
 # -*- coding: utf-8 -*-
 """
 Created on Fri Apr  1 17:03:24 2022
 
 @author: Quantum Photonics
 """
+import sys
+
+sys.path.append('../')
 
 from client_object import *
 import numpy as np
@@ -29,7 +34,7 @@ for i in range(100):
     print(output_object)
     timestr = time.strftime("%Y%m%d-%H%M%S")
     #np.savetxt("C:/QMLab Experimental Data/photonBloom/"+timestr+".txt",output_object)
-    jsonFile = open("C:/QMLab Experimental Data/photonBloom/"+timestr+".dat", "w")
+    jsonFile = open("C:/QMLab Experimental Data/photonBloom/output/"+timestr+".dat", "w")
     jsonFile.write(output_object)
     jsonFile.close()
    

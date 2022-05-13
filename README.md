@@ -7,3 +7,8 @@ Photon-Number Resolving Spatial + Temporal Multiplex Detector Ecosystem
 
 - big_tagger, client_object, server_object and blossom are part of the direct hardware interfacing...they seem to be far easier than data processing
 
+- Dev Note: Please do NOT push raw data files onto the repository unless it is a static reference document (EG configuration JSON which should NOT be deleted). Please create a folder called output in your local clone and output datafiles there. Folders called data and output are ignored (see .gitignore)
+
+- If data has to be shared, use onedrive, it's great!
+
+- Also, please PULL before PUSHING as usual :D

@@ -42,7 +42,7 @@ class Lotus():
     @percentsss
     @starsss
     def ciao(self):
-        print('Con te partiroooooooo')
+        print('Ciao')
         print('Datalogger Object Destroyed')
 
 
