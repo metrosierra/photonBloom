@@ -158,15 +158,17 @@ class BaseTag():
 ######################   hardware configuration methods   ################################
 
     ####about 0.08V for ref
-    def set_trigger(self, channel, level):
+    def set_trigger(self, channel, level, verbose = True):
         self.client.setTriggerLevel(channel = channel, voltage = level)
-        print('\n Trigger level set at {}V for channels {}'.format(level, channel))
+        if verbose:
+            print('\n Trigger level set at {}V for channels {}'.format(level, channel))
         return self
 
     ####about 100ns for ref
-    def set_deadtime(self, channel, deadtime):
+    def set_deadtime(self, channel, deadtime, verbose = True):
         self.client.setDeadtime(channel = channel, deadtime = deadtime)
-        print('\n Deadtime set at {}ps for channels {}'.format(deadtime, channel))
+        if verbose:
+            print('\n Deadtime set at {}ps for channels {}'.format(deadtime, channel))
         return self
 
     def set_eventdivider(self, channel, divider):
@@ -219,7 +221,7 @@ class BaseTag():
         the USB bandwidth, or the network bandwidth.""".format(self.overflows))
 
 
-    def get_count(self, startfor = int(1e12), channels = [1, 2], binwidth = 1000, n = 1000):
+    def get_count(self, startfor = int(1e12), channels = [1, 2], binwidth = 1000, n = 1000, verbose = True):
 
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Counter(self.client, channels, binwidth, n) as compte:
@@ -243,13 +245,14 @@ class BaseTag():
                 compte.startFor(startfor)
                 compte.waitUntilFinished()
                 self.countrate = compte.getData()
-                print('Measured count of channel 1-4 in counts:')
+                if verbose:
+                    print('Measured count of channel 1-4 in counts:')
 
         return self.countrate
 
 
     ###subclassing the CountRate measurement class
-    def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4]):
+    def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4], verbose = True):
 
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Countrate(self.client, channels) as cr:
@@ -272,8 +275,9 @@ class BaseTag():
                 cr.waitUntilFinished()
                 self.allrate = cr.getData()
 
-                print('Measured total total count rate of channel 1-4 in counts/s:')
-                print(self.allrate)
+                if verbose:
+                    print('Measured total total count rate of channel 1-4 in counts/s:')
+                    print(self.allrate)
 
         return self.allrate
 
