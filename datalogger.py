@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import numpy as np
+import os
 from datetime import datetime
 import json
 import threading
@@ -85,7 +86,7 @@ class Lotus():
 
     def set_autoconfig(self):
 
-        with open('configuration/tagger_config.json') as jsondata:
+        with open(os.path.join(os.path.dirname(__file__),'configurations','tagger_config.json')) as jsondata:
 
             self.config = json.load(jsondata)
             print(self.config)
