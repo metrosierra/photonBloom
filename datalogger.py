@@ -126,18 +126,21 @@ class Lotus():
     
     def start_countplot_protocol(self, channels = [1, 2], binwidth = 1e12, n = 20):
         
+        # Make binwidth addressable outside of start_countplot_protocol TODO! unify class variables
+        
+        self.binwidth = binwidth
+        
         if self.spot0.countrate_running:
             print('Countrate plot already opened! Please kill it first before another instance!')
         
         else:
             self.tag_counter(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
-            threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
+            threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', 0.1, len(channels)), daemon = True).start()
 
         return None
 
-    def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
+    def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, plot_no = 4):
 
-        plot_no = len(self.spot0.countrate)
         with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
 
             plume.set_xlabel(xlabel)
@@ -147,7 +150,7 @@ class Lotus():
                 xaxis = np.arange(len(self.spot0.countrate[0]))
                 
                 for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.countrate[q]], q)
+                    plume.set_data([xaxis, self.spot0.countrate[q] / self.binwidth * 1e12], q)
                 
                 plume.update()
 
@@ -189,6 +192,7 @@ class Lotus():
 ### Measurement + Data Saving Protocols
 
     def tag_counter(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
+        
 
         if startfor == -1:
             print('Persisting Counter class measurement!!!')
