@@ -127,8 +127,10 @@ class Lotus():
     def start_countplot_protocol(self, channels = [1, 2], binwidth = 1e12, n = 20):
         
         # Make binwidth addressable outside of start_countplot_protocol TODO! unify class variables
-        
         self.binwidth = binwidth
+        #convert single channel entries to list
+        if type(channels) is int:
+            channels = [channels]
         
         if self.spot0.countrate_running:
             print('Countrate plot already opened! Please kill it first before another instance!')
