@@ -23,13 +23,14 @@ dummy_config = {"channel1": {"index": 1}, "channel2": {"index": 2}, "channel3": 
 ###loosely datalogger/plotter class
 class Lotus():
 
-    def __init__(self):
+    def __init__(self, disable_autoconfig=True):
 
         print('Initiliasing prototype usage file powered by TagClient methods')
         self.config = dummy_config
         self.create_networktagger('192.168.0.2')
 
-        self.set_autoconfig()
+        if disable_autoconfig == False:
+            self.set_autoconfig()
         print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
 
 
