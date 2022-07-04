@@ -162,6 +162,12 @@ class Lotus():
 
     def start_corrplot_protocol(self, channels = [1, 2], binwidth = 10e3, n = 100):
         
+        # Make binwidth addressable outside of start_countplot_protocol TODO! unify class variables
+        self.binwidth = binwidth
+        #convert single channel entries to list
+        if type(channels) is int:
+            raise ValueError('Channel inputs should be list i.e. [1,2]')
+        
         if self.spot0.corr_running:
             print('Correlation plot already opened! Please kill it first before another instance!')
         
