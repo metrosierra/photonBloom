@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+
+"""
+Library for data viewing over LAN of Swabian Time Tagger Ultra
+
+Methods use big_tagger class BaseTag and subclass TagClient to expose TimeTagger methods over LAN
+
+Todo:
+*
+*
+*
+"""
+
 import numpy as np
 import os
 from datetime import datetime
@@ -23,19 +35,19 @@ dummy_config = {"channel1": {"index": 1}, "channel2": {"index": 2}, "channel3": 
 ###loosely datalogger/plotter class
 class Lotus():
 
-    def __init__(self, disable_autoconfig=True):
+    def __init__(self, **kwargs):
 
         print('Initiliasing prototype usage file powered by TagClient methods')
         self.config = dummy_config
-        self.create_networktagger('192.168.0.2')
+        self.create_networktagger('192.168.0.2', **kwargs)
 
-        if disable_autoconfig == False:
-            self.set_autoconfig()
+        if self.spot0.disable_autoconfig == False:
+            self.spot0.set_autoconfig()
         print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
 
 
-    def create_networktagger(self, ip_address):
-        self.spot0 = TagClient(ip_address)
+    def create_networktagger(self, ip_address, **kwargs):
+        self.spot0 = TagClient(ip_address, **kwargs)
         return self.spot0 
 
     def __enter__(self):
@@ -54,57 +66,6 @@ class Lotus():
         self.ciao()
 ###################### # Hardware config macros #######################
 
-    def set_manualconfig(self, channels):
-
-        trigger = float(input('\nPlease input the trigger level in volts!!\n'))
-        print('{}V Received!'.format(trigger))
-        deadtime = float(input('\nPlease input the deadtimes in picoseconds!\n'))
-        print('{}ps Received!'.format(deadtime))
-        divider =  round(int(input('\nPlease input the divider integer!\n')))
-        print('{} divider order received!'.format(divider))
-        turnon = round(int(input('\nLED Power: 1/0????\n')))
-        print('Logic of {} received!'.format(turnon))
-
-
-        for channel in channels:
-
-            channel = round(channel)
-            self.spot0.set_trigger(channel = channel, level = trigger)
-            self.config['channel{}'.format(channel)]['trigger'] = trigger
-
-            self.spot0.set_deadtime(channel = channel, deadtime = deadtime)
-            self.config['channel{}'.format(channel)]['deadtime'] = deadtime
-
-            self.spot0.set_eventdivider(channel = channel, divider = divider)
-            self.config['channel{}'.format(channel)]['divider'] = divider
-
-            self.spot0.set_led(turnon = turnon)
-            self.config['ledstate'] = turnon
-
-        print('Channels {} configured! Check out the current configuration below:'.format(channels))
-        # print(json.dumps(self.config, indent = 4))
-
-
-    def set_autoconfig(self):
-
-        with open(os.path.join(os.path.dirname(__file__),'configurations','tagger_config.json')) as jsondata:
-
-            self.config = json.load(jsondata)
-            print(self.config)
-            for i in range(1, 5):
-
-                trigger = self.config['channel{}'.format(i)]['trigger']
-                deadtime = self.config['channel{}'.format(i)]['deadtime']
-                divider = self.config['channel{}'.format(i)]['divider']
-                turnon = self.config['ledstate']
-
-                self.spot0.set_trigger(channel = i, level = trigger)
-                self.spot0.set_deadtime(channel = i, deadtime = deadtime)
-                self.spot0.set_eventdivider(channel = i, divider = divider)
-                self.spot0.set_led(turnon = turnon)
-
-        return self
-
     def stop_plot(self, target = 'counter'):
         if target == 'counter':
             self.spot0.countrate_running = False 
@@ -117,13 +78,6 @@ class Lotus():
 
 ### Plotting protocols
 ####################################################################################
-
-    
-    
-    
-    
-    
-    
     
     def start_countplot_protocol(self, channels = [1, 2], binwidth = 1e12, n = 20):
         
