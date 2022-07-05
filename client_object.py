@@ -36,12 +36,12 @@ class TagClient(BaseTag):
         except RuntimeError:
             raise Exception('No Time Tagger server available on {} and the default port 41101.'.format(self.target_ip))
 
-        client = TimeTagger.createTimeTaggerNetwork(self.target_ip)
+        self.client = TimeTagger.createTimeTaggerNetwork(self.target_ip)
         print('\nConnecting to the server on localhost.')
         print('Server handshake successful!!!!!!!!!!!\n')
         self.get_info()
 
-        return client
+        return self.client
 
 
 if __name__ == '__main__':
