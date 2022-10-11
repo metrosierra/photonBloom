@@ -1,7 +1,21 @@
 #!/usr/bin/env python3
+"""
+Library for client-side control of Swabian Timetagger Ultra
+
+New timetagger clients should inherit the 'BaseTag' class and all key functions 
+should be implemented here and not in offspring classes
+See the docstrings of the implemented functions for the exisiting scopes.
+
+Todo:
+*
+*
+*
+"""
 
 import TimeTagger
 
+import os
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -10,21 +24,101 @@ import subroutines.jitter_subroutine as jitty
 import subroutines.mathematics as mathy
 from subroutines.mathematics import percentsss, starsss
 
-class BaseTag():
-    def __init__(self, tagger):
+try:
+    import data_tools as dt
+    _fileloc, _calibrationslib, _adjustmentslib = dt.localfiles()
+except ModuleNotFoundError as mex:
+    print(f"{mex} -> dev_tools not in python path!")
+    _fileloc = _calibrationslib = _adjustmentslib = None
 
+
+class BaseTag():
+    """Underlying TimeTagger class for interfacing with SNSPDs
+
+    Parameters
+    ----------
+    tagger : TimeTaggerNetwork object, default None
+        Timetagger object from Swabian Timetagger package
+    savefile : str, default None
+        Filename of the file populated with countrate/correlation data
+    print_kwargs : bool, default False
+        Print list of possible kwargs
+    verbose : bool, default False
+        Print additional outputs during runtime
+    disable_autoconfig : bool, default True
+        Disable resetting trigger levels and gate times to values specified in configurations/tagger_config.json
+    
+
+
+    Attributes
+    ----------
+    fileloc, calibrationslib, adjustmentslib : see data_tools.localfiles()
+        Data folder, calibrations folder and adjustments folder locations
+    client : Timetagger object
+        Timetagger object
+    savefile : str
+        Current name of measurement save data
+    res_mode : dict
+        Resolution mode of Timetagger - averages over multipleR TDC channels to reduce jitter
+    print_kwargs : bool
+        Print list of possible kwargs
+    verbose : bool
+        Print additional outputs at runtime
+    disable_autoconfig : bool
+        Disable resetting trigger levels and gate times to values specified in configurations/tagger_config.json
+    is_test : bool
+
+    is_on : bool
+
+    corr_running : bool
+
+    allrate_running : bool
+
+    countrate_running : bool
+
+    stream_running : bool
+
+    countrate : np.array()
+
+    data : list
+
+    config : dict
+
+    """
+
+    def __init__(
+        self, 
+        tagger = None, 
+        savefile = None,
+        print_kwargs = False,
+        verbose = False,
+        disable_autoconfig = True,
+        **kwargs):
+
+        fileloc, calibrationslib, adjustmentslib = (
+        _fileloc,
+        _calibrationslib,
+        _adjustmentslib,
+        )
         self.client = tagger
         self.res_modes = {'Standard': TimeTagger.Resolution.Standard, 'HighResA': TimeTagger.Resolution.HighResA,
                      'HighResB': TimeTagger.Resolution.HighResB, 'HighResC': TimeTagger.Resolution.HighResC}
+        self.savefile = savefile
+        self.print_kwargs = print_kwargs
+        self.verbose = verbose
+        self.disable_autoconfig = disable_autoconfig
 
-        self.istest = False
-        self.eyesopen = True
+        self.is_test = False
+        self.is_on = True
 
         self.corr_running = False
         self.allrate_runnning = False 
         self.countrate_running = False
         self.stream_running = False
         self.countrate = np.array([[0, 0], [0, 0]])
+        self.data = []
+        self.config = {}
+
 
     @percentsss 
     @starsss
@@ -154,41 +248,99 @@ class BaseTag():
         plt.show()
 
         return measured_jitters, within_specs, measured_channels
+    
+    def set_manualconfig(self, channels):
+        """Manualy set selected channels to the same trigger level [V], deadtime [ps], event divider [int] and LED power [1/0] """
+
+        trigger = float(input('\nPlease input the trigger level in volts!!\n'))
+        print('{}V Received!'.format(trigger))
+        deadtime = float(input('\nPlease input the deadtimes in picoseconds!\n'))
+        print('{}ps Received!'.format(deadtime))
+        divider =  round(int(input('\nPlease input the divider integer!\n')))
+        print('{} divider order received!'.format(divider))
+        turnon = round(int(input('\nLED Power: 1/0????\n')))
+        print('Logic of {} received!'.format(turnon))
+
+
+        for channel in channels:
+
+            channel = round(channel)
+            self.set_trigger(channel = channel, level = trigger)
+            self.config['channel{}'.format(channel)]['trigger'] = trigger
+
+            self.set_deadtime(channel = channel, deadtime = deadtime)
+            self.config['channel{}'.format(channel)]['deadtime'] = deadtime
+
+            self.set_eventdivider(channel = channel, divider = divider)
+            self.config['channel{}'.format(channel)]['divider'] = divider
+
+            self.set_led(turnon = turnon)
+            self.config['ledstate'] = turnon
+
+        print('Channels {} configured! Check out the current configuration below:'.format(channels))
+        # print(json.dumps(self.config, indent = 4))
+
+
+    def set_autoconfig(self):
+        """Automatically set trigger levels, deadtimes, event dividers and ledstate from configurations/tagger_config.json file"""
+
+        with open(os.path.join(os.path.dirname(__file__),'configurations','tagger_config.json')) as jsondata:
+
+            self.config = json.load(jsondata)
+            print(config)
+            for i in range(1, 5):
+                trigger = self.config['channel{}'.format(i)]['trigger']
+                deadtime = self.config['channel{}'.format(i)]['deadtime']
+                divider = self.config['channel{}'.format(i)]['divider']
+                turnon = self.config['ledstate']
+
+                self.set_trigger(channel = i, level = trigger)
+                self.set_deadtime(channel = i, deadtime = deadtime)
+                self.set_eventdivider(channel = i, divider = divider)
+                self.set_led(turnon = turnon)
+
+        return self.config
+    
 
 ######################   hardware configuration methods   ################################
 
     ####about 0.08V for ref
     def set_trigger(self, channel, level):
         self.client.setTriggerLevel(channel = channel, voltage = level)
-        print('\n Trigger level set at {}V for channels {}'.format(level, channel))
+        if self.verbose:
+            print('\n Trigger level set at {}V for channels {}'.format(level, channel))
         return self
 
     ####about 100ns for ref
     def set_deadtime(self, channel, deadtime):
         self.client.setDeadtime(channel = channel, deadtime = deadtime)
-        print('\n Deadtime set at {}ps for channels {}'.format(deadtime, channel))
+        if self.verbose:
+            print('\n Deadtime set at {}ps for channels {}'.format(deadtime, channel))
         return self
 
     def set_eventdivider(self, channel, divider):
         self.client.setEventDivider(channel = channel, divider = divider)
-        print('\n Event divider set at {} events for channels {}'.format(divider, channel))
+        if self.verbose:
+            print('\n Event divider set at {} events for channels {}'.format(divider, channel))
         return self
 
     def set_testsignal(self, channels):
-        if not self.istest:
+        if not self.is_test:
             self.tagger.setTestSignal(channels, True)
-            print('Test mode set! Activating test signals on channels {}'.format(channels))
-            self.istest = True
+            if self.verbose:
+                print('Test mode set! Activating test signals on channels {}'.format(channels))
+            self.is_test = True
         else:
             self.tagger.setTestSignal(channels, False)
-            print('Test mode unset! deactivating test signals on channels {}'.format(channels))
-            self.istest = False
+            if self.verbose:
+                print('Test mode unset! deactivating test signals on channels {}'.format(channels))
+            self.is_test = False
 
     ###### it's christmas!!!!!!!!!!!
     def set_led(self, turnon = True):
 
-        self.eyesopen = turnon
-        if self.eyesopen:
+        self.is_on = turnon
+        if self.is_on:
             self.client.setLED(1)
         else:
             self.client.setLED(0)
@@ -196,12 +348,12 @@ class BaseTag():
 
     def set_ledtoggle(self):
 
-        if self.eyesopen:
+        if self.is_on:
             self.client.setLED(0)
-            self.eyesopen = False
+            self.is_on = False
         else:
             self.client.setLED(1)
-            self.eyesopen = True
+            self.is_on = True
         return self
 
 ######################   measurement methods   ################################
@@ -221,6 +373,8 @@ class BaseTag():
 
     def get_count(self, startfor = int(1e12), channels = [1, 2], binwidth = 1000, n = 1000):
 
+        if type(channels) is int:
+            channels = [channels]
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Counter(self.client, channels, binwidth, n) as compte:
 
@@ -243,7 +397,9 @@ class BaseTag():
                 compte.startFor(startfor)
                 compte.waitUntilFinished()
                 self.countrate = compte.getData()
-                print('Measured count of channel 1-4 in counts:')
+                if self.verbose:
+                    print(f'Measured count of channel(s) {channels} in counts:')
+                    print(self.countrate)
 
         return self.countrate
 
@@ -251,6 +407,8 @@ class BaseTag():
     ###subclassing the CountRate measurement class
     def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4]):
 
+        if type(channels) is int:
+            channels = [channels]
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Countrate(self.client, channels) as cr:
 
@@ -272,14 +430,17 @@ class BaseTag():
                 cr.waitUntilFinished()
                 self.allrate = cr.getData()
 
-                print('Measured total total count rate of channel 1-4 in counts/s:')
-                print(self.allrate)
+                if self.verbose:
+                    print(f'Measured total total count rate of channel {channels}  in counts/s:')
+                    print(self.allrate)
 
         return self.allrate
 
     ### full auto and cross correlation
     def get_correlation(self, startfor = int(1E12), channels = [1, 2], binwidth = 1000, n = 1000):
 
+        if type(channels) is int:
+            channels = [channels]
         with TimeTagger.Correlation(self.client, channels[0], channels[1], binwidth, n) as corr:
             
             if startfor == -1 and self.corr_running == False:
