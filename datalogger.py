@@ -149,6 +149,44 @@ class Lotus():
 
         print('Correlation Plotting Instance Killed!')
         return None
+
+
+    def start_trigcorrplot_protocol(self, channels = [1, 2], binwidth = 10e3, n = 100):
+        
+        # Make binwidth addressable outside of start_countplot_protocol TODO! unify class variables
+        self.binwidth = binwidth
+        #convert single channel entries to list
+        if type(channels) is int:
+            raise ValueError('Channel inputs should be list i.e. [1,2]')
+        
+        if self.spot0.trig_corr_running:
+            print('Correlation plot already opened! Please kill it first before another instance!')
+        
+        else:
+            self.tag_triggered_correlation(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
+            threading.Thread(target = self.trigcorrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
+        
+        return None 
+ 
+    def trigcorrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
+
+        plot_no = 1
+        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
+
+            plume.set_xlabel(xlabel)
+            plume.set_ylabel(ylabel)
+  
+            while self.spot0.trig_corr_running:
+                xaxis = np.arange(len(self.spot0.trig_corr_counts))
+                for q in range(plot_no):
+                    plume.set_data([xaxis, self.spot0.trig_corr_counts], q)
+                
+                plume.update()
+
+        print('Correlation Plotting Instance Killed!')
+        return None
+
+
 ####################################################################################
 
 
@@ -165,6 +203,7 @@ class Lotus():
             counts = self.spot0.get_count(startfor, channels, binwidth, n)
 
             if save:
+                if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
                 np.save('output/lastframe_bincounts_width{}ps_n{}_{}'.format(binwidth, n, dt_string), counts)
@@ -181,15 +220,34 @@ class Lotus():
             corr = self.spot0.get_correlation(startfor, channels, binwidth, n)
 
             if save:
+                if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
                 np.save('output/correlated_width{}ps_n{}_{}'.format(binwidth, n, dt_string), corr)
 
             return corr
 
+
+    def tag_triggered_correlation(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
+
+        if startfor == -1:
+            # print('Persisting Counter class measurement!!!')
+            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth, n,), daemon = True).start()
+
+        elif startfor > 0.:
+            trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth, n)
+
+            if save:
+                if not os.path.exists('output/'): os.makedir('output/')
+                now = datetime.now()
+                dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+                np.save('output/trigcorrelated_width{}ps_n{}_{}'.format(binwidth, n, dt_string), trigcorr)
+            return trigcorr
+
     def tag_streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):
         tags, channel_list = self.spot0.streamdata(startfor = startfor, channels = channels, buffer_size = buffer_size, update_rate = update_rate, verbose = verbose)
 
+        if not os.path.exists('output/'): os.makedir('output/')
         now = datetime.now()
         dt_string = now.strftime("%d%m%Y_%H_%M_%S")
         np.save('output/collected_tags_{}'.format(dt_string), tags)
