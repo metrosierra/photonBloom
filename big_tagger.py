@@ -93,7 +93,7 @@ class BaseTag():
         savefile = None,
         print_kwargs = False,
         verbose = False,
-        disable_autoconfig = True,
+        disable_autoconfig = False,
         **kwargs):
 
         fileloc, calibrationslib, adjustmentslib = (
@@ -289,7 +289,7 @@ class BaseTag():
         with open(os.path.join(os.path.dirname(__file__),'configurations','tagger_config.json')) as jsondata:
 
             self.config = json.load(jsondata)
-            print(config)
+            print(self.config)
             for i in range(1, 5):
                 trigger = self.config['channel{}'.format(i)]['trigger']
                 deadtime = self.config['channel{}'.format(i)]['deadtime']
@@ -377,6 +377,8 @@ class BaseTag():
 
         if type(channels) is int:
             channels = [channels]
+        
+
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Counter(self.client, channels, binwidth_ns*1000, n) as compte:
 
@@ -391,14 +393,14 @@ class BaseTag():
 
             elif startfor == -1 and self.countrate_running == True:
                 print('Counter object instance already exists!!! Please destroy it first')
-                self.countrate = np.array([0])
+                self.countrate = np.array([[0]*4])
 
 
             elif startfor > 0.:
-
                 compte.startFor(startfor)
                 compte.waitUntilFinished()
                 self.countrate = compte.getData()
+
                 if self.verbose:
                     print(f'Measured count of channel(s) {channels} in counts:')
                     print(self.countrate)
@@ -406,7 +408,8 @@ class BaseTag():
         return self.countrate
 
 
-    ###subclassing the CountRate measurement class
+    ###subclassing the CUMULATIVE CountRate measurement class
+    ###DO NOT confuse with count measurement which is binwise countrate
     def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4]):
 
         if type(channels) is int:
@@ -434,7 +437,6 @@ class BaseTag():
 
                 if self.verbose:
                     print(f'Measured total total count rate of channel {channels}  in counts/s:')
-                    print(self.allrate)
 
         return self.allrate
 
@@ -642,3 +644,7 @@ class BaseTag():
 
         print(missed_events, 'events missed!!!')
         return collected_tags[1:], tags_channel_list[1:]
+
+
+####################################################################################
+

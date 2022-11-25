@@ -15,15 +15,15 @@
 
     "channel3": {
         "index":3,
-        "trigger": 0.5,
-        "deadtime": 2000,
+        "trigger": 0.08,
+        "deadtime": 100000,
         "divider": 1
   },
 
     "channel4": {
         "index": 4,
-        "trigger": 0.5,
-        "deadtime": 2000,
+        "trigger": 0.08,
+        "deadtime": 100000,
         "divider": 1
   },
 

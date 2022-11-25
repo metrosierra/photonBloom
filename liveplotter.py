@@ -7,7 +7,7 @@ from subroutines.mathematics import percentsss, starsss
 from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
 import time
-
+from PyQt5 import QtWidgets
 
 
 class Plumeria():
@@ -15,7 +15,7 @@ class Plumeria():
     def __init__(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
 
         # instantiate the window object
-        self.app = QtGui.QApplication([])
+        self.app = QtWidgets.QApplication([])
         self.window = pg.GraphicsLayoutWidget(show = True, title = "Live Plotting Window")
         self.window.resize(900,500)
         # just antialiasing
@@ -45,7 +45,7 @@ class Plumeria():
         for i in range(self.plot_no):
             ### setting pen as integer makes line colour cycle through 9 hues by default
             ### check pyqtgraph documentation on styling...it's quite messy
-            self.curves.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i)))
+            self.curves.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i+1)))
             self.data_store.append(self.initial_xydata)
         print(self.curves)
         ### style points
@@ -91,8 +91,13 @@ class Plumeria():
             self.graph.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
 
         self.point_count += 1
-        QtGui.QApplication.processEvents() # This command initiates a refresh
+        QtWidgets.QApplication.processEvents() # This command initiates a refresh
         time.sleep(self.refresh_interval)
+
+    def get_window_state(self):
+        self.is_closed = self.window.isHidden()
+        return self.is_closed  
+
 
 ## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':

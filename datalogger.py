@@ -43,7 +43,7 @@ class Lotus():
 
         if self.spot0.disable_autoconfig == False:
             self.spot0.set_autoconfig()
-        print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
+            print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
 
 
     def create_networktagger(self, ip_address, **kwargs):
@@ -79,10 +79,10 @@ class Lotus():
 ### Plotting protocols
 ####################################################################################
     
-    def start_countplot_protocol(self, channels = [1, 2], binwidth = 1e12, n = 20):
+    def start_countplot_protocol(self, channels = [1, 2], binwidth_ns = 1e9, n = 20):
         
         # Make binwidth addressable outside of start_countplot_protocol TODO! unify class variables
-        self.binwidth = binwidth
+        self.binwidth = binwidth_ns
         #convert single channel entries to list
         if type(channels) is int:
             channels = [channels]
@@ -91,10 +91,9 @@ class Lotus():
             print('Countrate plot already opened! Please kill it first before another instance!')
         
         else:
-            self.tag_counter(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
+            self.tag_counter(startfor = -1, channels = channels, binwidth_ns = binwidth_ns, n = n, save = False)
             threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', 0.1, len(channels)), daemon = True).start()
-
-        return None
+        return 
 
     def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, plot_no = 4):
 
@@ -103,16 +102,16 @@ class Lotus():
             plume.set_xlabel(xlabel)
             plume.set_ylabel(ylabel)
 
-            while self.spot0.countrate_running:
+            while self.spot0.countrate_running and not plume.get_window_state():
                 xaxis = np.arange(len(self.spot0.countrate[0]))
-                
                 for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.countrate[q] / self.binwidth * 1e12], q)
+                    plume.set_data([xaxis, self.spot0.countrate[q]], q)
                 
                 plume.update()
 
+        self.spot0.countrate_running = False
         print('Countrate Plotting Instance Killed!')
-        return None
+        return 
 ####################################################################################
 
     def start_corrplot_protocol(self, channels = [1, 2], binwidth = 10e3, n = 100):
@@ -128,8 +127,8 @@ class Lotus():
         
         else:
             self.tag_correlation(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
+            self.spot0.corr_running = True 
             threading.Thread(target = self.corrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
-        
         return None 
  
     def corrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
@@ -140,13 +139,13 @@ class Lotus():
             plume.set_xlabel(xlabel)
             plume.set_ylabel(ylabel)
   
-            while self.spot0.corr_running:
+            while self.spot0.corr_running and not plume.get_window_state():
                 xaxis = np.arange(len(self.spot0.corr_counts))
                 for q in range(plot_no):
                     plume.set_data([xaxis, self.spot0.corr_counts], q)
                 
                 plume.update()
-
+        self.spot0.corr_running = False 
         print('Correlation Plotting Instance Killed!')
         return None
 
@@ -164,6 +163,7 @@ class Lotus():
         
         else:
             self.tag_triggered_correlation(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
+            self.spot0.trig_corr_running = True
             threading.Thread(target = self.trigcorrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
         
         return None 
@@ -176,13 +176,13 @@ class Lotus():
             plume.set_xlabel(xlabel)
             plume.set_ylabel(ylabel)
   
-            while self.spot0.trig_corr_running:
+            while self.spot0.trig_corr_running and not plume.get_window_state():
                 xaxis = np.arange(len(self.spot0.trig_corr_counts))
                 for q in range(plot_no):
                     plume.set_data([xaxis, self.spot0.trig_corr_counts], q)
                 
                 plume.update()
-
+        self.spot0.trig_corr_running = False
         print('Correlation Plotting Instance Killed!')
         return None
 
@@ -192,22 +192,20 @@ class Lotus():
 
 ### Measurement + Data Saving Protocols
 
-    def tag_counter(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
+    def tag_counter(self, startfor, channels, binwidth_ns = 1e9, n = 10, save = False):
         
-
         if startfor == -1:
             print('Persisting Counter class measurement!!!')
-            threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth, n), daemon = True).start()
+            threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth_ns, n), daemon = True).start()
 
         elif startfor > 0.:
-            counts = self.spot0.get_count(startfor, channels, binwidth, n)
+            counts = self.spot0.get_count(startfor, channels, binwidth_ns, n)
 
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/lastframe_bincounts_width{}ps_n{}_{}'.format(binwidth, n, dt_string), counts)
-
+                np.save('output/lastframe_bincounts_width{}ps_n{}_{}'.format(binwidth_ns, n, dt_string), counts)
             return counts
 
     def tag_correlation(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
@@ -247,7 +245,7 @@ class Lotus():
     def tag_streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):
         tags, channel_list = self.spot0.streamdata(startfor = startfor, channels = channels, buffer_size = buffer_size, update_rate = update_rate, verbose = verbose)
 
-        if not os.path.exists('output/'): os.makedir('output/')
+        if not os.path.exists('output/'): os.mkdir('output/')
         now = datetime.now()
         dt_string = now.strftime("%d%m%Y_%H_%M_%S")
         np.save('output/collected_tags_{}'.format(dt_string), tags)
