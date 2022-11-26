@@ -59,144 +59,29 @@ class Lotus():
         print('Ciao')
         print('Datalogger Object Destroyed')
 
-
-
     def __exit__(self, exception_type, exception_value, exception_traceback):
         self.spot0.__exit__(exception_type, exception_value, exception_traceback)
         self.ciao()
-###################### # Hardware config macros #######################
 
-    def stop_plot(self, target = 'counter'):
-        if target == 'counter':
-            self.spot0.countrate_running = False 
-
-        elif target == 'correlation':
-            self.spot0.corr_running = False 
             
-
 ####################### Measurement + Plotting Macros #######################
-
-### Plotting protocols
+### now we assume that if we startfor = -1 we open a live plot
+### we generate a new boolean flag in a list that tracks the "identity"
+### of each measurement and thus plotting session (for each function call).
+### Closing the liveplot toggles the specific flag in the list
+### and thus also causes the measurement thread to end as well
 ####################################################################################
-    
-    def start_countplot_protocol(self, channels = [1, 2], binwidth_ns = 1e9, n = 20):
-        
-        # Make binwidth addressable outside of start_countplot_protocol TODO! unify class variables
-        self.binwidth = binwidth_ns
-        #convert single channel entries to list
-        if type(channels) is int:
-            channels = [channels]
-        
-        if self.spot0.countrate_running:
-            print('Countrate plot already opened! Please kill it first before another instance!')
-        
-        else:
-            self.tag_counter(startfor = -1, channels = channels, binwidth_ns = binwidth_ns, n = n, save = False)
-            threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', 0.1, len(channels)), daemon = True).start()
-        return 
-
-    def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, plot_no = 4):
-
-        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
-
-            plume.set_xlabel(xlabel)
-            plume.set_ylabel(ylabel)
-
-            while self.spot0.countrate_running and not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.countrate[0]))
-                for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.countrate[q]], q)
-                
-                plume.update()
-
-        self.spot0.countrate_running = False
-        print('Countrate Plotting Instance Killed!')
-        return 
-####################################################################################
-
-    def start_corrplot_protocol(self, channels = [1, 2], binwidth = 10e3, n = 100):
-        
-        # Make binwidth addressable outside of start_countplot_protocol TODO! unify class variables
-        self.binwidth = binwidth
-        #convert single channel entries to list
-        if type(channels) is int:
-            raise ValueError('Channel inputs should be list i.e. [1,2]')
-        
-        if self.spot0.corr_running:
-            print('Correlation plot already opened! Please kill it first before another instance!')
-        
-        else:
-            self.tag_correlation(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
-            self.spot0.corr_running = True 
-            threading.Thread(target = self.corrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
-        return None 
- 
-    def corrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
-
-        plot_no = 1
-        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
-
-            plume.set_xlabel(xlabel)
-            plume.set_ylabel(ylabel)
-  
-            while self.spot0.corr_running and not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.corr_counts))
-                for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.corr_counts], q)
-                
-                plume.update()
-        self.spot0.corr_running = False 
-        print('Correlation Plotting Instance Killed!')
-        return None
-
-
-    def start_trigcorrplot_protocol(self, channels = [1, 2], binwidth = 10e3, n = 100):
-        
-        # Make binwidth addressable outside of start_countplot_protocol TODO! unify class variables
-        self.binwidth = binwidth
-        #convert single channel entries to list
-        if type(channels) is int:
-            raise ValueError('Channel inputs should be list i.e. [1,2]')
-        
-        if self.spot0.trig_corr_running:
-            print('Correlation plot already opened! Please kill it first before another instance!')
-        
-        else:
-            self.tag_triggered_correlation(startfor = -1, channels = channels, binwidth = binwidth, n = n, save = False)
-            self.spot0.trig_corr_running = True
-            threading.Thread(target = self.trigcorrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot'), daemon = True).start()
-        
-        return None 
- 
-    def trigcorrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1):
-
-        plot_no = 1
-        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
-
-            plume.set_xlabel(xlabel)
-            plume.set_ylabel(ylabel)
-  
-            while self.spot0.trig_corr_running and not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.trig_corr_counts))
-                for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.trig_corr_counts], q)
-                
-                plume.update()
-        self.spot0.trig_corr_running = False
-        print('Correlation Plotting Instance Killed!')
-        return None
-
-
-####################################################################################
-
-
 ### Measurement + Data Saving Protocols
 
     def tag_counter(self, startfor, channels, binwidth_ns = 1e9, n = 10, save = False):
         
         if startfor == -1:
-            print('Persisting Counter class measurement!!!')
-            threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth_ns, n), daemon = True).start()
+            print('Persisting Counter measurement class! Close live plot to exit this!!')
+            self.spot0.get_count.append(True)
+            identity = len(self.spot0.get_count) - 1
+            threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
+            threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', 0.1, len(channels), identity), daemon = True).start()
+            return 
 
         elif startfor > 0.:
             counts = self.spot0.get_count(startfor, channels, binwidth_ns, n)
@@ -211,8 +96,12 @@ class Lotus():
     def tag_correlation(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
 
         if startfor == -1:
-            print('Persisting Counter class measurement!!!')
-            threading.Thread(target = self.spot0.get_correlation, args = (startfor, channels, binwidth, n,), daemon = True).start()
+            print('Persisting XCorrelation measurement class! Close live plot to exit this!!')
+            self.spot0.corr_running.append(True)
+            identity = len(self.spot0.corr_running) - 1
+            threading.Thread(target = self.spot0.get_correlation, args = (startfor, channels, binwidth, n, identity), daemon = True).start()
+            threading.Thread(target = self.corrplot, args = ('Delay', 'Counts', 'Live Correlation Plot', identity), daemon = True).start()
+            return
 
         elif startfor > 0.:
             corr = self.spot0.get_correlation(startfor, channels, binwidth, n)
@@ -225,12 +114,15 @@ class Lotus():
 
             return corr
 
-
     def tag_triggered_correlation(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
 
         if startfor == -1:
-            # print('Persisting Counter class measurement!!!')
-            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth, n,), daemon = True).start()
+            print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
+            self.spot0.get_trig_corr_running.append(True)
+            identity = len(self.spot0.trig_corr_running) - 1
+            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth, n, identity), daemon = True).start()
+            threading.Thread(target = self.trigcorrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', identity), daemon = True).start()
+            return
 
         elif startfor > 0.:
             trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth, n)
@@ -252,6 +144,64 @@ class Lotus():
         np.save('output/tags_channel_list_{}'.format(dt_string), channel_list)
 
         return tags, channel_list
+
+### Plotting protocols
+####################################################################################
+    
+    def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, plot_no = 4, identity = 0):
+
+        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
+
+            plume.set_xlabel(xlabel)
+            plume.set_ylabel(ylabel)
+
+            while not plume.get_window_state():
+                xaxis = np.arange(len(self.spot0.countrate[0]))
+                for q in range(plot_no):
+                    plume.set_data([xaxis, self.spot0.countrate[q]], q)
+                
+                plume.update()
+
+        self.spot0.count_running[identity] = False
+        print('Count Plotting Instance Killed!')
+        return 
+
+    def corrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, identity = 0):
+
+        plot_no = 1
+        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
+
+            plume.set_xlabel(xlabel)
+            plume.set_ylabel(ylabel)
+  
+            while not plume.get_window_state():
+                xaxis = np.arange(len(self.spot0.corr_counts))
+                for q in range(plot_no):
+                    plume.set_data([xaxis, self.spot0.corr_counts], q)
+                
+                plume.update()
+        self.spot0.corr_running[identity] = False 
+        print('Correlation Plotting Instance Killed!')
+        return 
+
+ 
+    def trigcorrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, identity = 0):
+
+        plot_no = 1
+        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
+
+            plume.set_xlabel(xlabel)
+            plume.set_ylabel(ylabel)
+  
+            while not plume.get_window_state():
+                xaxis = np.arange(len(self.spot0.trig_corr_counts))
+                for q in range(plot_no):
+                    plume.set_data([xaxis, self.spot0.trig_corr_counts], q)
+                
+                plume.update()
+        self.spot0.trig_corr_running[identity] = False
+        print('Correlation Plotting Instance Killed!')
+        return 
 
 ####################################################################################
 

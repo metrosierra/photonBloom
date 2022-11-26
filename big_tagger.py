@@ -112,14 +112,18 @@ class BaseTag():
         self.is_test = False
         self.is_on = True
 
-        self.corr_running = False
-        self.trig_corr_running = False
-        self.allrate_runnning = False 
-        self.countrate_running = False
-        self.stream_running = False
-        self.countrate = np.array([[0, 0], [0, 0]])
         self.data = []
         self.config = {}
+        self.stream_running = False
+
+        ### now these measurement running flags are lists to allow for 
+        ### arbitrary number of simultaneous threaded measurements
+        ### the flags are toggled by the associated live plot
+        ### using the protocol in datalogger.py
+        self.corr_running = []
+        self.trig_corr_running = []
+        self.allrate_runnning = [] 
+        self.count_running = []
 
 
     @percentsss 
@@ -373,7 +377,7 @@ class BaseTag():
         the USB bandwidth, or the network bandwidth.""".format(self.overflows))
 
 
-    def get_count(self, startfor = int(1e12), channels = [1, 2], binwidth_ns = 1, n = 1000):
+    def get_count(self, startfor = int(1e12), channels = [1, 2], binwidth_ns = 1, n = 1000, identity = 0):
 
         if type(channels) is int:
             channels = [channels]
@@ -383,51 +387,41 @@ class BaseTag():
         with TimeTagger.Counter(self.client, channels, binwidth_ns*1000, n) as compte:
 
             if startfor == -1 and self.countrate_running == False:
-                self.countrate_running = True
+                self.count_running = True
                 compte.start()
                 
-                while self.countrate_running:
-                    self.countrate = compte.getData(rolling = True)
+                while self.countrate_running[identity]:
+                    self.count = compte.getData(rolling = True)
                     # print(self.countrate)
                 compte.stop()
-
-            elif startfor == -1 and self.countrate_running == True:
-                print('Counter object instance already exists!!! Please destroy it first')
-                self.countrate = np.array([[0]*4])
-
 
             elif startfor > 0.:
                 compte.startFor(startfor)
                 compte.waitUntilFinished()
-                self.countrate = compte.getData()
+                self.count = compte.getData()
 
                 if self.verbose:
                     print(f'Measured count of channel(s) {channels} in counts:')
-                    print(self.countrate)
+                    print(self.count)
 
-        return self.countrate
+        return self.count
 
 
     ###subclassing the CUMULATIVE CountRate measurement class
     ###DO NOT confuse with count measurement which is binwise countrate
-    def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4]):
+    def get_countrate(self, startfor = int(1e12), channels = [1, 2, 3, 4], identity = 0):
 
         if type(channels) is int:
             channels = [channels]
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Countrate(self.client, channels) as cr:
 
-            if startfor == -1 and self.allrate_running == False:
-                self.allrate_running = True
-                cr.start()
-                
-                while self.allrate_running:
+            if startfor == -1:
+                cr.start()                
+                while self.allrate_running[identity]:
                     self.allrate = cr.getData()
                 cr.stop()
 
-            elif startfor == -1 and self.allrate_running == True:
-                print('Countrate object instance already exists!!! Please destroy it first')
-                self.allrate = 0.
 
             elif startfor > 0.:
 
@@ -442,22 +436,17 @@ class BaseTag():
 
     ### full auto and cross correlation
     ### we work in ns
-    def get_correlation(self, startfor = int(1E12), channels = [1, 2], binwidth_ns = 1, n = 1000):
+    def get_correlation(self, startfor = int(1E12), channels = [1, 2], binwidth_ns = 1, n = 1000, identity = 0):
 
         if type(channels) is int:
             channels = [channels]
         with TimeTagger.Correlation(self.client, channels[0], channels[1], binwidth_ns*1000, n) as corr:
             
-            if startfor == -1 and self.corr_running == False:
-                self.corr_running = True
+            if startfor == -1:
                 corr.start()
-                while self.corr_running:
+                while self.corr_running[identity]:
                     self.corr_counts = corr.getData()
                 corr.stop()
-
-            elif startfor == -1 and self.corr_running == True:
-                print('Correlation object instance already exists!!! Please destroy it first')
-                self.corr_counts = np.array([0.])
 
             elif startfor > 0.:
                 corr.startFor(startfor)
@@ -472,7 +461,8 @@ class BaseTag():
     def get_triggered_correlation(self, startfor = int(1E12),
                               chs = [3, 1, 2], 
                               binwidth_ns = 500, 
-                              n_values = 20):
+                              n_values = 20,
+                              identity = 0):
 
         
         ##only one corr channel should not happen but ok
@@ -539,20 +529,15 @@ class BaseTag():
                                                             n_bins = n_values))
 
             self.trig_corr_counts = np.zeros(shape=(n_values,n_values))   
-            if startfor == -1 and self.trig_corr_running == False:
-                self.trig_corr_running = True
+            if startfor == -1:
                 sm.start()
-                while self.trig_corr_running:
+                while self.trig_corr_running[identity]:
                     for i in range(n_values):
                         # dat = np.add(corr_list[i].getData(), corr2_list[i].getData())
                         for j in range(len(corr_list)):
                         #print(np.array(dat))
                             self.trig_corr_counts[i] += corr_list[j].getData() 
                 sm.stop()
-
-            elif startfor == -1 and self.trig_corr_running == True:
-                print('Correlation object instance already exists!!! Please destroy it first')
-                self.trig_corr_counts = np.zeros(shape=(n_values,n_values))   
 
             elif startfor > 0.:
                 sm.startFor(startfor, clear = True)
