@@ -16,6 +16,7 @@ import os
 from datetime import datetime
 import json
 import threading
+import time
 
 from client_object import TagClient
 from liveplotter import Plumeria
@@ -77,14 +78,14 @@ class Lotus():
         
         if startfor == -1:
             print('Persisting Counter measurement class! Close live plot to exit this!!')
-            self.spot0.get_count.append(True)
-            identity = len(self.spot0.get_count) - 1
+            self.spot0.count_running.append(True)
+            identity = len(self.spot0.count_running) - 1
             threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
             threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', 0.1, len(channels), identity), daemon = True).start()
             return 
 
         elif startfor > 0.:
-            counts = self.spot0.get_count(startfor, channels, binwidth_ns, n)
+            counts = self.spot0.count_running(startfor, channels, binwidth_ns, n)
 
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')
@@ -100,6 +101,7 @@ class Lotus():
             self.spot0.corr_running.append(True)
             identity = len(self.spot0.corr_running) - 1
             threading.Thread(target = self.spot0.get_correlation, args = (startfor, channels, binwidth, n, identity), daemon = True).start()
+            time.sleep(1)
             threading.Thread(target = self.corrplot, args = ('Delay', 'Counts', 'Live Correlation Plot', identity), daemon = True).start()
             return
 
@@ -114,24 +116,25 @@ class Lotus():
 
             return corr
 
-    def tag_triggered_correlation(self, startfor, channels, binwidth = 1000, n = 1000, save = False):
+    def tag_triggered_correlation(self, startfor, channels, binwidth_ns = 500, n = 20, save = False):
 
         if startfor == -1:
             print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
-            self.spot0.get_trig_corr_running.append(True)
+            self.spot0.trig_corr_running.append(True)
             identity = len(self.spot0.trig_corr_running) - 1
-            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth, n, identity), daemon = True).start()
+            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
+            time.sleep(1)
             threading.Thread(target = self.trigcorrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', identity), daemon = True).start()
             return
 
         elif startfor > 0.:
-            trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth, n)
+            trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth_ns, n)
 
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/trigcorrelated_width{}ps_n{}_{}'.format(binwidth, n, dt_string), trigcorr)
+                np.save('output/trigcorrelated_width{}ps_n{}_{}'.format(binwidth_ns, n, dt_string), trigcorr)
             return trigcorr
 
     def tag_streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):
@@ -156,9 +159,9 @@ class Lotus():
             plume.set_ylabel(ylabel)
 
             while not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.countrate[0]))
+                xaxis = np.arange(len(self.spot0.count[0]))
                 for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.countrate[q]], q)
+                    plume.set_data([xaxis, self.spot0.count[q]], q)
                 
                 plume.update()
 
@@ -187,16 +190,16 @@ class Lotus():
  
     def trigcorrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, identity = 0):
 
-        plot_no = 1
+        plot_no = 5
         with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
 
             plume.set_xlabel(xlabel)
             plume.set_ylabel(ylabel)
   
             while not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.trig_corr_counts))
-                for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.trig_corr_counts], q)
+                xaxis = np.arange(len(self.spot0.trig_corr_counts[0]))
+                for q in range(5):
+                    plume.set_data([xaxis, self.spot0.trig_corr_counts[q+10]], q)
                 
                 plume.update()
         self.spot0.trig_corr_running[identity] = False

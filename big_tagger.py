@@ -378,19 +378,16 @@ class BaseTag():
 
 
     def get_count(self, startfor = int(1e12), channels = [1, 2], binwidth_ns = 1, n = 1000, identity = 0):
-
         if type(channels) is int:
             channels = [channels]
         
-
+        print('my identity is', identity)
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Counter(self.client, channels, binwidth_ns*1000, n) as compte:
 
-            if startfor == -1 and self.countrate_running == False:
-                self.count_running = True
-                compte.start()
-                
-                while self.countrate_running[identity]:
+            if startfor == -1:
+                compte.start()                
+                while self.count_running[identity]:
                     self.count = compte.getData(rolling = True)
                     # print(self.countrate)
                 compte.stop()
@@ -403,6 +400,7 @@ class BaseTag():
                 if self.verbose:
                     print(f'Measured count of channel(s) {channels} in counts:')
                     print(self.count)
+            print('Counter class instance destroyed!')
 
         return self.count
 
@@ -458,6 +456,76 @@ class BaseTag():
         return self.corr_counts
 
     ### 2D correlation vs time-delay from a trigger channel
+
+    # def kyle(self, 
+    #                             trigger_channel = 1, 
+    #                             corr_channel1 = 3, 
+    #                             corr_channel2 = 4, 
+    #                             binwidth_ns=5, 
+    #                             n_values=20,
+    #                             runtime = int(1e12)):
+    #         # Create Correlation measurements and use SynchronizedMeasurements to start them easily
+    #         sm = TimeTagger.SynchronizedMeasurements(self.client)
+
+    #         if (n_values % 2) == 0:
+    #             n_values+=1
+
+    #         midpoint = n_values/2+0.5
+
+    #         # Make virtual channels that are delayed by each multiple of the bin widths
+    #         # then take coincidences for corr_channel1(2) and the trigger_channel
+    #         # this creates virtual channels that can then be correlated with corr_channel2(1) 
+    #         ydelayed = []
+    #         ycoincidences = []
+    #         y2coincidences = []
+
+    #         channel1delayed = TimeTagger.DelayedChannel(sm.getTagger(), 
+    #                                                 input_channel=corr_channel1, 
+    #                                                 delay=midpoint*binwidth_ns*1000)
+    #         channel2delayed = TimeTagger.DelayedChannel(sm.getTagger(), 
+    #                                                 input_channel=corr_channel2, 
+    #                                                 delay=midpoint*binwidth_ns*1000)
+
+    #         for i in range(n_values):
+    #             ydelayed.append(TimeTagger.DelayedChannel(sm.getTagger(), 
+    #                                                     input_channel=trigger_channel, 
+    #                                                     delay=(i)*binwidth_ns*1000))
+    #             ycoincidences.append(TimeTagger.Coincidence(sm.getTagger(), [channel1delayed.getChannel(),ydelayed[i].getChannel()],
+    #                                             coincidenceWindow = binwidth_ns*1000,
+    #                                             timestamp = TimeTagger.CoincidenceTimestamp.ListedFirst))
+    #             y2coincidences.append(TimeTagger.Coincidence(sm.getTagger(), [channel2delayed.getChannel(),ydelayed[i].getChannel()],
+    #                                             coincidenceWindow = binwidth_ns*1000,
+    #                                             timestamp = TimeTagger.CoincidenceTimestamp.ListedFirst))
+
+    #         # Measure correlations between the delayed triggered virtual channels and corr_channel2(1)
+    #         corr_list = []
+    #         corr2_list = []
+
+    #         for i in range(n_values):
+    #             corr_list.append(TimeTagger.Correlation(sm.getTagger(),
+    #                                                     ycoincidences[i].getChannel(),
+    #                                                     channel2delayed.getChannel(), 
+    #                                                     binwidth = binwidth_ns*1000,
+    #                                                     n_bins = n_values))
+    #             corr2_list.append(TimeTagger.Correlation(sm.getTagger(),
+    #                                                     y2coincidences[i].getChannel(),
+    #                                                     channel1delayed.getChannel(), 
+    #                                                     binwidth = binwidth_ns*1000,
+    #                                                     n_bins = n_values))
+
+    #         # Run for runtime
+    #         sm.startFor(runtime, clear=True)
+    #         sm.waitUntilFinished()
+
+    #         outputdata = np.zeros(shape=(n_values,n_values))
+
+    #         for i in range(n_values):
+    #             with corr_list[i] as corr, corr2_list[i] as corr2:
+    #                 dat = np.add(corr.getData(), corr2.getData())
+    #                 #print(np.array(dat))
+    #                 outputdata[i]=np.array(dat)                
+    #         return outputdata
+
     def get_triggered_correlation(self, startfor = int(1E12),
                               chs = [3, 1, 2], 
                               binwidth_ns = 500, 
@@ -482,6 +550,8 @@ class BaseTag():
 
         # Create Correlation measurements and use SynchronizedMeasurements to start them easily
         with TimeTagger.SynchronizedMeasurements(self.client) as sm:
+            self.trig_corr_counts = np.zeros(shape=(n_values,n_values))   
+
             # Proxy tagger object, we can use the same object for all synced measurement classes below
             syncTagger = sm.getTagger()
 
@@ -490,8 +560,8 @@ class BaseTag():
             # this creates virtual channels that can then be correlated with corr_channel2(1) 
             delayedtriggers = []
             ycoincidences = [[] for i in range(no_corrs)]
-            
             delayedchannels = []
+
             for i in range(no_corrs):
                 delayedchannels.append(TimeTagger.DelayedChannel(syncTagger, 
                                                     input_channel = corr_chs[i], 
@@ -509,34 +579,33 @@ class BaseTag():
                                                             timestamp = TimeTagger.CoincidenceTimestamp.ListedFirst))
 
             # Measure correlations between the delayed triggered virtual channels and corr_channel2(1)
-            corr_list = []
-            
-            sets = itertools.combinations(np.arange(no_corrs), 2)
-
+            corr_list = [[] for i in range(n_values)]
+            sets = list(itertools.combinations(np.arange(no_corrs), 2))
             for i in range(n_values):
                 for pair in sets:
-
-                    lead, follow = pair    
-                    corr_list.append(TimeTagger.Correlation(syncTagger,
-                                                            ycoincidences[i][lead].getChannel(),
+                    lead, follow = pair
+                    # print(lead, follow)    
+                    corr_list[i].append(TimeTagger.Correlation(syncTagger,
+                                                            ycoincidences[lead][i].getChannel(),
                                                             delayedchannels[follow].getChannel(), 
                                                             binwidth = binwidth_ns*1000,
                                                             n_bins = n_values))
-                    corr_list.append(TimeTagger.Correlation(syncTagger,
-                                                            ycoincidences[i][follow].getChannel(),
+                    corr_list[i].append(TimeTagger.Correlation(syncTagger,
+                                                            ycoincidences[follow][i].getChannel(),
                                                             delayedchannels[lead].getChannel(), 
                                                             binwidth = binwidth_ns*1000,
                                                             n_bins = n_values))
 
-            self.trig_corr_counts = np.zeros(shape=(n_values,n_values))   
             if startfor == -1:
                 sm.start()
                 while self.trig_corr_running[identity]:
                     for i in range(n_values):
+
                         # dat = np.add(corr_list[i].getData(), corr2_list[i].getData())
-                        for j in range(len(corr_list)):
+                        for j in range(no_corrs):
                         #print(np.array(dat))
-                            self.trig_corr_counts[i] += corr_list[j].getData() 
+                            ### these are numpy arrays now...like spyder tells us
+                            self.trig_corr_counts[i] += corr_list[i][j].getData() 
                 sm.stop()
 
             elif startfor > 0.:
@@ -544,11 +613,10 @@ class BaseTag():
                 sm.waitUntilFinished()
                 for i in range(n_values):
                         # dat = np.add(corr_list[i].getData(), corr2_list[i].getData())
-                    for j in range(len(corr_list)):
+                    for j in range(no_corrs):
                         #print(np.array(dat))
-                        self.trig_corr_counts[i] += corr_list[j].getData()
+                        self.trig_corr_counts[i] += corr_list[i][j].getData()
 
-                print(self.trig_corr_counts)
    
 
         return self.trig_corr_counts
