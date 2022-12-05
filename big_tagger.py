@@ -50,7 +50,6 @@ class BaseTag():
         Disable resetting trigger levels and gate times to values specified in configurations/tagger_config.json
     
 
-
     Attributes
     ----------
     fileloc, calibrationslib, adjustmentslib : see data_tools.localfiles()
@@ -71,20 +70,23 @@ class BaseTag():
 
     is_on : bool
 
-    corr_running : bool
+    corr_running: list of bool
 
-    allrate_running : bool
+    trig_corr_running: list of bool
 
-    countrate_running : bool
+    allrate_runnning: list of bool
 
-    stream_running : bool
+    count_running: list of bool
 
-    countrate : np.array()
+    count: list of np.array()
 
-    data : list
+    allrate: list of np.array()
 
-    config : dict
+    corr_counts: list of np.array()
 
+    trig_corr_counts: list of np.array()
+
+    config: dict
     """
 
     def __init__(
@@ -124,7 +126,10 @@ class BaseTag():
         self.trig_corr_running = []
         self.allrate_runnning = [] 
         self.count_running = []
-
+        self.count = []
+        self.allrate = []
+        self.corr_counts = []
+        self.trig_corr_counts = []
 
     @percentsss 
     @starsss
@@ -388,21 +393,21 @@ class BaseTag():
             if startfor == -1:
                 compte.start()                
                 while self.count_running[identity]:
-                    self.count = compte.getData(rolling = True)
+                    self.count[identity] = compte.getData(rolling = True)
                     # print(self.countrate)
                 compte.stop()
 
             elif startfor > 0.:
                 compte.startFor(startfor)
                 compte.waitUntilFinished()
-                self.count = compte.getData()
+                self.count[identity] = compte.getData()
 
                 if self.verbose:
                     print(f'Measured count of channel(s) {channels} in counts:')
-                    print(self.count)
+                    print(self.count[identity])
             print('Counter class instance destroyed!')
 
-        return self.count
+        return self.count[identity]
 
 
     ###subclassing the CUMULATIVE CountRate measurement class
@@ -417,7 +422,7 @@ class BaseTag():
             if startfor == -1:
                 cr.start()                
                 while self.allrate_running[identity]:
-                    self.allrate = cr.getData()
+                    self.allrate[identity] = cr.getData()
                 cr.stop()
 
 
@@ -425,12 +430,12 @@ class BaseTag():
 
                 cr.startFor(startfor)
                 cr.waitUntilFinished()
-                self.allrate = cr.getData()
+                self.allrate[identity] = cr.getData()
 
                 if self.verbose:
                     print(f'Measured total total count rate of channel {channels}  in counts/s:')
 
-        return self.allrate
+        return self.allrate[identity]
 
     ### full auto and cross correlation
     ### we work in ns
@@ -439,21 +444,21 @@ class BaseTag():
         if type(channels) is int:
             channels = [channels]
         with TimeTagger.Correlation(self.client, channels[0], channels[1], binwidth_ns*1000, n) as corr:
-            
+                   
             if startfor == -1:
                 corr.start()
                 while self.corr_running[identity]:
-                    self.corr_counts = corr.getData()
+                    self.corr_counts[identity] = corr.getData()
                 corr.stop()
 
             elif startfor > 0.:
                 corr.startFor(startfor)
                 corr.waitUntilFinished()
-                self.corr_counts = corr.getData()
-                print(self.corr_counts)
+                self.corr_counts[identity] = corr.getData()
+                print(self.corr_counts[identity])
 
         ### 1d np array (int)
-        return self.corr_counts
+        return self.corr_counts[identity]
 
     ### 2D correlation vs time-delay from a trigger channel
 
@@ -605,7 +610,7 @@ class BaseTag():
                         for j in range(no_corrs):
                         #print(np.array(dat))
                             ### these are numpy arrays now...like spyder tells us
-                            self.trig_corr_counts[i] += corr_list[i][j].getData() 
+                            self.trig_corr_counts[identity][i] += corr_list[i][j].getData() 
                 sm.stop()
 
             elif startfor > 0.:
@@ -615,11 +620,11 @@ class BaseTag():
                         # dat = np.add(corr_list[i].getData(), corr2_list[i].getData())
                     for j in range(no_corrs):
                         #print(np.array(dat))
-                        self.trig_corr_counts[i] += corr_list[i][j].getData()
+                        self.trig_corr_counts[identity][i] += corr_list[i][j].getData()
 
    
 
-        return self.trig_corr_counts
+        return self.trig_corr_counts[identity]
      
 #TODO!
     def filewrite(self, startfor = int(5E11), channels = [1, 2, 3, 4]):
@@ -697,6 +702,10 @@ class BaseTag():
 
         print(missed_events, 'events missed!!!')
         return collected_tags[1:], tags_channel_list[1:]
+
+def return_count(self):
+    return self.count
+
 
 
 ####################################################################################

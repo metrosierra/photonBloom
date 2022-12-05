@@ -3,6 +3,7 @@
 from subroutines.mathematics import percentsss, starsss
 
 ###%%%%%%%%%%%%%%%%%%%%%%
+# from PyQt5 import QtWidgets
 
 from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
@@ -10,48 +11,42 @@ import time
 import sys
 
 
-class RoseApp():
-    def __init__(self, args = []):
 
-        self.app = QtGui.QApplication.instance()
-        if self.app is None:
-            self.app = QtGui.QApplication(args)
+class WorkerBee(QtCore.QThread):
+    signal = QtCore.pyqtSignal(list)
+    def __init__(self, datastream_store, datastream_toggle, isHidden_toggle, refresh_interval = 0.0001, kwarg_dict = {}):
+        super().__init__()
 
+        self.isHidden = isHidden_toggle
+        self.data = datastream_store
+        self.isStreaming = datastream_toggle
+        self.refresh_interval = refresh_interval
+        self.kwarg_dict = kwarg_dict
+        self.data = [[[0.], [1.]]]
 
-        self.windows = {}
-        self.windowcount = 0
+    def run(self):
 
-        #enter event loop
-        self.exec_()
+        self.data_object.start(**self.kwarg_dict)
 
-    @QtCore.pyqtSlot()
-    def new_window(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
-        window = PetalWindow(self.windowcount, title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no)
+        while not self.isHidden_object():
+            self.signal.emit(self.data_object)
+            time.sleep(self.refresh_interval)
+        
+        self.isStreaming = False
+        self.data_object.stop()
+        self.quit()
+        print('WorkerBee vi saluta')
 
-        ### This line is a signal connection to window.closed property
-        ### which is emitted when the window is closed
-        ### it's related to the decorator @QtCore.pyqtSlot()
-        window.closed.connect(self.remove_window)
-
-        self.windows[self.windowcount] = window
-        self.windowcount += 1
-
-    @QtCore.pyqtSlot(int)
-    def remove_window(self, index):
-        window_target = self.windows[index]
-        window_target.deleteLater()
-        del self.windows[index]
-        print(self.windows)
 
 
 class PetalWindow(QtWidgets.QWidget):
 
     ### this is link to the parent class decorated functions
-    closed = QtCore.pyqtSignal(int)
+    closed = QtCore.pyqtSignal()
 
-    def __init__(self, window_id, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
+    def __init__(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
+        
         super().__init__()
-        self.window_id = window_id
 
         self.window = pg.GraphicsLayoutWidget(show = True, title = "Live Plotting Window")
         self.window.resize(900,500)
@@ -62,17 +57,13 @@ class PetalWindow(QtWidgets.QWidget):
         self.graph = self.window.addPlot(title = title)
         self.graph.addLegend()
 
-        self.initial_xydata = [[0.], [0.]]
         self.refresh_interval = refresh_interval
 
+        self.initial_xydata = [[[0.], [0.]]]
         self.xlabel = xlabel 
         self.ylabel = ylabel
-        self.styling = {'font-size':'20px'}
         self.set_xlabel(self.xlabel)
         self.set_ylabel(self.ylabel)
-
-        self.point_count = 1
-        self.plotting = False
 
         # creating maybe multiple line plot subclass objects for the self.graph object, store in list
         self.plot_no = plot_no 
@@ -85,26 +76,25 @@ class PetalWindow(QtWidgets.QWidget):
             self.curves.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i)))
             self.data_store.append(self.initial_xydata)
         print(self.curves)
-        ### style points
+
+        ##################### style points #####################
         self.graph.showGrid(x = True, y = True)
+        self.styling = {'font-size':'20px'}
+        ########################################################
+        
+        self.worker = WorkerBee(self.isHidden)
+        self.make_connection(self.worker)
+        self.worker.start()
+        self.show()
+        print(self.isHidden())
 
+    def make_connection(self, data_object):
+        data_object.signal.connect(self.update)
 
-
-    ### the emit function is part of the qt signalling method
-    def closeEvent(self, event):
-        self.closed.emit(self.window_id)
-        super().closeEvent(event)
-
-    def __enter__(self):
-        return self
- 
-    @percentsss 
-    @starsss
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-        self.app.closeAllWindows()
-        print('Plotting Object Destroyed')
-        print('Ciao bella ciao bella ciao ciao ciao')
-
+    @QtCore.pyqtSlot(list)
+    def update(self, data):
+        self.set_data(data)
+        
     def set_xlabel(self, label):
         self.graph.setLabel('bottom', label, **self.styling)
 
@@ -115,31 +105,39 @@ class PetalWindow(QtWidgets.QWidget):
     ### this is a local data storage, the update function then
     ### updates the curve instances
     ### the idea is self.data_store is easier to access to check
-    def set_data(self, data, index):
-        self.data_store[index] = data
-        self.curves[index].setData(data[0], data[1])
+    def set_data(self, data):
+
+        for i in range(len(data)):
+            self.data_store[i] = data[i]
+            self.curves[i].setData(data[i][0], data[i][1])
         return self
 
- 
-    def set_refresh_interval(self, interval):
-        self.refresh_interval = interval
-        return self
 
-    def update(self):
-        # set data simply changes the current dataframe to display
+### Rose is the plot GUI instance, 
+### We have one rose and multiple petals (plot windows)
+class RoseApp(QtWidgets.QMainWindow):
 
-        if self.point_count == 0:
-            self.graph.enableAutoRange('xy', False)  # stop auto-scaling after the first data set is plotted
+    def __init__(self):
+        super().__init__()
+        self.w = None  # No external window yet.
+        
+        self.windows = []
+        self.window_count = 0
 
-        self.point_count += 1
-        # QtGui.QApplication.processEvents() # This command initiates a refresh
-        time.sleep(self.refresh_interval)
+        # self.new_window()
+        self.show()
 
-
+    def new_window(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
+        self.windows.append(PetalWindow(title, xlabel, ylabel, refresh_interval, plot_no))
+        self.windows[self.window_count].show()
+        self.window_count += 1
 
 
 ## Start Qt event loop unless running in interactive mode
 if __name__ == '__main__':
     import sys
     if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        
+        app = QtGui.QApplication(sys.argv)
         rose = RoseApp()
+        app.exec_()

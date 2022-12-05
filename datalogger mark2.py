@@ -46,6 +46,9 @@ class Lotus():
             self.spot0.set_autoconfig()
             print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
 
+        
+
+
 
     def create_networktagger(self, ip_address, **kwargs):
         self.spot0 = TagClient(ip_address, **kwargs)
@@ -78,12 +81,11 @@ class Lotus():
         
         if startfor == -1:
             print('Persisting Counter measurement class! Close live plot to exit this!!')
-            self.spot0.count_running.append(True)
-            self.spot0.count.append(np.array([0.]))
 
+            self.spot0.count_running.append(True)
             identity = len(self.spot0.count_running) - 1
-            threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
             threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', 0.1, len(channels), identity), daemon = True).start()
+            
             return 
 
         elif startfor > 0.:
@@ -101,8 +103,6 @@ class Lotus():
         if startfor == -1:
             print('Persisting XCorrelation measurement class! Close live plot to exit this!!')
             self.spot0.corr_running.append(True)
-            self.spot0.corr_counts.append(np.array([0.]))
-
             identity = len(self.spot0.corr_running) - 1
             threading.Thread(target = self.spot0.get_correlation, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
             time.sleep(1)
@@ -125,8 +125,6 @@ class Lotus():
         if startfor == -1:
             print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
             self.spot0.trig_corr_running.append(True)
-            self.spot0.trig_corr_counts.append(np.zeros((2,1)))
-
             identity = len(self.spot0.trig_corr_running) - 1
             threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
             time.sleep(1)
@@ -154,63 +152,6 @@ class Lotus():
 
         return tags, channel_list
 
-### Plotting protocols
-####################################################################################
-    
-    def countplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, plot_no = 4, identity = 0):
-
-        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
-
-            plume.set_xlabel(xlabel)
-            plume.set_ylabel(ylabel)
-
-            while not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.count[0]))
-                for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.count[q]], q)
-                
-                plume.update()
-
-        self.spot0.count_running[identity] = False
-        print('Count Plotting Instance Killed!')
-        return 
-
-    def corrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, identity = 0):
-
-        plot_no = 1
-        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
-
-            plume.set_xlabel(xlabel)
-            plume.set_ylabel(ylabel)
-  
-            while not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.corr_counts))
-                for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.corr_counts], q)
-                
-                plume.update()
-        self.spot0.corr_running[identity] = False 
-        print('Correlation Plotting Instance Killed!')
-        return 
-
- 
-    def trigcorrplot(self, xlabel = 'X Axis', ylabel = 'Y Axis', title = 'Unknown Plot', refresh_interval = 0.1, identity = 0):
-
-        plot_no = 20
-        with Plumeria(title = title, xlabel = xlabel, ylabel = ylabel, refresh_interval = refresh_interval, plot_no = plot_no) as plume:
-
-            plume.set_xlabel(xlabel)
-            plume.set_ylabel(ylabel)
-  
-            while not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.trig_corr_counts[0]))
-                for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.trig_corr_counts[q]], q)
-                
-                plume.update()
-        self.spot0.trig_corr_running[identity] = False
-        print('Correlation Plotting Instance Killed!')
-        return 
 
 ####################################################################################
 
