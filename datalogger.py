@@ -125,7 +125,7 @@ class Lotus():
         if startfor == -1:
             print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
             self.spot0.trig_corr_running.append(True)
-            self.spot0.trig_corr_counts.append(np.zeros((2,1)))
+            self.spot0.trig_corr_counts.append(np.zeros((n,n)))
 
             identity = len(self.spot0.trig_corr_running) - 1
             threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
@@ -134,6 +134,7 @@ class Lotus():
             return
 
         elif startfor > 0.:
+            self.spot0.trig_corr_counts.append(np.zeros((n,n)))
             trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth_ns, n)
 
             if save:
@@ -165,9 +166,9 @@ class Lotus():
             plume.set_ylabel(ylabel)
 
             while not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.count[0]))
+                xaxis = np.arange(len(self.spot0.count[identity][0]))
                 for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.count[q]], q)
+                    plume.set_data([xaxis, self.spot0.count[identity][q]], q)
                 
                 plume.update()
 
@@ -184,9 +185,9 @@ class Lotus():
             plume.set_ylabel(ylabel)
   
             while not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.corr_counts))
+                xaxis = np.arange(len(self.spot0.corr_counts[identity]))
                 for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.corr_counts], q)
+                    plume.set_data([xaxis, self.spot0.corr_counts[identity]], q)
                 
                 plume.update()
         self.spot0.corr_running[identity] = False 
@@ -203,9 +204,9 @@ class Lotus():
             plume.set_ylabel(ylabel)
   
             while not plume.get_window_state():
-                xaxis = np.arange(len(self.spot0.trig_corr_counts[0]))
+                xaxis = np.arange(len(self.spot0.trig_corr_counts[identity][0]))
                 for q in range(plot_no):
-                    plume.set_data([xaxis, self.spot0.trig_corr_counts[q]], q)
+                    plume.set_data([xaxis, self.spot0.trig_corr_counts[identity][q]], q)
                 
                 plume.update()
         self.spot0.trig_corr_running[identity] = False

@@ -15,7 +15,7 @@
 
     "channel3": {
         "index":3,
-        "trigger": 0.08,
+        "trigger": 0.07,
         "deadtime": 100000,
         "divider": 1
   },

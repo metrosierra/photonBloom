@@ -448,17 +448,21 @@ class BaseTag():
             if startfor == -1:
                 corr.start()
                 while self.corr_running[identity]:
-                    self.corr_counts[identity] = corr.getData()
+                    data = corr.getData()
+                    # baseline = np.average(data[:10])
+                    # self.corr_counts[identity] = data/baseline
+                    self.corr_counts[identity] = data
+
                 corr.stop()
 
             elif startfor > 0.:
                 corr.startFor(startfor)
                 corr.waitUntilFinished()
-                self.corr_counts[identity] = corr.getData()
-                print(self.corr_counts[identity])
+                counts = corr.getData()
+                print(counts)
 
         ### 1d np array (int)
-        return self.corr_counts[identity]
+                return counts
 
     ### 2D correlation vs time-delay from a trigger channel
 
@@ -555,7 +559,7 @@ class BaseTag():
 
         # Create Correlation measurements and use SynchronizedMeasurements to start them easily
         with TimeTagger.SynchronizedMeasurements(self.client) as sm:
-            self.trig_corr_counts = np.zeros(shape=(n_values,n_values))   
+            # self.trig_corr_counts = np.zeros(shape=(n_values,n_values))   
 
             # Proxy tagger object, we can use the same object for all synced measurement classes below
             syncTagger = sm.getTagger()
@@ -605,12 +609,16 @@ class BaseTag():
                 sm.start()
                 while self.trig_corr_running[identity]:
                     for i in range(n_values):
+                    # for i in range(10,20):
 
                         # dat = np.add(corr_list[i].getData(), corr2_list[i].getData())
                         for j in range(no_corrs):
                         #print(np.array(dat))
                             ### these are numpy arrays now...like spyder tells us
-                            self.trig_corr_counts[identity][i] += corr_list[i][j].getData() 
+                            data = corr_list[i][j].getData() 
+                            # baseline = np.average(data[:4]) + 0.0001
+
+                            self.trig_corr_counts[identity][i] += data 
                 sm.stop()
 
             elif startfor > 0.:
@@ -620,7 +628,7 @@ class BaseTag():
                         # dat = np.add(corr_list[i].getData(), corr2_list[i].getData())
                     for j in range(no_corrs):
                         #print(np.array(dat))
-                        self.trig_corr_counts[identity][i] += corr_list[i][j].getData()
+                        self.trig_corr_counts[-1][i] += corr_list[i][j].getData()
 
    
 

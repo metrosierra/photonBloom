@@ -47,7 +47,7 @@ class Plumeria():
             ### check pyqtgraph documentation on styling...it's quite messy
             self.curves.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i+1)))
             self.data_store.append(self.initial_xydata)
-        print(self.curves)
+        # print(self.curves)
         ### style points
 
 
