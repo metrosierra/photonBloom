@@ -369,7 +369,34 @@ class BaseTag():
 
 ######################   measurement methods   ################################
 
+    def return_count(self, identity):
+        return self.count[identity]
 
+    def return_corr_counts(self, identity):
+        return self.corr_counts[identity]
+
+    def return_trig_corr_counts(self, identity):
+        return self.trig_corr_counts[identity]
+
+    def return_allrate(self, identity):
+        return self.allrate[identity]
+
+    def switchoff_count(self, identity):
+        self.count_running[identity] = False
+        return self
+
+    def switchoff_corr_counts(self, identity):
+        self.corr_counts_running[identity] = False
+        return self
+
+    def switchoff_trig_corr_counts(self, identity):
+        self.trig_corr_counts_running[identity] = False
+        return self
+
+    def switchoff_allrate(self, identity):
+        self.allrate_running[identity] = False
+        return self
+        
     def overflow_check(self):
         # Check for overflows
         self.overflows = self.client.getOverflows()

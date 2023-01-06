@@ -14,26 +14,22 @@ import sys
 
 class WorkerBee(QtCore.QThread):
     signal = QtCore.pyqtSignal(list)
-    def __init__(self, datastream_store, datastream_toggle, isHidden_toggle, refresh_interval = 0.0001, kwarg_dict = {}):
+    def __init__(self, data_func, data_kill_func, isHidden_toggle, refresh_interval, identity):
         super().__init__()
 
         self.isHidden = isHidden_toggle
-        self.data = datastream_store
-        self.isStreaming = datastream_toggle
+        self.data_func = data_func
+        self.data_toggle_func = data_kill_func
         self.refresh_interval = refresh_interval
-        self.kwarg_dict = kwarg_dict
-        self.data = [[[0.], [1.]]]
+        self.identity = identity 
 
     def run(self):
 
-        self.data_object.start(**self.kwarg_dict)
-
         while not self.isHidden_object():
-            self.signal.emit(self.data_object)
+            self.signal.emit(self.data_func())
             time.sleep(self.refresh_interval)
         
-        self.isStreaming = False
-        self.data_object.stop()
+        self.data_kill_func(self.identity)
         self.quit()
         print('WorkerBee vi saluta')
 
@@ -44,7 +40,7 @@ class PetalWindow(QtWidgets.QWidget):
     ### this is link to the parent class decorated functions
     closed = QtCore.pyqtSignal()
 
-    def __init__(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
+    def __init__(self, data_func, data_kill_func, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1, identity = 0):
         
         super().__init__()
 
@@ -52,7 +48,6 @@ class PetalWindow(QtWidgets.QWidget):
         self.window.resize(900,500)
         # just antialiasing
         pg.setConfigOptions(antialias = True)
-
         # Creates graph object
         self.graph = self.window.addPlot(title = title)
         self.graph.addLegend()
@@ -67,13 +62,13 @@ class PetalWindow(QtWidgets.QWidget):
 
         # creating maybe multiple line plot subclass objects for the self.graph object, store in list
         self.plot_no = plot_no 
-        self.curves = []
+        self.plots = []
         self.data_store = []
         ### storing lineplot instances into list, with indexed data store list
         for i in range(self.plot_no):
             ### setting pen as integer makes line colour cycle through 9 hues by default
             ### check pyqtgraph documentation on styling...it's quite messy
-            self.curves.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i)))
+            self.plots.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i)))
             self.data_store.append(self.initial_xydata)
         print(self.curves)
 
@@ -82,7 +77,7 @@ class PetalWindow(QtWidgets.QWidget):
         self.styling = {'font-size':'20px'}
         ########################################################
         
-        self.worker = WorkerBee(self.isHidden)
+        self.worker = WorkerBee(data_func, data_kill_func, self.isHidden, self.refresh_interval, identity)
         self.make_connection(self.worker)
         self.worker.start()
         self.show()
@@ -90,17 +85,17 @@ class PetalWindow(QtWidgets.QWidget):
 
     def make_connection(self, data_object):
         data_object.signal.connect(self.update)
-
+        return self
     @QtCore.pyqtSlot(list)
     def update(self, data):
         self.set_data(data)
-        
+        return self
     def set_xlabel(self, label):
         self.graph.setLabel('bottom', label, **self.styling)
-
+        return self
     def set_ylabel(self, label):
         self.graph.setLabel('left', label, **self.styling)
-
+        return self
     ### please input data as list of lists => [[xdata], [ydata]]
     ### this is a local data storage, the update function then
     ### updates the curve instances
@@ -109,7 +104,7 @@ class PetalWindow(QtWidgets.QWidget):
 
         for i in range(len(data)):
             self.data_store[i] = data[i]
-            self.curves[i].setData(data[i][0], data[i][1])
+            self.plots[i].setData(data[i][0], data[i][1])
         return self
 
 
@@ -127,8 +122,9 @@ class RoseApp(QtWidgets.QMainWindow):
         # self.new_window()
         self.show()
 
-    def new_window(self, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1):
-        self.windows.append(PetalWindow(title, xlabel, ylabel, refresh_interval, plot_no))
+
+    def new_window(self, data_func, data_kill_func, refresh_interval = 0.0001, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', plot_no = 1, identity = 0):
+        self.windows.append(PetalWindow(data_func, data_kill_func, title, xlabel, ylabel, refresh_interval, plot_no, identity))
         self.windows[self.window_count].show()
         self.window_count += 1
 

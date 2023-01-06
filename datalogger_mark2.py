@@ -17,10 +17,11 @@ from datetime import datetime
 import json
 import threading
 import time
+from pyqtgraph.Qt import QtGui
 
 from client_object import TagClient
 from liveplotter import Plumeria
-from liveplotter_mark2 import RoseApp, PetalWindow
+from liveplotter_mark2 import RoseApp
 
 from subroutines.mathematics import percentsss, starsss
 
@@ -46,8 +47,10 @@ class Lotus():
             self.spot0.set_autoconfig()
             print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
 
-        
-
+        self.app = QtGui.QApplication(sys.argv)
+        self.rose0 = RoseApp()
+        self.app.exec_()
+        print('Rose GUI Main Window Activated! Add plots at will!')
 
 
     def create_networktagger(self, ip_address, **kwargs):
@@ -84,12 +87,25 @@ class Lotus():
 
             self.spot0.count_running.append(True)
             identity = len(self.spot0.count_running) - 1
-            threading.Thread(target = self.countplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', 0.1, len(channels), identity), daemon = True).start()
-            
+            threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
+
+            qthread_args = {
+                'data_func': self.spot0.return_count, 
+                'data_kill_func': self.spot0.count_running,
+                'identity': identity,
+                'plot_no': 1
+            }
+
+            self.rose0.new_window(refresh_interval = 0.0001, 
+                                    title = 'Rolling Count Rate Plot', 
+                                    xlabel = 'Time (s)', 
+                                    ylabel = 'Counts/s', 
+                                    **qthread_args)
+
             return 
 
         elif startfor > 0.:
-            counts = self.spot0.count_running(startfor, channels, binwidth_ns, n)
+            counts = self.spot0.get_count(startfor, channels, binwidth_ns, n)
 
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')
@@ -98,15 +114,27 @@ class Lotus():
                 np.save('output/lastframe_bincounts_width{}ps_n{}_{}'.format(binwidth_ns, n, dt_string), counts)
             return counts
 
-    def tag_correlation(self, startfor, channels, binwidth_ns = 1000, n = 1000, save = False):
+    def tag_correlation(self, startfor, channels, binwidth_ns = 1000, n = 100, save = False):
 
         if startfor == -1:
             print('Persisting XCorrelation measurement class! Close live plot to exit this!!')
             self.spot0.corr_running.append(True)
             identity = len(self.spot0.corr_running) - 1
             threading.Thread(target = self.spot0.get_correlation, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
-            time.sleep(1)
-            threading.Thread(target = self.corrplot, args = ('Delay', 'Counts', 'Live Correlation Plot', identity), daemon = True).start()
+            
+            qthread_args = {
+                'data_func': self.spot0.return_corr_counts, 
+                'data_kill_func': self.spot0.corr_running,
+                'identity': identity,
+                'plot_no': 1
+            }
+
+            self.rose0.new_window(refresh_interval = 0.0001, 
+                                    title = 'Cross Correlation Plot', 
+                                    xlabel = 'Delay', 
+                                    ylabel = 'Counts', 
+                                    **qthread_args)
+
             return
 
         elif startfor > 0.:
@@ -127,8 +155,20 @@ class Lotus():
             self.spot0.trig_corr_running.append(True)
             identity = len(self.spot0.trig_corr_running) - 1
             threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
-            time.sleep(1)
-            threading.Thread(target = self.trigcorrplot, args = ('Time (s)', 'Counts', 'Live Countrate Plot', identity), daemon = True).start()
+
+            qthread_args = {
+                'data_func': self.spot0.return_trig_corr_counts, 
+                'data_kill_func': self.spot0.trig_corr_running,
+                'identity': identity,
+                'plot_no': 20
+            }
+
+            self.rose0.new_window(refresh_interval = 0.0001, 
+                                    title = 'Triggered Cross Correlation Plot', 
+                                    xlabel = 'Delay', 
+                                    ylabel = 'Counts', 
+                                    **qthread_args)
+
             return
 
         elif startfor > 0.:
