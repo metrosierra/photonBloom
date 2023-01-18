@@ -386,11 +386,11 @@ class BaseTag():
         return self
 
     def switchoff_corr_counts(self, identity):
-        self.corr_counts_running[identity] = False
+        self.corr_running[identity] = False
         return self
 
     def switchoff_trig_corr_counts(self, identity):
-        self.trig_corr_counts_running[identity] = False
+        self.trig_corr_running[identity] = False
         return self
 
     def switchoff_allrate(self, identity):
@@ -414,6 +414,7 @@ class BaseTag():
             channels = [channels]
         
         print('my identity is', identity)
+        self.count.append(np.array([0.]))
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Counter(self.client, channels, binwidth_ns*1000, n) as compte:
 
@@ -470,15 +471,16 @@ class BaseTag():
 
         if type(channels) is int:
             channels = [channels]
+        self.corr_counts.append(np.array([0.]))
         with TimeTagger.Correlation(self.client, channels[0], channels[1], binwidth_ns*1000, n) as corr:
                    
             if startfor == -1:
                 corr.start()
                 while self.corr_running[identity]:
                     data = corr.getData()
-                    # baseline = np.average(data[:10])
-                    # self.corr_counts[identity] = data/baseline
-                    self.corr_counts[identity] = data
+                    baseline = np.average(data[:10])
+                    self.corr_counts[identity] = np.array([data/baseline])
+                    # self.corr_counts[identity] = data
 
                 corr.stop()
 
@@ -583,6 +585,7 @@ class BaseTag():
         if (n_values % 2) == 0:
             n_values+=1
         midpoint = n_values/2+0.5
+        self.trig_corr_counts.append(np.array([0.]))
 
         # Create Correlation measurements and use SynchronizedMeasurements to start them easily
         with TimeTagger.SynchronizedMeasurements(self.client) as sm:

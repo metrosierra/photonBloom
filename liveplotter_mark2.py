@@ -9,11 +9,11 @@ from pyqtgraph.Qt import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 import time
 import sys
-
+import numpy as np
 
 
 class WorkerBee(QtCore.QThread):
-    signal = QtCore.pyqtSignal(list)
+    signal = QtCore.pyqtSignal(np.ndarray)
     def __init__(self, data_func, data_kill_func, isHidden_toggle, refresh_interval, identity):
         super().__init__()
 
@@ -25,11 +25,14 @@ class WorkerBee(QtCore.QThread):
 
     def run(self):
 
-        while not self.isHidden_object():
-            self.signal.emit(self.data_func())
-            time.sleep(self.refresh_interval)
-        
-        self.data_kill_func(self.identity)
+        while not self.isHidden():
+            print(self.identity, 'hihihihihi')
+            print(type(self.data_func(self.identity)), 'heyhey')
+            self.signal.emit(self.data_func(self.identity))
+            # time.sleep(self.refresh_interval)
+            time.sleep(0.5)
+
+        self.data_toggle_func(self.identity)
         self.quit()
         print('WorkerBee vi saluta')
 
@@ -53,7 +56,10 @@ class PetalWindow(QtWidgets.QWidget):
         self.graph.addLegend()
 
         self.refresh_interval = refresh_interval
-
+        ##################### style points #####################
+        self.graph.showGrid(x = True, y = True)
+        self.styling = {'font-size':'20px'}
+        ########################################################
         self.initial_xydata = [[[0.], [0.]]]
         self.xlabel = xlabel 
         self.ylabel = ylabel
@@ -70,12 +76,9 @@ class PetalWindow(QtWidgets.QWidget):
             ### check pyqtgraph documentation on styling...it's quite messy
             self.plots.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i)))
             self.data_store.append(self.initial_xydata)
-        print(self.curves)
+        print(self.plots)
 
-        ##################### style points #####################
-        self.graph.showGrid(x = True, y = True)
-        self.styling = {'font-size':'20px'}
-        ########################################################
+
         
         self.worker = WorkerBee(data_func, data_kill_func, self.isHidden, self.refresh_interval, identity)
         self.make_connection(self.worker)
@@ -86,7 +89,7 @@ class PetalWindow(QtWidgets.QWidget):
     def make_connection(self, data_object):
         data_object.signal.connect(self.update)
         return self
-    @QtCore.pyqtSlot(list)
+    @QtCore.pyqtSlot(np.ndarray)
     def update(self, data):
         self.set_data(data)
         return self
@@ -101,10 +104,10 @@ class PetalWindow(QtWidgets.QWidget):
     ### updates the curve instances
     ### the idea is self.data_store is easier to access to check
     def set_data(self, data):
-
-        for i in range(len(data)):
+        
+        for i in range(self.plot_no):
             self.data_store[i] = data[i]
-            self.plots[i].setData(data[i][0], data[i][1])
+            self.plots[i].setData(np.arange(len(data[i])), data[i])
         return self
 
 

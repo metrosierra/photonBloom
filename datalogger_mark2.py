@@ -17,8 +17,8 @@ from datetime import datetime
 import json
 import threading
 import time
-from pyqtgraph.Qt import QtGui
-
+import sys
+from PyQt5.QtWidgets import QApplication
 from client_object import TagClient
 from liveplotter import Plumeria
 from liveplotter_mark2 import RoseApp
@@ -47,10 +47,8 @@ class Lotus():
             self.spot0.set_autoconfig()
             print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
 
-        self.app = QtGui.QApplication(sys.argv)
+        self.app = QApplication(sys.argv)
         self.rose0 = RoseApp()
-        self.app.exec_()
-        print('Rose GUI Main Window Activated! Add plots at will!')
 
 
     def create_networktagger(self, ip_address, **kwargs):
@@ -59,6 +57,12 @@ class Lotus():
 
     def __enter__(self):
         return self
+
+    # def gui_thread(self):
+    #     self.app = QApplication(sys.argv)
+    #     self.rose0 = RoseApp()
+    #     self.app.exec_()
+    #     print('Rose GUI Main Window Activated! Add plots at will!')
 
     @percentsss
     @starsss
@@ -91,9 +95,9 @@ class Lotus():
 
             qthread_args = {
                 'data_func': self.spot0.return_count, 
-                'data_kill_func': self.spot0.count_running,
+                'data_kill_func': self.spot0.switchoff_count,
                 'identity': identity,
-                'plot_no': 1
+                'plot_no': len(channels)
             }
 
             self.rose0.new_window(refresh_interval = 0.0001, 
@@ -124,7 +128,7 @@ class Lotus():
             
             qthread_args = {
                 'data_func': self.spot0.return_corr_counts, 
-                'data_kill_func': self.spot0.corr_running,
+                'data_kill_func': self.spot0.switchoff_corr_counts,
                 'identity': identity,
                 'plot_no': 1
             }
