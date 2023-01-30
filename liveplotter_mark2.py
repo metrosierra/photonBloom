@@ -25,17 +25,21 @@ class WorkerBee(QtCore.QThread):
 
     def run(self):
 
+        i = 0 
         while not self.isHidden():
-            print(self.identity, 'hihihihihi')
-            print(type(self.data_func(self.identity)), 'heyhey')
+            i += 1
+            if i%1000 == 0:
+                print('1000 cycles past')
+                i = 0
+                # print(type(self.data_func(self.identity)), 'heyhey')
+            # print(self.data_func(self.identity))
             self.signal.emit(self.data_func(self.identity))
             # time.sleep(self.refresh_interval)
-            time.sleep(0.5)
+            time.sleep(self.refresh_interval)
 
         self.data_toggle_func(self.identity)
         self.quit()
         print('WorkerBee vi saluta')
-
 
 
 class PetalWindow(QtWidgets.QWidget):
@@ -43,7 +47,7 @@ class PetalWindow(QtWidgets.QWidget):
     ### this is link to the parent class decorated functions
     closed = QtCore.pyqtSignal()
 
-    def __init__(self, data_func, data_kill_func, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.0001, plot_no = 1, identity = 0):
+    def __init__(self, data_func, data_kill_func, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.1, plot_no = 1, identity = 0):
         
         super().__init__()
 
@@ -55,6 +59,7 @@ class PetalWindow(QtWidgets.QWidget):
         self.graph = self.window.addPlot(title = title)
         self.graph.addLegend()
 
+        self.identity = identity
         self.refresh_interval = refresh_interval
         ##################### style points #####################
         self.graph.showGrid(x = True, y = True)
@@ -76,15 +81,12 @@ class PetalWindow(QtWidgets.QWidget):
             ### check pyqtgraph documentation on styling...it's quite messy
             self.plots.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i)))
             self.data_store.append(self.initial_xydata)
-        print(self.plots)
-
-
         
-        self.worker = WorkerBee(data_func, data_kill_func, self.isHidden, self.refresh_interval, identity)
+        self.worker = WorkerBee(data_func, data_kill_func, self.window.isHidden, self.refresh_interval, self.identity)
         self.make_connection(self.worker)
         self.worker.start()
-        self.show()
-        print(self.isHidden())
+        # self.show()
+        print('New Plot Window Identity is', self.identity)
 
     def make_connection(self, data_object):
         data_object.signal.connect(self.update)
@@ -108,6 +110,7 @@ class PetalWindow(QtWidgets.QWidget):
         for i in range(self.plot_no):
             self.data_store[i] = data[i]
             self.plots[i].setData(np.arange(len(data[i])), data[i])
+        
         return self
 
 
@@ -123,12 +126,12 @@ class RoseApp(QtWidgets.QMainWindow):
         self.window_count = 0
 
         # self.new_window()
-        self.show()
+        # self.show()
 
 
     def new_window(self, data_func, data_kill_func, refresh_interval = 0.0001, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', plot_no = 1, identity = 0):
         self.windows.append(PetalWindow(data_func, data_kill_func, title, xlabel, ylabel, refresh_interval, plot_no, identity))
-        self.windows[self.window_count].show()
+        # self.windows[self.window_count].show()
         self.window_count += 1
 
 

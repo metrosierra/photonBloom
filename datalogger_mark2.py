@@ -84,6 +84,34 @@ class Lotus():
 ####################################################################################
 ### Measurement + Data Saving Protocols
 
+    def binwidth_study(self):
+
+        self.tag_correlation(startfor=600e12, channels = [3,4], binwidth_ns =0.1, n=100000, save=True)
+        self.tag_correlation(startfor=300e12, channels = [3,4], binwidth_ns =0.5, n=50000, save=True)
+        self.tag_correlation(startfor=300e12, channels = [3,4], binwidth_ns =1, n=25000, save=True)
+        self.tag_correlation(startfor=300e12, channels = [3,4], binwidth_ns = 5, n=5000, save=True)
+        self.tag_correlation(startfor=60e12, channels = [3,4], binwidth_ns = 10, n=2400, save=True)
+        self.tag_correlation(startfor=60e12, channels = [3,4], binwidth_ns = 20, n=1200, save=True)
+        self.tag_correlation(startfor=60e12, channels = [3,4], binwidth_ns = 50, n=600, save=True)
+        self.tag_correlation(startfor=60e12, channels = [3,4], binwidth_ns = 100, n=300, save=True)
+
+
+
+    def run_pet(self, startfor=30e12):
+
+        self.tag_correlation(startfor=startfor, channels = [3,4], binwidth_ns =100, n=300, save=True)
+        self.tag_correlation(startfor=startfor, channels = [1,3], binwidth_ns =100, n=300, save=True)
+        self.tag_correlation(startfor=startfor, channels = [1,4], binwidth_ns =100, n=300, save=True)
+        self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =100, n=300, stacks = 20, save=True)
+
+    def run_trig(self, startfor=30e12):
+
+        self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =100, n=300, stacks = 20, save=True)
+        self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =150, n=200, stacks = 20, save=True)
+        self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =200, n=100, stacks = 20, save=True)
+
+
+
     def tag_counter(self, startfor, channels, binwidth_ns = 1e9, n = 10, save = False):
         
         if startfor == -1:
@@ -100,7 +128,7 @@ class Lotus():
                 'plot_no': len(channels)
             }
 
-            self.rose0.new_window(refresh_interval = 0.0001, 
+            self.rose0.new_window(refresh_interval = 0.1, 
                                     title = 'Rolling Count Rate Plot', 
                                     xlabel = 'Time (s)', 
                                     ylabel = 'Counts/s', 
@@ -115,7 +143,7 @@ class Lotus():
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/lastframe_bincounts_width{}ps_n{}_{}'.format(binwidth_ns, n, dt_string), counts)
+                np.save('output/lastframe_bincounts_width{}ps_n{}_{:.1e}time_{}'.format(binwidth_ns, n, startfor, dt_string), counts)
             return counts
 
     def tag_correlation(self, startfor, channels, binwidth_ns = 1000, n = 100, save = False):
@@ -133,7 +161,7 @@ class Lotus():
                 'plot_no': 1
             }
 
-            self.rose0.new_window(refresh_interval = 0.0001, 
+            self.rose0.new_window(refresh_interval = 0.1, 
                                     title = 'Cross Correlation Plot', 
                                     xlabel = 'Delay', 
                                     ylabel = 'Counts', 
@@ -148,26 +176,26 @@ class Lotus():
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/correlated_width{}ps_n{}_{}'.format(binwidth_ns, n, dt_string), corr)
+                np.save('output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string), corr)
 
             return corr
 
-    def tag_triggered_correlation(self, startfor, channels, binwidth_ns = 500, n = 20, save = False):
+    def tag_triggered_correlation(self, startfor, channels, binwidth_ns = 100, n = 100, stacks = 20, save = False):
 
         if startfor == -1:
             print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
             self.spot0.trig_corr_running.append(True)
             identity = len(self.spot0.trig_corr_running) - 1
-            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
+            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth_ns, n, stacks, identity), daemon = True).start()
 
             qthread_args = {
                 'data_func': self.spot0.return_trig_corr_counts, 
-                'data_kill_func': self.spot0.trig_corr_running,
+                'data_kill_func': self.spot0.switchoff_trig_corr_counts,
                 'identity': identity,
-                'plot_no': 20
+                'plot_no': stacks
             }
 
-            self.rose0.new_window(refresh_interval = 0.0001, 
+            self.rose0.new_window(refresh_interval = 0.1, 
                                     title = 'Triggered Cross Correlation Plot', 
                                     xlabel = 'Delay', 
                                     ylabel = 'Counts', 
@@ -182,7 +210,7 @@ class Lotus():
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/trigcorrelated_width{}ps_n{}_{}'.format(binwidth_ns, n, dt_string), trigcorr)
+                np.save('output/trigcorrelated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string), trigcorr)
             return trigcorr
 
     def tag_streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):
