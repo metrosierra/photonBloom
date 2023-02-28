@@ -610,6 +610,31 @@ class BaseTag():
                 print(data)
                 return data
      
+
+
+    def get_sweeping_correlation(self, startfor = 1e12, channels = [5, 3, 4], binwidth_ns = 10, n_values = 600,  identity = 0):
+
+        ### one triangle signal wave
+        ### 1 channel using rising edge acts as sweep cycle start and falling edge
+        ### as stop/reset of the cycle 
+        ### the other acts as histogram increment signals (hi freq) that is
+        ### we also use a duplicate virtual channel as histogram increments
+
+        rise_channel = channels[0]
+        step_channel = channels[0]
+        fall_channel = -1
+        corr_chs = channels[1:]
+    
+        rise_step_config = [0.08, 100000, 1, 0]
+        fall_config = [-0.08, 100000, 1, 0]
+        self.set_manualconfig_internal([rise_channel, step_channel], [rise_step_config, fall_config])
+
+        with TimeTagger.SynchronizedMeasurements(self.client) as sm:
+            
+            syncTagger = sm.getTagger()
+
+
+
 #TODO!
     def filewrite(self, startfor = int(5E11), channels = [1, 2, 3, 4]):
         pass
