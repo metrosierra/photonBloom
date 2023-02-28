@@ -95,20 +95,54 @@ class Lotus():
         self.tag_correlation(startfor=60e12, channels = [3,4], binwidth_ns = 50, n=600, save=True)
         self.tag_correlation(startfor=60e12, channels = [3,4], binwidth_ns = 100, n=300, save=True)
 
+        print('100ns mark reached!!!')
+
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 125, n=300, save=True)
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 150, n=300, save=True)
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 175, n=300, save=True)
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 200, n=300, save=True)
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 400, n=300, save=True)
+
+        print('400ns mark reached!!!')
+
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 800, n=300, save=True)
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 1000, n=300, save=True)
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 5000, n=300, save=True)
+        self.tag_correlation(startfor=30e12, channels = [3,4], binwidth_ns = 10000, n=300, save=True)
 
 
-    def run_pet(self, startfor=30e12):
 
-        self.tag_correlation(startfor=startfor, channels = [3,4], binwidth_ns =100, n=300, save=True)
-        self.tag_correlation(startfor=startfor, channels = [1,3], binwidth_ns =100, n=300, save=True)
-        self.tag_correlation(startfor=startfor, channels = [1,4], binwidth_ns =100, n=300, save=True)
-        self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =100, n=300, stacks = 20, save=True)
+    def run_pet(self, startfor=60e12):
+
+        self.tag_correlation(startfor=startfor, channels = [3,4], binwidth_ns =10, n=4800, save=True)
+        self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns = 50, n=3000, stacks = 40, save=True)
+
+        # self.tag_correlation(startfor=startfor, channels = [1,3], binwidth_ns =10, n=2400, save=True)
+        # self.tag_correlation(startfor=startfor, channels = [1,4], binwidth_ns =10, n=2400, save=True)
+
 
     def run_trig(self, startfor=30e12):
 
         self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =100, n=300, stacks = 20, save=True)
         self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =150, n=200, stacks = 20, save=True)
         self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =200, n=100, stacks = 20, save=True)
+
+
+    def run_segmented_selfcorr(self, segment = 60e12, cycles = 10):
+
+        counts = self.tag_correlation(startfor=segment, channels = [3,4], binwidth_ns =2, n=6000)
+        if not os.path.exists('output/'): os.makedir('output/')
+        now = datetime.now()
+        dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+        np.save('output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(2, 6000, 34, segment, dt_string), counts)  
+
+
+        for i in range(cycles-1):
+            print(i+1, 'cycles of', cycles, 'done!!!!')
+            counts += self.tag_correlation(startfor=segment, channels = [3,4], binwidth_ns =2, n=6000)
+            np.save('output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(2, 6000, 34, segment, dt_string), counts)  
+
+
 
 
 
@@ -204,7 +238,7 @@ class Lotus():
             return
 
         elif startfor > 0.:
-            trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth_ns, n)
+            trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth_ns, n, stacks)
 
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')

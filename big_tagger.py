@@ -299,15 +299,16 @@ class BaseTag():
 
             self.config = json.load(jsondata)
             print(self.config)
-            for i in range(1, 5):
+            for i in range(1, len(self.config)):
+                channel = self.config['channel{}'.format(i)]['index']
                 trigger = self.config['channel{}'.format(i)]['trigger']
                 deadtime = self.config['channel{}'.format(i)]['deadtime']
                 divider = self.config['channel{}'.format(i)]['divider']
                 turnon = self.config['ledstate']
 
-                self.set_trigger(channel = i, level = trigger)
-                self.set_deadtime(channel = i, deadtime = deadtime)
-                self.set_eventdivider(channel = i, divider = divider)
+                self.set_trigger(channel = channel, level = trigger)
+                self.set_deadtime(channel = channel, deadtime = deadtime)
+                self.set_eventdivider(channel = channel, divider = divider)
                 self.set_led(turnon = turnon)
 
         return self.config
@@ -534,15 +535,18 @@ class BaseTag():
             ycoincidences = [[] for i in range(no_corrs)]
             delayedchannels = []
 
+            delay_step = 2e6
+            delay_step = 1e7
+            print('\nThe inter-stack time gap is', delay_step, '!!!!')
             for i in range(no_corrs):
                 delayedchannels.append(TimeTagger.DelayedChannel(syncTagger, 
                                                     input_channel = corr_chs[i], 
-                                                    delay = midpoint*binwidth_ns*1000*10))
+                                                    delay = midpoint*delay_step))
             
             for i in range(stacks):
                 delayedtriggers.append(TimeTagger.DelayedChannel(syncTagger, 
                                                         input_channel = trigger_channel, 
-                                                        delay = (i)*binwidth_ns*1000*10))
+                                                        delay = (i)*delay_step))
 
 
 #### consider separating out coincidencewindow from binwidth
@@ -585,7 +589,7 @@ class BaseTag():
                             data = corr_list[i][j].getData() 
                             temp += data
 
-                        temp /= np.average(np.min(temp))
+                        # temp /= np.average(np.min(temp))
                             # baseline = np.average(data[:4]) + 0.0001
                         self.trig_corr_counts[identity][i] = temp
                         

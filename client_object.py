@@ -15,6 +15,7 @@ class TagClient(BaseTag):
         print(self.serverlist)
 
         self.client = self.server_handshake()
+        print('Available Channels', self.client.getChannelList())
 
         super().__init__(self.client, **kwargs)
         print('\nTimetagger object initialising...assuming it is reading from PhotonSpot nanowire single-photon detector...will prompt about detector gain settings in a bit\n')

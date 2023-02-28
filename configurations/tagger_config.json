@@ -8,8 +8,8 @@
 
     "channel2": {
         "index": 2,
-        "trigger": 0.08,
-        "deadtime": 100000,
+        "trigger": 0.25,
+        "deadtime": 131e6,
         "divider": 1
   },
 
@@ -26,6 +26,13 @@
         "deadtime": 100000,
         "divider": 1
   },
+
+  "channel5": {
+    "index": -2,
+    "trigger": 0.25,
+    "deadtime": 131e6,
+    "divider": 1
+},
 
     "ledstate": 0
 
