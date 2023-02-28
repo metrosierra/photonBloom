@@ -120,7 +120,6 @@ class Lotus():
         # self.tag_correlation(startfor=startfor, channels = [1,3], binwidth_ns =10, n=2400, save=True)
         # self.tag_correlation(startfor=startfor, channels = [1,4], binwidth_ns =10, n=2400, save=True)
 
-
     def run_trig(self, startfor=30e12):
 
         self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =100, n=300, stacks = 20, save=True)
@@ -136,14 +135,10 @@ class Lotus():
         dt_string = now.strftime("%d%m%Y_%H_%M_%S")
         np.save('output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(2, 6000, 34, segment, dt_string), counts)  
 
-
         for i in range(cycles-1):
             print(i+1, 'cycles of', cycles, 'done!!!!')
             counts += self.tag_correlation(startfor=segment, channels = [3,4], binwidth_ns =2, n=6000)
             np.save('output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(2, 6000, 34, segment, dt_string), counts)  
-
-
-
 
 
     def tag_counter(self, startfor, channels, binwidth_ns = 1e9, n = 10, save = False):
@@ -280,9 +275,6 @@ class Lotus():
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
                 np.save('output/sweepcorrelated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string), sweepcorr)
             return sweepcorr
-
-
-
 
 
     def tag_streamdata(self, startfor, channels, buffer_size = 100000, update_rate = 0.0001, verbose = True):

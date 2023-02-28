@@ -86,6 +86,8 @@ class BaseTag():
 
     trig_corr_counts: list of np.array()
 
+    sweep_corr_counts: list of np.array()
+
     config: dict
     """
 
@@ -121,7 +123,7 @@ class BaseTag():
         ### now these measurement running flags are lists to allow for 
         ### arbitrary number of simultaneous threaded measurements
         ### the flags are toggled by the associated live plot
-        ### using the protocol in datalogger.py
+        ### using the protocol in {datalogger}
         self.corr_running = []
         self.trig_corr_running = []
         self.sweep_corr_running = []
@@ -176,94 +178,7 @@ class BaseTag():
 
         return self.method_list
 
-
-    def get_jitter(self):
-
-        jitty.warmup(self.client)
-        measured_jitters = []
-        within_specs = []
-        measured_channels = []
-
-        # We loop over the different HighRes modes, if available. Or only use the single available mode.
-        for i, mode in enumerate(self.modes):
-            if self.edition == 'High-Res':
-                print('Setting the Time Tagger into {} mode'.format(mode))
-                # We need to first free the Time Tagger to initiate it again with a different HighRes modes
-                TimeTagger.freeTimeTagger(self.client)
-                self.client = TimeTagger.createTimeTaggerNetwork(address = self.target_ip, resolution = self.res_modes[mode])
-            print('Single channel RMS jitter is specified with {} ps'.format(jitty.jitter_specs_rms[mode]))
-            if 'HighRes' in mode:
-                channels_available = self.client.getChannelList(TimeTagger.ChannelEdge.HighResRising)
-            else:
-                channels_available = self.client.getChannelList(TimeTagger.ChannelEdge.Rising)
-            print('The available channel numbers are {}'.format(channels_available))
-            self.client.setTestSignal(channels_available, True)  # Reactivating the test signals
-            print('Measuring for 30 seconds')
-
-            # Retrieving the measured data
-            indices, data, meas_chan = jitty.synchronized_correlation_measurement(self.client, channels_available, duration = int(30e12))
-            measured_channels.append(meas_chan)
-            measured_jitters.append(np.full(len(meas_chan), '', dtype=object))
-            within_specs.append(np.full(len(meas_chan), '', dtype=object))
-            print('Measurement complete.\nNow evaluating the data')
-            time.sleep(1)
-
-            fig, ax = plt.subplots()  # Create a plot to visualize the TWO channel jitter
-            # Looping over the measurement data, evaluating the single channel RMS jitter from it and displaying the results
-            # For the visual comparison a Gaussian with standard deviation = sqrt(2)*specified_RMS_jitter is used
-            # since we look at the two-channel jitter
-            for j, (ind, dat) in enumerate(zip(indices, data)):
-                std, mean = jitty.get_jitter_and_delay(ind, dat)
-                measured_jitters[i][j] = std
-                within_specs[i][j] = std < jitty.jitter_specs_rms[mode]
-                print('channel numbers ' + measured_channels[i][j] +
-                      ': measured single channel RMS jitter: {} ps, within specifications: {}'.format(std, within_specs[i][j]))
-                if j == len(data)-1:  # make only label for last curve to not clutter the plot.
-                    label = 'measured jitter'
-                else:
-                    label = None
-                ax.plot(ind-mean, dat/1e3, label = label)
-            ax.set_xlim((-jitty.jitter_specs_rms[mode]*5, jitty.jitter_specs_rms[mode]*5))
-            ax.set_xlabel('Time (ps)')
-            ax.set_ylabel('kCounts')
-
-            ax.plot(ind, mathy.gaussian([0, jitty.jitter_specs_rms[mode]*np.sqrt(2), np.sum(data)/len(data)/1e3], ind),
-                    color = 'k', ls = '--', label = 'specified jitter')
-
-            ax.set_title('Visual comparison of the measured two-channel jitters to specifications')
-            ax.legend(loc = 1)
-            plt.show()
-            print('\n')
-
-        print('Plotting a summary of the results')
-
-        # Summary of the measured RMS jitters for a single channel in a table
-        colLabels = ['single channel\nRMS jitter (ps)', 'within\nspecifications']
-        fig, axes = plt.subplots(1, len(self.modes), figsize=(len(self.modes)*7, len(measured_channels[0])/1.6+0.7))
-        axes = np.atleast_1d(axes)
-        for i in np.arange(len(self.modes)):
-            content = np.hstack((measured_jitters[i].reshape(-1, 1), within_specs[i].reshape(-1, 1)))
-            colors = np.full_like(content, 'white')
-            colors[within_specs[i] == True, 1] = 'C2'
-            colors[within_specs[i] == False, 1] = 'C3'
-            the_table = axes[i].table(cellText = content, colLabels = colLabels, rowLabels = measured_channels[i],
-                                      loc = 'center', cellColours = colors, cellLoc = 'center')
-            the_table.scale(0.78, 2.2)
-            axes[i].axis('tight')
-            axes[i].axis('off')
-            if self.edition == 'High-Res':
-                axes[i].set_title(list(self.res_modes.keys())[i], size = 12, pad = 7)
-            else:
-                axes[i].set_title(self.model + ' ' + self.edition, size = 12, pad = 7)
-        axes[0].text(-0.05, 0.5, 'channel combination', rotation = 90, transform = axes[0].transAxes, va = 'center', size = 12)
-        if self.edition == 'High-Res':
-            figManager = plt.get_current_fig_manager()
-            figManager.window.showMaximized()
-        plt.show()
-
-        return measured_jitters, within_specs, measured_channels
-    
-    def set_manualconfig(self, channels):
+    def set_manualconfig_user(self, channels):
         """Manualy set selected channels to the same trigger level [V], deadtime [ps], event divider [int] and LED power [1/0] """
 
         trigger = float(input('\nPlease input the trigger level in volts!!\n'))
@@ -281,18 +196,33 @@ class BaseTag():
             channel = round(channel)
             self.set_trigger(channel = channel, level = trigger)
             self.config['channel{}'.format(channel)]['trigger'] = trigger
-
             self.set_deadtime(channel = channel, deadtime = deadtime)
             self.config['channel{}'.format(channel)]['deadtime'] = deadtime
-
             self.set_eventdivider(channel = channel, divider = divider)
             self.config['channel{}'.format(channel)]['divider'] = divider
-
             self.set_led(turnon = turnon)
             self.config['ledstate'] = turnon
 
         print('Channels {} configured! Check out the current configuration below:'.format(channels))
         # print(json.dumps(self.config, indent = 4))
+
+    def set_manualconfig_internal(self, channels, values):
+
+        for i, channel in enumerate(channels):
+
+            trigger, deadtime, divider, turnon = values[i]
+            channel = round(channel)
+            self.set_trigger(channel = channel, level = trigger)
+            self.config['channel{}'.format(channel)]['trigger'] = trigger
+            self.set_deadtime(channel = channel, deadtime = deadtime)
+            self.config['channel{}'.format(channel)]['deadtime'] = deadtime
+            self.set_eventdivider(channel = channel, divider = divider)
+            self.config['channel{}'.format(channel)]['divider'] = divider
+            self.set_led(turnon = turnon)
+            self.config['ledstate'] = turnon
+
+        print('Channels {} configured! Check out the current configuration below:'.format(channels))
+        print(json.dumps(self.config, indent = 4))
 
 
     def set_autoconfig(self):
@@ -386,7 +316,6 @@ class BaseTag():
         return self.allrate[identity]
 
     def return_sweep_corr_counts(self, identity):
-        # print(identity, self.sweep_corr_counts)
         return self.sweep_corr_counts[identity]
 
 
@@ -508,6 +437,7 @@ class BaseTag():
             print('Correlation class instance destroyed!')
 
 
+########################## Experiment specific functions QMLab ##########################
 
     def get_triggered_correlation(self, startfor = int(1E12),
                               chs = [3, 1, 2], 
@@ -516,12 +446,10 @@ class BaseTag():
                               stacks = 20,
                               identity = 0):
 
-        
         ##only one corr channel should not happen but ok
         if type(chs) is int or type(chs) is float:
             print('Only one channel given. Please give two channels for the correlation')
             return None 
-
         print('Taking first channel in list as trigger channel!!!')
 
         trigger_channel = chs[0]
@@ -535,11 +463,9 @@ class BaseTag():
 
         # Create Correlation measurements and use SynchronizedMeasurements to start them easily
         with TimeTagger.SynchronizedMeasurements(self.client) as sm:
-            # self.trig_corr_counts = np.zeros(shape=(n_values,n_values))   
 
             # Proxy tagger object, we can use the same object for all synced measurement classes below
             syncTagger = sm.getTagger()
-
             # Make virtual channels that are delayed by each multiple of the bin widths
             # then take coincidences for corr_channel1(2) and the trigger_channel
             # this creates virtual channels that can then be correlated with corr_channel2(1) 
@@ -554,12 +480,10 @@ class BaseTag():
                 delayedchannels.append(TimeTagger.DelayedChannel(syncTagger, 
                                                     input_channel = corr_chs[i], 
                                                     delay = midpoint*delay_step))
-            
             for i in range(stacks):
                 delayedtriggers.append(TimeTagger.DelayedChannel(syncTagger, 
                                                         input_channel = trigger_channel, 
                                                         delay = (i)*delay_step))
-
 
 #### consider separating out coincidencewindow from binwidth
                 for j in range(no_corrs):
@@ -567,7 +491,6 @@ class BaseTag():
                                                             [delayedchannels[j].getChannel(), delayedtriggers[i].getChannel()],
                                                             coincidenceWindow = binwidth_ns*1000,
                                                             timestamp = TimeTagger.CoincidenceTimestamp.ListedFirst))
-
             # Measure correlations between the delayed triggered virtual channels and corr_channel2(1)
             corr_list = [[] for i in range(stacks)]
             sets = list(itertools.combinations(np.arange(no_corrs), 2))
@@ -592,16 +515,11 @@ class BaseTag():
                 while self.trig_corr_running[identity]:
 
                     for i in range(stacks):
-                    # for i in range(10,20):
-                        # dat = np.add(corr_list[i].getData(), corr2_list[i].getData())
                         temp = self.trig_corr_counts[identity][i].copy()
                         for j in range(no_corrs):
-                        #print(np.array(dat))
                             ### these are numpy arrays now...like spyder tells us
                             data = corr_list[i][j].getData() 
                             temp += data
-
-                        # temp /= np.average(np.min(temp))
                             # baseline = np.average(data[:4]) + 0.0001
                         self.trig_corr_counts[identity][i] = temp
                         
@@ -619,9 +537,7 @@ class BaseTag():
                 sm.startFor(startfor, clear = True)
                 sm.waitUntilFinished()
                 for i in range(stacks):
-                        # dat = np.add(corr_list[i].getData(), corr2_list[i].getData())
                     for j in range(no_corrs):
-                        #print(np.array(dat))
                         data[i] += corr_list[i][j].getData()
 
                 print(data)
@@ -629,14 +545,12 @@ class BaseTag():
      
 
 
-    def get_sweep_correlation(self, startfor = 1e12, channels = [2, 3, 4], binwidth_ns = 2, n = 6000, step_no = 20, identity = 0):
+    def get_sweep_correlation(self, startfor = 1e12, channels = [2, 3, 4], binwidth_ns = 2, n = 6000, step_no = 20, gatewindow_ns = 75e6, identity = 0):
 
         ### one triangle signal wave
         ### 1 channel using rising edge acts as sweep cycle start and falling edge
         ### as stop/reset of the cycle 
-        ### the other acts as histogram increment signals (hi freq) that is
-        ### we also use a duplicate virtual channel as histogram increments
-        print('hihihihihihihi')
+        ### we also use a virtual channel as histogram increments
 
         rise_channel = channels[0]
         fall_channel = -channels[0]
@@ -652,8 +566,8 @@ class BaseTag():
         with TimeTagger.SynchronizedMeasurements(self.client) as sm:
             
             syncTagger = sm.getTagger()
-            step = 200 / 1000*375 /20 * 10e9
-            step_pattern = [i * step for i in range(1, step_no+2)]
+            step_ps = gatewindow_ns * 1000 / step_no
+            step_pattern = [i * step_ps for i in range(step_no)]
             step_channel = TimeTagger.EventGenerator(syncTagger, rise_channel, step_pattern, trigger_divider = 1)
 
             sweep_exp1 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[0], start_channel = corr_chs[1], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = n, n_histograms = step_no)
@@ -664,11 +578,9 @@ class BaseTag():
             
                 while self.sweep_corr_running[identity]:
                     data1 = sweep_exp1.getData()
-                    # print(data1)
                     data2 = sweep_exp2.getData()
 
                     for i in range(step_no):
-
                         data = np.concatenate((np.flip(data1[i]), data2[i]))
                         self.sweep_corr_counts[identity][i] = data
                         
@@ -679,7 +591,6 @@ class BaseTag():
                 return
 
             elif startfor > 0.:
-
                 data = np.zeros((step_no, n))
                 sm.startFor(startfor, clear = True)
                 sm.waitUntilFinished()
@@ -687,12 +598,11 @@ class BaseTag():
                 data2 = sweep_exp2.getData()
 
                 for i in range(step_no):
-                    data = np.concatenate((data1[i], data2[i]))
-
+                    data = np.concatenate((np.flip(data1[i]), data2[i]))
                 print(data)
                 return data
 
-
+############################################################################################
 
 #TODO!
     def filewrite(self, startfor = int(5E11), channels = [1, 2, 3, 4]):
@@ -771,8 +681,95 @@ class BaseTag():
         print(missed_events, 'events missed!!!')
         return collected_tags[1:], tags_channel_list[1:]
 
-def return_count(self):
-    return self.count
+
+##################### Auxiliary functions #####################
+    def get_jitter(self):
+
+        jitty.warmup(self.client)
+        measured_jitters = []
+        within_specs = []
+        measured_channels = []
+
+        # We loop over the different HighRes modes, if available. Or only use the single available mode.
+        for i, mode in enumerate(self.modes):
+            if self.edition == 'High-Res':
+                print('Setting the Time Tagger into {} mode'.format(mode))
+                # We need to first free the Time Tagger to initiate it again with a different HighRes modes
+                TimeTagger.freeTimeTagger(self.client)
+                self.client = TimeTagger.createTimeTaggerNetwork(address = self.target_ip, resolution = self.res_modes[mode])
+            print('Single channel RMS jitter is specified with {} ps'.format(jitty.jitter_specs_rms[mode]))
+            if 'HighRes' in mode:
+                channels_available = self.client.getChannelList(TimeTagger.ChannelEdge.HighResRising)
+            else:
+                channels_available = self.client.getChannelList(TimeTagger.ChannelEdge.Rising)
+            print('The available channel numbers are {}'.format(channels_available))
+            self.client.setTestSignal(channels_available, True)  # Reactivating the test signals
+            print('Measuring for 30 seconds')
+
+            # Retrieving the measured data
+            indices, data, meas_chan = jitty.synchronized_correlation_measurement(self.client, channels_available, duration = int(30e12))
+            measured_channels.append(meas_chan)
+            measured_jitters.append(np.full(len(meas_chan), '', dtype=object))
+            within_specs.append(np.full(len(meas_chan), '', dtype=object))
+            print('Measurement complete.\nNow evaluating the data')
+            time.sleep(1)
+
+            fig, ax = plt.subplots()  # Create a plot to visualize the TWO channel jitter
+            # Looping over the measurement data, evaluating the single channel RMS jitter from it and displaying the results
+            # For the visual comparison a Gaussian with standard deviation = sqrt(2)*specified_RMS_jitter is used
+            # since we look at the two-channel jitter
+            for j, (ind, dat) in enumerate(zip(indices, data)):
+                std, mean = jitty.get_jitter_and_delay(ind, dat)
+                measured_jitters[i][j] = std
+                within_specs[i][j] = std < jitty.jitter_specs_rms[mode]
+                print('channel numbers ' + measured_channels[i][j] +
+                      ': measured single channel RMS jitter: {} ps, within specifications: {}'.format(std, within_specs[i][j]))
+                if j == len(data)-1:  # make only label for last curve to not clutter the plot.
+                    label = 'measured jitter'
+                else:
+                    label = None
+                ax.plot(ind-mean, dat/1e3, label = label)
+            ax.set_xlim((-jitty.jitter_specs_rms[mode]*5, jitty.jitter_specs_rms[mode]*5))
+            ax.set_xlabel('Time (ps)')
+            ax.set_ylabel('kCounts')
+
+            ax.plot(ind, mathy.gaussian([0, jitty.jitter_specs_rms[mode]*np.sqrt(2), np.sum(data)/len(data)/1e3], ind),
+                    color = 'k', ls = '--', label = 'specified jitter')
+
+            ax.set_title('Visual comparison of the measured two-channel jitters to specifications')
+            ax.legend(loc = 1)
+            plt.show()
+            print('\n')
+
+        print('Plotting a summary of the results')
+
+        # Summary of the measured RMS jitters for a single channel in a table
+        colLabels = ['single channel\nRMS jitter (ps)', 'within\nspecifications']
+        fig, axes = plt.subplots(1, len(self.modes), figsize=(len(self.modes)*7, len(measured_channels[0])/1.6+0.7))
+        axes = np.atleast_1d(axes)
+        for i in np.arange(len(self.modes)):
+            content = np.hstack((measured_jitters[i].reshape(-1, 1), within_specs[i].reshape(-1, 1)))
+            colors = np.full_like(content, 'white')
+            colors[within_specs[i] == True, 1] = 'C2'
+            colors[within_specs[i] == False, 1] = 'C3'
+            the_table = axes[i].table(cellText = content, colLabels = colLabels, rowLabels = measured_channels[i],
+                                      loc = 'center', cellColours = colors, cellLoc = 'center')
+            the_table.scale(0.78, 2.2)
+            axes[i].axis('tight')
+            axes[i].axis('off')
+            if self.edition == 'High-Res':
+                axes[i].set_title(list(self.res_modes.keys())[i], size = 12, pad = 7)
+            else:
+                axes[i].set_title(self.model + ' ' + self.edition, size = 12, pad = 7)
+        axes[0].text(-0.05, 0.5, 'channel combination', rotation = 90, transform = axes[0].transAxes, va = 'center', size = 12)
+        if self.edition == 'High-Res':
+            figManager = plt.get_current_fig_manager()
+            figManager.window.showMaximized()
+        plt.show()
+
+        return measured_jitters, within_specs, measured_channels
+
+
 
 
 
