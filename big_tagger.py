@@ -124,12 +124,15 @@ class BaseTag():
         ### using the protocol in datalogger.py
         self.corr_running = []
         self.trig_corr_running = []
+        self.sweep_corr_running = []
         self.allrate_runnning = [] 
         self.count_running = []
+
         self.count = []
         self.allrate = []
         self.corr_counts = []
         self.trig_corr_counts = []
+        self.sweep_corr_counts = []
 
     @percentsss 
     @starsss
@@ -382,6 +385,11 @@ class BaseTag():
     def return_allrate(self, identity):
         return self.allrate[identity]
 
+    def return_sweep_corr_counts(self, identity):
+        # print(identity, self.sweep_corr_counts)
+        return self.sweep_corr_counts[identity]
+
+
     def switchoff_count(self, identity):
         self.count_running[identity] = False
         return self
@@ -392,6 +400,10 @@ class BaseTag():
 
     def switchoff_trig_corr_counts(self, identity):
         self.trig_corr_running[identity] = False
+        return self
+    
+    def switchoff_sweep_corr_counts(self, identity):
+        self.sweep_corr_running[identity] = False
         return self
 
     def switchoff_allrate(self, identity):
@@ -596,6 +608,11 @@ class BaseTag():
                             # np.average(self.trig_corr_counts[identity][i][0:5])
                 sm.stop()
 
+                while sm.isRunning():
+                    print('Waiting for synced measurement to stop')
+
+                sm.clear()
+
             elif startfor > 0.:
 
                 data = np.zeros((stacks, n_values))
@@ -612,26 +629,68 @@ class BaseTag():
      
 
 
-    def get_sweeping_correlation(self, startfor = 1e12, channels = [5, 3, 4], binwidth_ns = 10, n_values = 600,  identity = 0):
+    def get_sweep_correlation(self, startfor = 1e12, channels = [2, 3, 4], binwidth_ns = 2, n = 6000, step_no = 20, identity = 0):
 
         ### one triangle signal wave
         ### 1 channel using rising edge acts as sweep cycle start and falling edge
         ### as stop/reset of the cycle 
         ### the other acts as histogram increment signals (hi freq) that is
         ### we also use a duplicate virtual channel as histogram increments
+        print('hihihihihihihi')
 
         rise_channel = channels[0]
-        step_channel = channels[0]
-        fall_channel = -1
+        fall_channel = -channels[0]
         corr_chs = channels[1:]
-    
-        rise_step_config = [0.08, 100000, 1, 0]
-        fall_config = [-0.08, 100000, 1, 0]
-        self.set_manualconfig_internal([rise_channel, step_channel], [rise_step_config, fall_config])
 
+        ### we need to max out deadtime at 131e6ps
+        rise_step_config = [0.3, 131e6, 1, 0]
+        fall_config = [-0.3, 131e6, 1, 0]
+        # self.set_manualconfig_internal([rise_channel, fall_channel], [rise_step_config, fall_config])
+        self.sweep_corr_counts.append(np.ones((step_no, n*2)))
+
+        print(self.sweep_corr_counts)
         with TimeTagger.SynchronizedMeasurements(self.client) as sm:
             
             syncTagger = sm.getTagger()
+            step = 200 / 1000*375 /20 * 10e9
+            step_pattern = [i * step for i in range(1, step_no+2)]
+            step_channel = TimeTagger.EventGenerator(syncTagger, rise_channel, step_pattern, trigger_divider = 1)
+
+            sweep_exp1 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[0], start_channel = corr_chs[1], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = n, n_histograms = step_no)
+            sweep_exp2 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[1], start_channel = corr_chs[0], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = n, n_histograms = step_no)
+
+            if startfor == -1:
+                sm.start()
+            
+                while self.sweep_corr_running[identity]:
+                    data1 = sweep_exp1.getData()
+                    # print(data1)
+                    data2 = sweep_exp2.getData()
+
+                    for i in range(step_no):
+
+                        data = np.concatenate((np.flip(data1[i]), data2[i]))
+                        self.sweep_corr_counts[identity][i] = data
+                        
+                sm.stop()
+                while sm.isRunning():
+                    print('Waiting for synced measurement to stop')
+                sm.clear()
+                return
+
+            elif startfor > 0.:
+
+                data = np.zeros((step_no, n))
+                sm.startFor(startfor, clear = True)
+                sm.waitUntilFinished()
+                data1 = sweep_exp1.getData()
+                data2 = sweep_exp2.getData()
+
+                for i in range(step_no):
+                    data = np.concatenate((data1[i], data2[i]))
+
+                print(data)
+                return data
 
 
 
