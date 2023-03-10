@@ -243,13 +243,13 @@ class Lotus():
             return trigcorr
 
 
-    def tag_sweep_correlation(self, startfor = -1, channels = [2,3,4], binwidth_ns = 2, n = 6000, step_no = 5, save = False):
+    def tag_sweep_correlation(self, startfor = -1, channels = [2,3,4], binwidth_ns = 2, n = 6000, step_no = 5, gatewindow_ns = 75e6, save = False):
 
         if startfor == -1:
             print('Persisting SweepXCorrelation measurement class! Close live plot to exit this!!')
             self.spot0.sweep_corr_running.append(True)
             identity = len(self.spot0.sweep_corr_running) - 1
-            threading.Thread(target = self.spot0.get_sweep_correlation, args = (startfor, channels, binwidth_ns, n, step_no, identity), daemon = True).start()
+            threading.Thread(target = self.spot0.get_sweep_correlation, args = (startfor, channels, binwidth_ns, n, step_no, gatewindow_ns, identity), daemon = True).start()
 
             qthread_args = {
                 'data_func': self.spot0.return_sweep_corr_counts, 
@@ -258,7 +258,7 @@ class Lotus():
                 'plot_no': step_no
             }
 
-            self.rose0.new_window(refresh_interval = 0.1, 
+            self.rose0.new_multiwindow(refresh_interval = 0.1, 
                                     title = 'Swept Cross Correlation Plot', 
                                     xlabel = 'Delay', 
                                     ylabel = 'Counts', 
@@ -267,13 +267,13 @@ class Lotus():
             return
 
         elif startfor > 0.:
-            sweepcorr = self.spot0.get_sweep_correlation(startfor, channels, binwidth_ns, n, step_no)
+            sweepcorr = self.spot0.get_sweep_correlation(startfor, channels, binwidth_ns, n, step_no, gatewindow_ns)
 
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/sweepcorrelated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string), sweepcorr)
+                np.save('output/sweepcorrelated_width{}ns_n{}_gate{}ns_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, gatewindow_ns, channels, startfor, dt_string), sweepcorr)
             return sweepcorr
 
 
