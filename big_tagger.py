@@ -547,31 +547,28 @@ class BaseTag():
      
 
 
-    def get_sweep_correlation(self, startfor = 1e12, channels = [2, 3, 4], binwidth_ns = 2, n = 6000, step_no = 20, gatewindow_ns = 75e6, identity = 0):
+    def get_sweep_correlation(self, startfor = 1e12, channels = [-2, 3, 4], binwidth_ns = 2, n = 6000, step_no = 20, gatewindow_ns = 75e6, identity = 0):
 
-        ### one triangle signal wave
-        ### 1 channel using rising edge acts as sweep cycle start and falling edge
+        ### one triangle signal wave 
+        ### 1 channel using FALLING edge acts as sweep cycle start 
         ### as stop/reset of the cycle 
-        ### we also use a virtual channel as histogram increments
+        ### we also use a virtual channel as histogram increments 
 
-        rise_channel = channels[0]
-        fall_channel = -channels[0]
+        fall_channel = channels[0]
         corr_chs = channels[1:]
 
         ### we need to max out deadtime at 131e6ps
-        rise_step_config = [0.3, 131e6, 1, 0]
-        fall_config = [-0.3, 131e6, 1, 0]
-        # self.set_manualconfig_internal([rise_channel, fall_channel], [rise_step_config, fall_config])
+        fall_step_config = [0.3, 131e6, 1, 0]
+        # self.set_manualconfig_internal([fall_channel], [fall_step_config])
         self.sweep_corr_counts.append(np.ones((step_no, n*2)))
-
-        print(self.sweep_corr_counts)
         with TimeTagger.SynchronizedMeasurements(self.client) as sm:
             
             syncTagger = sm.getTagger()
             step_ps = gatewindow_ns * 1000 / step_no
-            step_pattern = [i * step_ps for i in range(step_no)]
-            step_channel = TimeTagger.EventGenerator(syncTagger, rise_channel, step_pattern, trigger_divider = 1)
+            step_pattern = [i * step_ps for i in range(step_no+1)]
+            step_channel = TimeTagger.EventGenerator(syncTagger, fall_channel, step_pattern, trigger_divider = 1)
 
+            print(step_pattern)
             sweep_exp1 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[0], start_channel = corr_chs[1], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = n, n_histograms = step_no)
             sweep_exp2 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[1], start_channel = corr_chs[0], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = n, n_histograms = step_no)
 
@@ -593,14 +590,16 @@ class BaseTag():
                 return
 
             elif startfor > 0.:
-                data = np.zeros((step_no, n))
+                data = np.zeros((step_no, 2*n))
                 sm.startFor(startfor, clear = True)
                 sm.waitUntilFinished()
                 data1 = sweep_exp1.getData()
                 data2 = sweep_exp2.getData()
 
                 for i in range(step_no):
-                    data = np.concatenate((np.flip(data1[i]), data2[i]))
+                    temp = np.concatenate((np.flip(data1[i]), data2[i]))
+                    data[i] = temp
+
                 print(data)
                 return data
 
