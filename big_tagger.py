@@ -474,7 +474,7 @@ class BaseTag():
             delayedchannels = []
 
             delay_step = 2e6
-            delay_step = 1e7
+            delay_step = 2.4e6
             print('\nThe inter-stack time gap is', delay_step, '!!!!')
             for i in range(no_corrs):
                 delayedchannels.append(TimeTagger.DelayedChannel(syncTagger, 
@@ -558,17 +558,17 @@ class BaseTag():
         ### we need to max out deadtime at 131e6ps
         fall_step_config = [0.3, 131e6, 1, 0]
         # self.set_manualconfig_internal([fall_channel], [fall_step_config])
-        self.sweep_corr_counts.append(np.ones((step_no, n*2)))
+        self.sweep_corr_counts.append(np.ones((step_no, n)))
         with TimeTagger.SynchronizedMeasurements(self.client) as sm:
             
             syncTagger = sm.getTagger()
-            step_ps = gatewindow_ns * 1000 / step_no
+            step_ps = int(np.round(gatewindow_ns * 1000 / step_no)) 
             step_pattern = [i * step_ps for i in range(step_no+1)]
             step_channel = TimeTagger.EventGenerator(syncTagger, fall_channel, step_pattern, trigger_divider = 1)
 
             print(step_pattern)
-            sweep_exp1 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[0], start_channel = corr_chs[1], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = n, n_histograms = step_no)
-            sweep_exp2 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[1], start_channel = corr_chs[0], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = n, n_histograms = step_no)
+            sweep_exp1 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[0], start_channel = corr_chs[1], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = int(np.round(n/2)), n_histograms = step_no)
+            sweep_exp2 = TimeTagger.TimeDifferences(syncTagger, click_channel = corr_chs[1], start_channel = corr_chs[0], next_channel = step_channel.getChannel(), sync_channel = fall_channel, binwidth = binwidth_ns*1000, n_bins = int(np.round(n/2)), n_histograms = step_no)
 
             if startfor == -1:
                 sm.start()
@@ -588,7 +588,7 @@ class BaseTag():
                 return
 
             elif startfor > 0.:
-                data = np.zeros((step_no, 2*n))
+                data = np.zeros((step_no, n))
                 sm.startFor(startfor, clear = True)
                 sm.waitUntilFinished()
                 data1 = sweep_exp1.getData()

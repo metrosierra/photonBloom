@@ -149,7 +149,7 @@ class Lotus():
             self.spot0.count_running.append(True)
             identity = len(self.spot0.count_running) - 1
             threading.Thread(target = self.spot0.get_count, args = (startfor, channels, binwidth_ns, n, identity), daemon = True).start()
-
+            time.sleep(0.1)
             qthread_args = {
                 'data_func': self.spot0.return_count, 
                 'data_kill_func': self.spot0.switchoff_count,
@@ -157,7 +157,7 @@ class Lotus():
                 'plot_no': len(channels)
             }
 
-            self.rose0.new_window(refresh_interval = 0.1, 
+            self.rose0.new_multiwindow(refresh_interval = 0.1, 
                                     title = 'Rolling Count Rate Plot', 
                                     xlabel = 'Time (s)', 
                                     ylabel = 'Counts/s', 
@@ -175,7 +175,7 @@ class Lotus():
                 np.save('output/lastframe_bincounts_width{}ps_n{}_{:.1e}time_{}'.format(binwidth_ns, n, startfor, dt_string), counts)
             return counts
 
-    def tag_correlation(self, startfor, channels, binwidth_ns = 1000, n = 100, save = False):
+    def tag_correlation(self, startfor = -1, channels = [3,4], binwidth_ns = 2, n = 6000, save = False):
 
         if startfor == -1:
             print('Persisting XCorrelation measurement class! Close live plot to exit this!!')
@@ -209,7 +209,7 @@ class Lotus():
 
             return corr
 
-    def tag_triggered_correlation(self, startfor, channels, binwidth_ns = 100, n = 100, stacks = 20, save = False):
+    def tag_triggered_correlation(self, startfor=-1, channels=[1,3,4], binwidth_ns = 2, n = 6000, stacks = 20, save = False):
 
         if startfor == -1:
             print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
@@ -273,7 +273,7 @@ class Lotus():
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/sweepcorrelated_width{}ns_n{}_gate{}ns_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, gatewindow_ns, channels, startfor, dt_string), sweepcorr)
+                np.save('output/sweepcorrelated_width{}ns_n{}_gate{}ns{}steps_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, gatewindow_ns, step_no, channels, startfor, dt_string), sweepcorr)
             return sweepcorr
 
 
