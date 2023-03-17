@@ -386,6 +386,8 @@ class BaseTag():
 
         if type(channels) is int:
             channels = [channels]
+        
+        self.allrate.append([0. for i in range(len(channels))])
         # With the TimeTaggerNetwork object, we can set up a measurement as usual
         with TimeTagger.Countrate(self.client, channels) as cr:
 
