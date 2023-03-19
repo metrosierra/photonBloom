@@ -27,13 +27,6 @@
         "divider": 1
   },
 
-    "channel5": {
-        "index": -2,
-        "trigger": 0.2,
-        "deadtime": 131e6,
-        "divider": 1
-},
-
     "ledstate": 0
 
 }

@@ -83,13 +83,13 @@ class Hydrangea():
 
                         [sg.Sizer(h_pixels = 100, v_pixels = 25)],
                         ####################################################
-                          [sg.Text('SweepCorr TrigCH'), sg.Input(key = '-TAGSWEEPCORR_TRIGCH-', size = (8, 1), default_text = '-2'),
+                          [sg.Text('SweepCorr TrigCH'), sg.Input(key = '-TAGSWEEPCORR_TRIGCH-', size = (8, 1), default_text = '2'),
                            sg.Text('SweepCorr XCH'), sg.Input(key = '-TAGSWEEPCORR_XCH1-', size = (8, 1), default_text = '3'),
                            sg.Text('SweepCorr XCH'), sg.Input(key = '-TAGSWEEPCORR_XCH2-', size = (8, 1), default_text = '4')],
 
-                          [sg.Text('Binwidth (ns)'), sg.Input(key = '-TAGSWEEPCORR_BINW-', size = (8, 1), default_text = '10'), 
+                          [sg.Text('Binwidth (ns)'), sg.Input(key = '-TAGSWEEPCORR_BINW-', size = (8, 1), default_text = '2'), 
                            sg.Text('N_bins'), sg.Input(key = '-TAGSWEEPCORR_BINNO-', size = (8, 1), default_text = '6000'), 
-                           sg.Text('N_steps'), sg.Input(key = '-TAGSWEEPCORR_STEPS-', size = (8, 1), default_text = '40'), 
+                           sg.Text('N_steps'), sg.Input(key = '-TAGSWEEPCORR_STEPS-', size = (8, 1), default_text = '5'), 
                            sg.Button('Start Tag SweepCorr', bind_return_key = False)]
                         ]
 
@@ -156,6 +156,7 @@ class Hydrangea():
                                         and 'CB' in ch]
     
                     channel_list = [int(cbtext[2:]) for cbtext in channel_key_list]
+                    print(channel_list, 'channels selected!')
                     binwidth_ns = int(float(values['-TAGCOUNTER_BINW-']))
                     binno = int(values['-TAGCOUNTER_BINNO-'])
                     self.datalogger.tag_counter(startfor = -1, channels = channel_list, binwidth_ns = binwidth_ns, n = binno)
@@ -164,8 +165,8 @@ class Hydrangea():
                 elif event == 'Start Tag XCorr':
                     print("[LOG] Clicked Start Tag XCorr!")
 
-                    lead_ch = int(values['-TAGXCORR_LEADCH-'])
-                    follow_ch = int(values['-TAGXCORR_FOLLOWCH-'])
+                    lead_ch = int(values['-TAGXCORR_CH1-'])
+                    follow_ch = int(values['-TAGXCORR_CH2-'])
                     binwidth_ns = int(float(values['-TAGXCORR_BINW-']))
                     binno = int(values['-TAGXCORR_BINNO-'])
                     self.datalogger.tag_correlation(startfor = -1, channels = [lead_ch, follow_ch], binwidth_ns = binwidth_ns, n = binno)
@@ -175,8 +176,8 @@ class Hydrangea():
                     print("[LOG] Clicked Start Tag TrigCorr!")
 
                     trig_ch = int(values['-TAGTRIGCORR_TRIGCH-'])
-                    lead_ch = int(values['-TAGTRIGCORR_LEADCH-'])
-                    follow_ch = int(values['-TAGTRIGCORR_FOLLOWCH-'])
+                    lead_ch = int(values['-TAGTRIGCORR_XCH1-'])
+                    follow_ch = int(values['-TAGTRIGCORR_XCH2-'])
                     binwidth_ns = int(float(values['-TAGTRIGCORR_BINW-']))
                     binno = int(values['-TAGTRIGCORR_BINNO-'])
                     stacks = int(values['-TAGTRIGCORR_STACKS-'])
@@ -186,12 +187,12 @@ class Hydrangea():
                     print("[LOG] Clicked Start Tag SweepCorr!")
 
                     trig_ch = int(values['-TAGSWEEPCORR_TRIGCH-'])
-                    lead_ch = int(values['-TAGSWEEPCORR_LEADCH-'])
-                    follow_ch = int(values['-TAGSWEEPCORR_FOLLOWCH-'])
+                    lead_ch = int(values['-TAGSWEEPCORR_XCH1-'])
+                    follow_ch = int(values['-TAGSWEEPCORR_XCH2-'])
                     binwidth_ns = int(float(values['-TAGSWEEPCORR_BINW-']))
                     binno = int(values['-TAGSWEEPCORR_BINNO-'])
                     steps = int(values['-TAGSWEEPCORR_STEPS-'])
-                    self.datalogger.tag_sweep_correlation(startfor = -1, channels = [trig_ch, lead_ch, follow_ch], binwidth_ns = binwidth_ns, n = binno, steps = steps)
+                    self.datalogger.tag_sweep_correlation(startfor = -1, channels = [trig_ch, lead_ch, follow_ch], binwidth_ns = binwidth_ns, n = binno, step_no = steps)
 
 
 
