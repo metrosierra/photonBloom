@@ -19,9 +19,12 @@ import threading
 import time
 import sys
 from PyQt5.QtWidgets import QApplication
+
+
 from client_object import TagClient
-from liveplotter import Plumeria
 from liveplotter_mark2 import RoseApp
+from heating_afg import HotFibre
+
 
 from subroutines.mathematics import percentsss, starsss
 
@@ -49,7 +52,7 @@ class Lotus():
 
         self.app = QApplication(sys.argv)
         self.rose0 = RoseApp()
-
+        # self.filter0 = HotFibre(sensor = 'TH20K', channels = [1])
 
     def create_networktagger(self, ip_address, **kwargs):
         self.spot0 = TagClient(ip_address, **kwargs)

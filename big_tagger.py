@@ -310,7 +310,9 @@ class BaseTag():
         return self.corr_counts[identity]
 
     def return_trig_corr_counts(self, identity):
-        return self.trig_corr_counts[identity]
+        temp = self.trig_corr_counts[identity].copy()
+        temp[-1] = np.zeros(len(temp[0]))
+        return temp
 
     def return_allrate(self, identity):
         return self.allrate[identity]
@@ -476,7 +478,7 @@ class BaseTag():
             delayedchannels = []
 
             delay_step = 2e6
-            delay_step = 2.4e6
+            delay_step = 4.8e6
             print('\nThe inter-stack time gap is', delay_step, '!!!!')
             for i in range(no_corrs):
                 delayedchannels.append(TimeTagger.DelayedChannel(syncTagger, 
