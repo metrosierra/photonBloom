@@ -130,21 +130,7 @@ class Lotus():
         self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns =200, n=100, stacks = 20, save=True)
 
 
-    def run_segmented_selfcorr(self, segment = 60e12, cycles = 10):
-
-        counts = self.tag_correlation(startfor=segment, channels = [3,4], binwidth_ns =2, n=6000)
-        if not os.path.exists('output/'): os.makedir('output/')
-        now = datetime.now()
-        dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-        np.save('output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(2, 6000, 34, segment, dt_string), counts)  
-
-        for i in range(cycles-1):
-            print(i+1, 'cycles of', cycles, 'done!!!!')
-            counts += self.tag_correlation(startfor=segment, channels = [3,4], binwidth_ns =2, n=6000)
-            np.save('output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(2, 6000, 34, segment, dt_string), counts)  
-
-
-    def tag_counter(self, startfor, channels, binwidth_ns = 1e9, n = 10, save = False):
+    def tag_counter(self, startfor = -1, channels = [1,2,3,4], binwidth_ns = 1e8, n = 100, save = True):
         
         if startfor == -1:
             print('Persisting Counter measurement class! Close live plot to exit this!!')
@@ -168,7 +154,7 @@ class Lotus():
 
             return 
 
-        elif startfor > 0.:
+        elif type(startfor) is int or type(startfor) is float:
             counts = self.spot0.get_count(startfor, channels, binwidth_ns, n)
 
             if save:
@@ -178,7 +164,35 @@ class Lotus():
                 np.save('output/lastframe_bincounts_width{}ps_n{}_{:.1e}time_{}'.format(binwidth_ns, n, startfor, dt_string), counts)
             return counts
 
-    def tag_correlation(self, startfor = -1, channels = [3,4], binwidth_ns = 2, n = 6000, save = False):
+        elif type(startfor) is list and len(startfor) == 1 and type(startfor[0]) is int or type(startfor[0]) is float:
+            segment_ps = 30e12
+            cycles = int(np.round(startfor[0]/segment_ps))
+            print('Running segmented data run! {} cycles of 30s each'.format(cycles))
+            print('Starting cycle 1 of {}'.format(cycles))
+            counts = self.spot0.get_count(segment_ps, channels, binwidth_ns, n)
+            if save:
+                if not os.path.exists('output/'): os.makedir('output/')
+                now = datetime.now()
+                dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+                filename = 'output/lastframe_bincounts_width{}ps_n{}_{:.1e}time_{}'.format(binwidth_ns, n, startfor, dt_string)
+                np.save(filename, counts)
+            print('{}ps elapsed!'.format(segment_ps))
+
+            for i in range(cycles-1):
+                print('Starting cycle {} of {}'.format(i+2, cycles))
+                counts += self.spot0.get_count(segment_ps, channels, binwidth_ns, n)
+                if save:
+                    np.save(filename, counts)
+                print('{}ps elapsed!'.format((i+2)*segment_ps))
+
+            return counts
+
+        else: 
+            print('Invalid startfor argument! Must be -1, int or float, or list of int or float of length 1')
+
+
+
+    def tag_correlation(self, startfor = -1, channels = [3,4], binwidth_ns = 2, n = 6000, save = True):
 
         if startfor == -1:
             print('Persisting XCorrelation measurement class! Close live plot to exit this!!')
@@ -201,7 +215,7 @@ class Lotus():
 
             return
 
-        elif startfor > 0.:
+        elif type(startfor) is int or type(startfor) is float:
             corr = self.spot0.get_correlation(startfor, channels, binwidth_ns, n)
 
             if save:
@@ -209,10 +223,35 @@ class Lotus():
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
                 np.save('output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string), corr)
+            return corr
+
+        elif type(startfor) is list and len(startfor) == 1 and type(startfor[0]) is int or type(startfor[0]) is float:
+            segment_ps = 30e12
+            cycles = int(np.round(startfor[0]/segment_ps))
+            print('Running segmented data run! {} cycles of 30s each'.format(cycles))
+            print('Starting cycle 1 of {}'.format(cycles))
+            corr = self.spot0.get_correlation(segment_ps, channels, binwidth_ns, n)
+            if save:
+                if not os.path.exists('output/'): os.makedir('output/')
+                now = datetime.now()
+                dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+                filename = 'output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string)
+                np.save(filename, corr)
+            print('{}ps elapsed!'.format(segment_ps))
+
+            for i in range(cycles-1):
+                print('Starting cycle {} of {}'.format(i+2, cycles))
+                corr += self.spot0.get_correlation(segment_ps, channels, binwidth_ns, n)
+                if save:
+                    np.save(filename, corr)
+                print('{}ps elapsed!'.format((i+2)*segment_ps))
 
             return corr
 
-    def tag_triggered_correlation(self, startfor=-1, channels=[1,3,4], binwidth_ns = 2, n = 6000, stacks = 20, save = False):
+        else: 
+            print('Invalid startfor argument! Must be -1, int or float, or list of int or float of length 1')
+
+    def tag_triggered_correlation(self, startfor = -1, channels = [1,3,4], binwidth_ns = 15, n = 6000, stacks = 5, save = True):
 
         if startfor == -1:
             print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
@@ -235,7 +274,7 @@ class Lotus():
 
             return
 
-        elif startfor > 0.:
+        elif type(startfor) is int or type(startfor) is float:
             trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth_ns, n, stacks)
 
             if save:
@@ -245,8 +284,35 @@ class Lotus():
                 np.save('output/trigcorrelated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string), trigcorr)
             return trigcorr
 
+        elif type(startfor) is list and len(startfor) == 1 and type(startfor[0]) is int or type(startfor[0]) is float:
+            segment_ps = 30e12
+            cycles = int(np.round(startfor[0]/segment_ps))
+            print('Running segmented data run! {} cycles of {}ps each'.format(cycles, segment_ps))
+            print('Starting cycle 1 of {}'.format(cycles))
+            trigcorr = self.spot0.get_triggered_correlation(segment_ps, channels, binwidth_ns, n, stacks)
+            if save:
+                if not os.path.exists('output/'): os.makedir('output/')
+                now = datetime.now()
+                dt_string = now.strftime("%d%m%Y_%H_%M_%S")
+                filename = 'output/trigcorrelated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string)
+                np.save(filename, trigcorr)
+            print('{}ps elapsed!'.format(segment_ps))
 
-    def tag_sweep_correlation(self, startfor = -1, channels = [2,3,4], binwidth_ns = 2, n = 6000, step_no = 5, gatewindow_ns = 75e6, save = False):
+            for i in range(cycles-1):
+                print('Starting cycle {} of {}'.format(i+2, cycles))
+                trigcorr += self.spot0.get_triggered_correlation(segment_ps, channels, binwidth_ns, n, stacks)
+                if save:
+                    np.save(filename, trigcorr)
+                print('{}ps elapsed!'.format((i+2)*segment_ps))
+
+            return trigcorr
+        
+        else: 
+            print('Invalid startfor argument! Must be -1, int or float, or list of int or float of length 1')
+
+
+
+    def tag_sweep_correlation(self, startfor = -1, channels = [2,3,4], binwidth_ns = 2, n = 6000, step_no = 5, gatewindow_ns = 75e6, save = True):
 
         if startfor == -1:
             print('Persisting SweepXCorrelation measurement class! Close live plot to exit this!!')
@@ -269,14 +335,14 @@ class Lotus():
 
             return
 
-        elif startfor > 0.:
+        elif type(startfor) is int or type(startfor) is float:
             sweepcorr = self.spot0.get_sweep_correlation(startfor, channels, binwidth_ns, n, step_no, gatewindow_ns)
 
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/sweepcorrelated_width{}ns_n{}_gate{}ns{}steps_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, gatewindow_ns, step_no, channels, startfor, dt_string), sweepcorr)
+                np.save('output/sweepcorrelated_width{}ns_n{}_gate{}ns_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, gatewindow_ns, channels, startfor, dt_string), sweepcorr)
             return sweepcorr
 
 
