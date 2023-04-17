@@ -117,8 +117,9 @@ class Lotus():
 
     def run_pet(self, startfor=60e12):
 
-        self.tag_correlation(startfor=startfor, channels = [3,4], binwidth_ns =10, n=4800, save=True)
-        self.tag_triggered_correlation(startfor=startfor, channels = [1,3,4], binwidth_ns = 50, n=3000, stacks = 40, save=True)
+        # self.tag_correlation(startfor=startfor, channels = [3,4], binwidth_ns =10, n=4800, save=True)
+        self.tag_triggered_correlation(startfor=[1800e12], channels = [1,3,4], binwidth_ns = 15, n=15000, stacks = 40, save=True)
+        self.tag_triggered_correlation(startfor=[1800e12], channels = [1,3,4], binwidth_ns = 5, n=45000, stacks = 40, save=True)
 
         # self.tag_correlation(startfor=startfor, channels = [1,3], binwidth_ns =10, n=2400, save=True)
         # self.tag_correlation(startfor=startfor, channels = [1,4], binwidth_ns =10, n=2400, save=True)
@@ -174,13 +175,14 @@ class Lotus():
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                filename = 'output/lastframe_bincounts_width{}ps_n{}_{:.1e}time_{}'.format(binwidth_ns, n, startfor, dt_string)
+                filename = 'output/lastframe_bincounts_width{}ps_n{}_{:.1e}time_{}'.format(binwidth_ns, n, startfor[0], dt_string)
                 np.save(filename, counts)
             print('{}ps elapsed!'.format(segment_ps))
 
             for i in range(cycles-1):
                 print('Starting cycle {} of {}'.format(i+2, cycles))
                 counts += self.spot0.get_count(segment_ps, channels, binwidth_ns, n)
+                print('Cumulative dataframe', counts)
                 if save:
                     np.save(filename, counts)
                 print('{}ps elapsed!'.format((i+2)*segment_ps))
@@ -235,13 +237,14 @@ class Lotus():
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                filename = 'output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string)
+                filename = 'output/correlated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor[0], dt_string)
                 np.save(filename, corr)
             print('{}ps elapsed!'.format(segment_ps))
 
             for i in range(cycles-1):
                 print('Starting cycle {} of {}'.format(i+2, cycles))
                 corr += self.spot0.get_correlation(segment_ps, channels, binwidth_ns, n)
+                print('Cumulative dataframe', corr)
                 if save:
                     np.save(filename, corr)
                 print('{}ps elapsed!'.format((i+2)*segment_ps))
@@ -251,13 +254,13 @@ class Lotus():
         else: 
             print('Invalid startfor argument! Must be -1, int or float, or list of int or float of length 1')
 
-    def tag_triggered_correlation(self, startfor = -1, channels = [1,3,4], binwidth_ns = 15, n = 6000, stacks = 5, save = True):
+    def tag_triggered_correlation(self, startfor = -1, channels = [1,3,4], binwidth_ns = 15, n = 6000, stacks = 5, stack_ns = 240, coin_ns = 50, save = True):
 
         if startfor == -1:
             print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
             self.spot0.trig_corr_running.append(True)
             identity = len(self.spot0.trig_corr_running) - 1
-            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth_ns, n, stacks, identity), daemon = True).start()
+            threading.Thread(target = self.spot0.get_triggered_correlation, args = (startfor, channels, binwidth_ns, n, stacks, stack_ns, coin_ns, identity), daemon = True).start()
 
             qthread_args = {
                 'data_func': self.spot0.return_trig_corr_counts, 
@@ -275,13 +278,13 @@ class Lotus():
             return
 
         elif type(startfor) is int or type(startfor) is float:
-            trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth_ns, n, stacks)
+            trigcorr = self.spot0.get_triggered_correlation(startfor, channels, binwidth_ns, n, stacks, stack_ns, coin_ns)
 
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                np.save('output/trigcorrelated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string), trigcorr)
+                np.save('output/trigcorrelated_width{}ns_n{}_coin{}ns_deltat{}ns_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, coin_ns, stack_ns, channels, startfor[0], dt_string), trigcorr)
             return trigcorr
 
         elif type(startfor) is list and len(startfor) == 1 and type(startfor[0]) is int or type(startfor[0]) is float:
@@ -289,18 +292,19 @@ class Lotus():
             cycles = int(np.round(startfor[0]/segment_ps))
             print('Running segmented data run! {} cycles of {}ps each'.format(cycles, segment_ps))
             print('Starting cycle 1 of {}'.format(cycles))
-            trigcorr = self.spot0.get_triggered_correlation(segment_ps, channels, binwidth_ns, n, stacks)
+            trigcorr = self.spot0.get_triggered_correlation(segment_ps, channels, binwidth_ns, n, stacks, stack_ns, coin_ns)
             if save:
                 if not os.path.exists('output/'): os.makedir('output/')
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y_%H_%M_%S")
-                filename = 'output/trigcorrelated_width{}ns_n{}_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, channels, startfor, dt_string)
+                filename = 'output/trigcorrelated_width{}ns_n{}_coin{}ns_deltat{}ns_ch{}_{:.1e}time_{}'.format(binwidth_ns, n, coin_ns, stack_ns, channels, startfor[0], dt_string)
                 np.save(filename, trigcorr)
             print('{}ps elapsed!'.format(segment_ps))
 
             for i in range(cycles-1):
                 print('Starting cycle {} of {}'.format(i+2, cycles))
-                trigcorr += self.spot0.get_triggered_correlation(segment_ps, channels, binwidth_ns, n, stacks)
+                trigcorr += self.spot0.get_triggered_correlation(segment_ps, channels, binwidth_ns, n, stacks, stack_ns, coin_ns)
+                print('Cumulative dataframe', trigcorr)
                 if save:
                     np.save(filename, trigcorr)
                 print('{}ps elapsed!'.format((i+2)*segment_ps))

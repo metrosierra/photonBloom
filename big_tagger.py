@@ -311,8 +311,9 @@ class BaseTag():
 
     def return_trig_corr_counts(self, identity):
         temp = self.trig_corr_counts[identity].copy()
-        temp[-1] = np.zeros(len(temp[0]))
+        temp[round((len(temp)+1)/2)] = np.zeros(len(temp[0]))
         return temp
+        return self.trig_corr_counts[identity]
 
     def return_allrate(self, identity):
         return self.allrate[identity]
@@ -424,9 +425,9 @@ class BaseTag():
                 corr.start()
                 while self.corr_running[identity]:
                     data = corr.getData()
-                    baseline = np.average(data[:50])
+                    # data = corr.getDataNormalized()
+                    baseline = np.average(data[:n/20])
                     self.corr_counts[identity] = np.array([data/baseline])
-                    # self.corr_counts[identity] = data
 
                 corr.stop()
 
@@ -447,7 +448,9 @@ class BaseTag():
                               chs = [3, 1, 2], 
                               binwidth_ns = 100, 
                               n_values = 100,
-                              stacks = 20,
+                              stacks = 20, 
+                              stack_ns = 240,
+                              coin_ns = 20,
                               identity = 0):
 
         ##only one corr channel should not happen but ok
@@ -477,8 +480,7 @@ class BaseTag():
             ycoincidences = [[] for i in range(no_corrs)]
             delayedchannels = []
 
-            delay_step = 2e6
-            delay_step = 4.8e6
+            delay_step = stack_ns*1000
             print('\nThe inter-stack time gap is', delay_step, '!!!!')
             for i in range(no_corrs):
                 delayedchannels.append(TimeTagger.DelayedChannel(syncTagger, 
@@ -490,11 +492,14 @@ class BaseTag():
                                                         delay = (i)*delay_step))
 
 #### consider separating out coincidencewindow from binwidth
+                coincidence_ns = binwidth_ns 
+                coincidence_ns = coin_ns
                 for j in range(no_corrs):
                     ycoincidences[j].append(TimeTagger.Coincidence(syncTagger,
                                                             [delayedchannels[j].getChannel(), delayedtriggers[i].getChannel()],
-                                                            coincidenceWindow = binwidth_ns*1000,
+                                                            coincidenceWindow = coincidence_ns*1000,
                                                             timestamp = TimeTagger.CoincidenceTimestamp.ListedFirst))
+                
             # Measure correlations between the delayed triggered virtual channels and corr_channel2(1)
             corr_list = [[] for i in range(stacks)]
             sets = list(itertools.combinations(np.arange(no_corrs), 2))
@@ -519,7 +524,8 @@ class BaseTag():
                 while self.trig_corr_running[identity]:
 
                     for i in range(stacks):
-                        temp = self.trig_corr_counts[identity][i].copy()
+                        # temp = self.trig_corr_counts[identity][i].copy()
+                        temp = np.zeros(n_values)
                         for j in range(no_corrs):
                             ### these are numpy arrays now...like spyder tells us
                             data = corr_list[i][j].getData() 

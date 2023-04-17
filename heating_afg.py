@@ -26,7 +26,7 @@ _AFG3000_TCP_ADDRESS = 'TCPIP0::192.168.0.14::inst0::INSTR'
 
 ### please make channels an ordered list of integers....
 class HotFibre():
-    def __init__(self, sensor = 'TH20K', channels = [1]):
+    def __init__(self, sensor = 'TH20K', channels = [1,2]):
 
         self.afg = tfg.FuncGen(_AFG3000_TCP_ADDRESS)
         self.sensor = sensor
