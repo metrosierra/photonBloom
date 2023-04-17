@@ -426,7 +426,7 @@ class BaseTag():
                 while self.corr_running[identity]:
                     data = corr.getData()
                     # data = corr.getDataNormalized()
-                    baseline = np.average(data[:n/20])
+                    baseline = 1#np.average(data[:50])
                     self.corr_counts[identity] = np.array([data/baseline])
 
                 corr.stop()
