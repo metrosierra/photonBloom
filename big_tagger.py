@@ -20,6 +20,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import itertools
+import warnings
 
 import subroutines.jitter_subroutine as jitty
 import subroutines.mathematics as mathy
@@ -312,8 +313,14 @@ class BaseTag():
     def return_trig_corr_counts(self, identity):
         temp = self.trig_corr_counts[identity].copy()
         temp[round((len(temp)+1)/2)] = np.zeros(len(temp[0]))
+        '''
+        if len(temp)%2 == 0:
+            temp[round(len(temp)/2)] = np.zeros(len(temp[0]))
+        else:
+            temp[round((len(temp)+1)/2)] = np.zeros(len(temp[0]))
+        '''
         return temp
-        return self.trig_corr_counts[identity]
+        #return self.trig_corr_counts[identity]
 
     def return_allrate(self, identity):
         return self.allrate[identity]
@@ -444,6 +451,93 @@ class BaseTag():
 
 ########################## Experiment specific functions QMLab ##########################
 
+    def get_triggered_correlation_simple(self, startfor = int(1E12),
+                              chs = [3, 1, 2], 
+                              binwidth_ns = 100, 
+                              n_values = 100,
+                              coin_ns = 1,
+                              identity = 0):
+        
+        #chs: trig_ch, ch1, ch2
+        #binwidth_ns: binwidth in ns
+        #n_values: number of bins
+        #stacks: number of stacks
+        #stack_ns: time between stacks
+        #coin_ns: coincidence window
+        #identity: identity of the measurement
+
+        ##only one corr channel should not happen but ok
+        if type(chs) is int or type(chs) is float:
+            print('Only one channel given. Please give two channels for the correlation')
+            return None 
+        
+
+        trigger_channel = chs[0]
+        corr_chs = chs[1:]
+        no_corrs = len(corr_chs)
+
+        '''
+        if (stacks % 2) == 0:
+            stacks+=1
+        midpoint = stacks/2+0.5
+        '''
+        self.trig_corr_counts.append(np.ones((2,n_values)))
+
+        # Create Correlation measurements and use SynchronizedMeasurements to start them easily
+        with TimeTagger.SynchronizedMeasurements(self.client) as sm:
+
+            # Proxy tagger object, we can use the same object for all synced measurement classes below
+            syncTagger = sm.getTagger()
+            # Make virtual channels that are delayed by each multiple of the bin widths
+            # then take coincidences for corr_channel1(2) and the trigger_channel
+            # this creates virtual channels that can then be correlated with corr_channel2(1)
+            
+            triggered_coincidence=TimeTagger.Coincidence(syncTagger,[chs[1], chs[0]],
+                                    coincidenceWindow = coin_ns*1000,
+                                    timestamp = TimeTagger.CoincidenceTimestamp.ListedFirst)
+            
+            corr_list = [[] for i in range(2)]
+            corr_list[0]=TimeTagger.Correlation(syncTagger,
+                                                triggered_coincidence.getChannel(),
+                                                chs[2], 
+                                                binwidth = binwidth_ns*1000,
+                                                n_bins = n_values)
+            
+            corr_list[1]=TimeTagger.Correlation(syncTagger,
+                                                chs[1],
+                                                chs[2], 
+                                                binwidth = binwidth_ns*1000,
+                                                n_bins = n_values)
+            
+            if startfor == -1:
+                sm.start()
+            
+                while self.trig_corr_running[identity]:
+                        for j in range(2):
+                            ### these are numpy arrays now...like spyder tells us
+                            data = corr_list[j].getData() 
+                            # baseline = np.average(data[:4]) + 0.0001
+                            self.trig_corr_counts[identity][j] = data
+                        
+                            # np.average(self.trig_corr_counts[identity][i][0:5])
+                sm.stop()
+
+                while sm.isRunning():
+                    print('Waiting for synced measurement to stop')
+
+                sm.clear()
+
+            elif startfor > 0.:
+
+                data = np.zeros((2, n_values))
+                sm.startFor(startfor, clear = True)
+                sm.waitUntilFinished()
+                for j in range(2):
+                    data[j] = corr_list[j].getData()
+
+                print(data)
+                return data
+            
     def get_triggered_correlation(self, startfor = int(1E12),
                               chs = [3, 1, 2], 
                               binwidth_ns = 100, 

@@ -49,9 +49,10 @@ class Lotus():
         if self.spot0.disable_autoconfig == False:
             self.spot0.set_autoconfig()
             print('Automatically configuring Time Tagger based on JSON config file...change using set_manualconfig method')
-
+        
         self.app = QApplication(sys.argv)
         self.rose0 = RoseApp()
+        self.filter0=HotFibre()
         # self.filter0 = HotFibre(sensor = 'TH20K', channels = [1])
 
     def create_networktagger(self, ip_address, **kwargs):
@@ -132,7 +133,7 @@ class Lotus():
 
 
     def tag_counter(self, startfor = -1, channels = [1,2,3,4], binwidth_ns = 1e8, n = 100, save = True):
-        
+        #startfor: ps
         if startfor == -1:
             print('Persisting Counter measurement class! Close live plot to exit this!!')
 
@@ -192,6 +193,14 @@ class Lotus():
         else: 
             print('Invalid startfor argument! Must be -1, int or float, or list of int or float of length 1')
 
+    def tag_correlation_script(self):
+
+        time_collect=10#minutes
+        time_collect_ps=time_collect*60e12
+        self.tag_correlation(startfor=time_collect_ps, channels = [3,4], binwidth_ns = 0.1, n=6000, save=True)
+        self.filter0.step_volts(2,10)
+        self.tag_correlation(startfor=time_collect_ps, channels = [3,4], binwidth_ns = 0.1, n=6000, save=True)
+        
 
 
     def tag_correlation(self, startfor = -1, channels = [3,4], binwidth_ns = 2, n = 6000, save = True):
@@ -206,7 +215,8 @@ class Lotus():
                 'data_func': self.spot0.return_corr_counts, 
                 'data_kill_func': self.spot0.switchoff_corr_counts,
                 'identity': identity,
-                'plot_no': 1
+                'plot_no': 1,
+                'save_on': save
             }
 
             self.rose0.new_window(refresh_interval = 0.1, 
@@ -253,6 +263,28 @@ class Lotus():
 
         else: 
             print('Invalid startfor argument! Must be -1, int or float, or list of int or float of length 1')
+
+    def tag_triggered_correlation_simple(self, startfor = -1, channels = [1,3,4], binwidth_ns = 15, n = 6000, coin_ns = 50, save = True):
+
+        if startfor == -1:
+            print('Persisting TrigXCorrelation measurement class! Close live plot to exit this!!')
+            self.spot0.trig_corr_running.append(True)
+            identity = len(self.spot0.trig_corr_running) - 1
+            threading.Thread(target = self.spot0.get_triggered_correlation_simple, args = (startfor, channels, binwidth_ns, n, coin_ns, identity), daemon = True).start()
+
+            qthread_args = {
+                'data_func': self.spot0.return_trig_corr_counts, 
+                'data_kill_func': self.spot0.switchoff_trig_corr_counts,
+                'identity': identity,
+                'plot_no': 2
+            }
+
+            self.rose0.new_multiwindow(refresh_interval = 0.1, 
+                                    title = 'Triggered Cross Correlation Plot', 
+                                    xlabel = 'Delay', 
+                                    ylabel = 'Counts', 
+                                    **qthread_args)
+            return
 
     def tag_triggered_correlation(self, startfor = -1, channels = [1,3,4], binwidth_ns = 15, n = 6000, stacks = 5, stack_ns = 240, coin_ns = 50, save = True):
 

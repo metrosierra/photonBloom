@@ -47,7 +47,7 @@ class PetalWindow(QtWidgets.QWidget):
     ### this is link to the parent class decorated functions
     closed = QtCore.pyqtSignal()
 
-    def __init__(self, data_func, data_kill_func, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.1, plot_no = 1, identity = 0):
+    def __init__(self, data_func, data_kill_func, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', refresh_interval = 0.1, plot_no = 1, identity = 0, save_on=False):
         
         super().__init__()
 
@@ -60,6 +60,7 @@ class PetalWindow(QtWidgets.QWidget):
         self.graph.addLegend()
 
         self.identity = identity
+        self.save_on = save_on
         self.refresh_interval = refresh_interval
         ##################### style points #####################
         self.graph.showGrid(x = True, y = True)
@@ -82,7 +83,7 @@ class PetalWindow(QtWidgets.QWidget):
             self.plots.append(self.graph.plot(pen = i, name = 'Channel {}!!!'.format(i+1)))
             self.data_store.append(self.initial_xydata)
         
-        self.worker = WorkerBee(data_func, data_kill_func, self.window.isHidden, self.refresh_interval, self.identity)
+        self.worker = WorkerBee(data_func, data_kill_func, self.window.isHidden, self.refresh_interval, self.identity, self.save_on)
         self.make_connection(self.worker)
         self.worker.start()
         # self.show()
@@ -215,8 +216,8 @@ class RoseApp(QtWidgets.QMainWindow):
         # self.show()
 
 
-    def new_window(self, data_func, data_kill_func, refresh_interval = 0.0001, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', plot_no = 1, identity = 0):
-        self.windows.append(PetalWindow(data_func, data_kill_func, title, xlabel, ylabel, refresh_interval, plot_no, identity))
+    def new_window(self, data_func, data_kill_func, refresh_interval = 0.0001, title = 'Live Plot', xlabel = 'X axis', ylabel = 'Y axis', plot_no = 1, identity = 0, save_on = True):
+        self.windows.append(PetalWindow(data_func, data_kill_func, title, xlabel, ylabel, refresh_interval, plot_no, identity,save_on))
         # self.windows[self.window_count].show()
         self.window_count += 1
 
